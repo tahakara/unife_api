@@ -362,6 +362,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-./WebAPI/logs/*
-./WebAPI/Controllers/DatabaseController.cs
-./Domain/Entities/UniversityAdmin.cs
+/WebAPI/logs/*
+/WebAPI/Controllers/DatabaseController.cs
+/Domain/Entities/UniversityAdmin.cs
+/WebAPI/Controllers/DatabaseController.cs
