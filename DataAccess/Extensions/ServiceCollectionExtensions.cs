@@ -1,10 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Core.Database.Base;
+using Core.ObjectStorage.Base;
 using DataAccess.Context;
 using DataAccess.Database;
+using DataAccess.ObjectStorage;
 using DataAccess.Abstract;
 using DataAccess.Concrete.EntityFramework;
+using Domain.Repositories.Abstract.Base;
+using Domain.Repositories.Concrete.ObjectStorage;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Extensions
@@ -15,6 +19,12 @@ namespace DataAccess.Extensions
         {
             // Database Connection Factory
             services.AddScoped<IDbConnectionFactory<UnifeContext>, UnifeConnectionFactory>();
+            
+            // Object Storage Connection Factory
+            services.AddScoped<IObjectStorageConnectionFactory, UnifeObjectStorageConnectionFactory>();
+            
+            // Object Storage Generic Repository
+            services.AddScoped(typeof(IObjectStorageRepository<>), typeof(ObjectStorageRepositoryBase<>));
             
             // DbContext registration
             services.AddDbContext<UnifeContext>(options =>
@@ -39,7 +49,7 @@ namespace DataAccess.Extensions
                 }
             });
             
-            // Repositories
+            // Database Repositories
             services.AddScoped<IUniversityRepository, EfUniversityDal>();
             services.AddScoped<IUniversityTypeRepository, EfUniversityTypeDal>();
             services.AddScoped<IRegionRepository, EfRegionDal>();

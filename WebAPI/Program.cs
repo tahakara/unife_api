@@ -1,5 +1,6 @@
 ﻿using Buisness.Extensions;
 using Core.Database.Base;
+using Core.ObjectStorage.Base;
 using DataAccess.Context;
 using DataAccess.Database;
 using DataAccess.Extensions;
@@ -93,9 +94,26 @@ try
     builder.Services.AddDataAccessServices(builder.Configuration);
     builder.Services.AddBusinessServices();
 
-    // Health Checks - Özel health check ile
+    // Health Checks - Gelişmiş health check ile Redis desteği
     builder.Services.AddHealthChecks()
         .AddCheck<DatabaseHealthCheck>("database")
+        .AddCheck("redis", () =>
+        {
+            try
+            {
+                using var scope = builder.Services.BuildServiceProvider().CreateScope();
+                var objectStorageFactory = scope.ServiceProvider.GetRequiredService<IObjectStorageConnectionFactory>();
+                var testResult = objectStorageFactory.TestConnectionAsync().GetAwaiter().GetResult();
+                
+                return testResult 
+                    ? HealthCheckResult.Healthy("Redis connection is healthy")
+                    : HealthCheckResult.Unhealthy("Redis connection failed");
+            }
+            catch (Exception ex)
+            {
+                return HealthCheckResult.Unhealthy("Redis connection error", ex);
+            }
+        })
         .AddCheck("memory", () =>
         {
             var allocated = GC.GetTotalMemory(false);
@@ -127,6 +145,82 @@ try
         {
             Log.Error(ex, "Veritabanı başlatılırken hata oluştu");
             throw;
+        }
+    }
+
+    // Object Storage (Redis) Initialization
+    using (var scope = app.Services.CreateScope())
+    {
+        try
+        {
+            Log.Information("Redis object storage bağlantısı test ediliyor");
+            
+            var objectStorageFactory = scope.ServiceProvider.GetRequiredService<IObjectStorageConnectionFactory>();
+            
+            // Connection test
+            var connectionTestResult = await objectStorageFactory.TestConnectionAsync();
+            if (connectionTestResult)
+            {
+                Log.Information("Redis object storage bağlantısı başarılı");
+                
+                // Test a basic connection using the factory
+                using var connection = await objectStorageFactory.CreateConnectionAsync();
+                
+                // Basic connection info
+                var connectionInfo = new
+                {
+                    IsConnected = connection.IsConnected,
+                    ContainerName = connection.ContainerName,
+                    CreatedAt = connection.CreatedAt,
+                    Provider = "Redis"
+                };
+                
+                Log.Information("Redis bağlantı bilgileri: {@ConnectionInfo}", connectionInfo);
+                
+                // Test basic operations
+                var testKey = $"startup_test_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
+                var testValue = "Redis connection test successful";
+                
+                try
+                {
+                    await connection.SetStringAsync(testKey, testValue, TimeSpan.FromSeconds(30));
+                    var retrievedValue = await connection.GetStringAsync(testKey);
+                    await connection.DeleteAsync(testKey);
+                    
+                    if (retrievedValue == testValue)
+                    {
+                        Log.Information("Redis operasyonel test başarılı");
+                    }
+                    else
+                    {
+                        Log.Warning("Redis operasyonel test başarısız - değer eşleşmiyor");
+                    }
+                }
+                catch (Exception testEx)
+                {
+                    Log.Warning(testEx, "Redis operasyonel test sırasında hata");
+                }
+                
+                // Database size info
+                try
+                {
+                    var dbSize = await connection.GetDatabaseSizeAsync();
+                    Log.Information("Redis veritabanı boyutu: {Size} keys", dbSize);
+                }
+                catch (Exception sizeEx)
+                {
+                    Log.Warning(sizeEx, "Redis veritabanı boyutu alınırken hata");
+                }
+            }
+            else
+            {
+                Log.Warning("Redis object storage bağlantısı başarısız - uygulama devam ediyor");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Redis object storage başlatılırken hata oluştu - uygulama devam ediyor");
+            // Redis bağlantısı başarısız olsa da uygulama devam etsin
         }
     }
 

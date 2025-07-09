@@ -93,7 +93,6 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> Delete([FromBody] DeleteUniversityCommand command)
         {
             return await SendCommand(command);
-
         }
     }
 }
