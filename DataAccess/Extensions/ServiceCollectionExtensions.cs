@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Core.Database.Base;
 using Core.ObjectStorage.Base;
-using DataAccess.Context;
+using Core.ObjectStorage.Base.Redis;
 using DataAccess.Database;
 using DataAccess.ObjectStorage;
 using DataAccess.Abstract;
@@ -10,6 +10,9 @@ using DataAccess.Concrete.EntityFramework;
 using Domain.Repositories.Abstract.Base;
 using Domain.Repositories.Concrete.ObjectStorage;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using DataAccess.Database.Context;
+using DataAccess.ObjectStorage.Redis;
 
 namespace DataAccess.Extensions
 {
@@ -20,8 +23,28 @@ namespace DataAccess.Extensions
             // Database Connection Factory
             services.AddScoped<IDbConnectionFactory<UnifeContext>, UnifeConnectionFactory>();
             
-            // Object Storage Connection Factory
-            services.AddScoped<IObjectStorageConnectionFactory, UnifeObjectStorageConnectionFactory>();
+            // Redis Connection Factories for different storage types
+            services.AddScoped<IObjectStorageConnectionFactory>(provider =>
+            {
+                var configuration = provider.GetRequiredService<IConfiguration>();
+                var logger = provider.GetRequiredService<ILogger<ObjectStorageConnectionFactoryBase>>();
+                return new GenericRedisConnectionFactory(configuration, logger, RedisStorageType.Cache);
+            });
+
+            // Named Redis Connection Factories
+            services.AddKeyedScoped<IObjectStorageConnectionFactory>("cache", (provider, key) =>
+            {
+                var configuration = provider.GetRequiredService<IConfiguration>();
+                var logger = provider.GetRequiredService<ILogger<ObjectStorageConnectionFactoryBase>>();
+                return new GenericRedisConnectionFactory(configuration, logger, RedisStorageType.Cache);
+            });
+
+            services.AddKeyedScoped<IObjectStorageConnectionFactory>("session", (provider, key) =>
+            {
+                var configuration = provider.GetRequiredService<IConfiguration>();
+                var logger = provider.GetRequiredService<ILogger<ObjectStorageConnectionFactoryBase>>();
+                return new GenericRedisConnectionFactory(configuration, logger, RedisStorageType.Session);
+            });
             
             // Object Storage Generic Repository
             services.AddScoped(typeof(IObjectStorageRepository<>), typeof(ObjectStorageRepositoryBase<>));

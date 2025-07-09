@@ -2,7 +2,7 @@
 using Domain.Entities.LogEntities;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Context
+namespace DataAccess.Database.Context
 {
     public class UnifeContext : DbContext
     {

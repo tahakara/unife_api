@@ -1,5 +1,5 @@
 ﻿using Core.Database.Base;
-using DataAccess.Context;
+using DataAccess.Database.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 

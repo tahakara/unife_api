@@ -6,7 +6,7 @@ using DataAccess.Abstract;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 
-namespace Buisness.Services
+namespace Buisness.Services.EntityRepositoryServices
 {
     public class UniversityTypeService : ServiceManagerBase, IUniversityTypeService
     {

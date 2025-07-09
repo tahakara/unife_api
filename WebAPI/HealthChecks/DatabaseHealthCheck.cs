@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
-using DataAccess.Context;
 using Microsoft.EntityFrameworkCore;
+using DataAccess.Database.Context;
 
 namespace WebAPI.HealthChecks
 {

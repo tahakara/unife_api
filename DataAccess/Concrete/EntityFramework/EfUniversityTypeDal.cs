@@ -1,6 +1,6 @@
 ﻿using Core.Database.Base;
 using DataAccess.Abstract;
-using DataAccess.Context;
+using DataAccess.Database.Context;
 using Domain.Entities.Base.Concrete;
 using Domain.Repositories.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;

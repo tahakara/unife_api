@@ -9,7 +9,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Buisness.Services
+namespace Buisness.Services.EntityRepositoryServices
 {
     public class UniversityService : ServiceManagerBase, IUniversityService
     {
@@ -136,7 +136,7 @@ namespace Buisness.Services
 
         public async Task<bool> IsUniversityCodeUniqueAsync(string code)
         {
-            return !(await _universityRepository.IsCodeExistsAsync(code));
+            return !await _universityRepository.IsCodeExistsAsync(code);
         }
 
         public async Task<PagedResponse<SelectUniversityDto>> GetPagedUniversitiesAsync(int page, int size)

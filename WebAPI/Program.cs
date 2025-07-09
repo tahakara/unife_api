@@ -1,7 +1,7 @@
 ﻿using Buisness.Extensions;
 using Core.Database.Base;
 using Core.ObjectStorage.Base;
-using DataAccess.Context;
+using Core.Security.JWT.Extensions;
 using DataAccess.Database;
 using DataAccess.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +14,8 @@ using WebAPI.HealthChecks;
 using WebAPI.Middleware;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Buisness.Services.UtilityServices;
+using DataAccess.Database.Context;
 
 // Serilog yapılandırması
 Log.Logger = new LoggerConfiguration()
@@ -24,7 +26,7 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("UnifeAPI Enterprise uygulaması başlatılıyor");
+    Log.Information("Unife API uygulaması başlatılıyor");
 
     var builder = WebApplication.CreateBuilder(args);
     builder.WebHost.ConfigureKestrel(options =>
@@ -55,18 +57,43 @@ try
     });
     builder.Services.AddEndpointsApiExplorer();
 
-    // Swagger - Gelişmiş konfigürasyon
+    // Swagger Configuration
     builder.Services.AddSwaggerGen(c =>
     {
         c.SwaggerDoc("v1", new OpenApiInfo
         {
-            Title = "UnifeAPI Enterprise",
+            Title = "Unife API",
             Version = "v1",
-            Description = "Enterprise seviyede üniversite yönetim API'si",
+            Description = "Unife üniversite yönetim API'si",
             Contact = new OpenApiContact
             {
                 Name = "API Support",
-                Email = "support@unifeapi.com"
+                Email = "support@unife.com"
+            }
+        });
+
+        // JWT Authentication support in Swagger
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                new string[] {}
             }
         });
 
@@ -92,9 +119,13 @@ try
 
     // Layer Services
     builder.Services.AddDataAccessServices(builder.Configuration);
-    builder.Services.AddBusinessServices();
+    builder.Services.AddBusinessServices(builder.Configuration);
+    
+    // JWT Services
+    builder.Services.AddJwtCore(builder.Configuration);
+    builder.Services.AddScoped<ISessionJwtService, SessionJwtService>();
 
-    // Health Checks - Gelişmiş health check ile Redis desteği
+    // Health Checks
     builder.Services.AddHealthChecks()
         .AddCheck<DatabaseHealthCheck>("database")
         .AddCheck("redis", () =>
@@ -113,21 +144,6 @@ try
             {
                 return HealthCheckResult.Unhealthy("Redis connection error", ex);
             }
-        })
-        .AddCheck("memory", () =>
-        {
-            var allocated = GC.GetTotalMemory(false);
-            var data = new Dictionary<string, object>
-            {
-            { "allocated", allocated },
-            { "gen0", GC.CollectionCount(0) },
-            { "gen1", GC.CollectionCount(1) },
-            { "gen2", GC.CollectionCount(2) }
-            };
-
-            return allocated < 1024 * 1024 * 100 * 1.024// 1gb
-                ? HealthCheckResult.Healthy("Memory usage is normal", data)
-                : HealthCheckResult.Degraded("Memory usage is high", data: data);
         });
 
     var app = builder.Build();
@@ -244,7 +260,7 @@ try
         app.UseSwagger();
         app.UseSwaggerUI(c =>
         {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "UnifeAPI v1");
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Unife API v1");
             c.RoutePrefix = "swagger";
         });
     }
@@ -258,7 +274,7 @@ try
     
     app.MapControllers();
 
-    Log.Information("UnifeAPI Enterprise başarıyla başlatıldı");
+    Log.Information("Unife API başarıyla başlatıldı");
     app.Run();
 }
 catch (Exception ex)

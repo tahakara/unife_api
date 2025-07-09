@@ -1,4 +1,5 @@
 ﻿using Core.ObjectStorage.Base;
+using DataAccess.ObjectStorage.Redis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;

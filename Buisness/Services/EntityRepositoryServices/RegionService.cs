@@ -4,7 +4,7 @@ using Buisness.Concrete.ServiceManager;
 using DataAccess.Abstract;
 using Microsoft.Extensions.Logging;
 
-namespace Buisness.Services
+namespace Buisness.Services.EntityRepositoryServices
 {
     public class RegionService : ServiceManagerBase, IRegionService
     {
