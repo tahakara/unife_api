@@ -1,3 +1,4 @@
+using Domain.Entities.AuthorizationEntities;
 using Domain.Entities.Base.Concrete;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -32,5 +33,9 @@ namespace Domain.Entities.Base.Concrete
         public virtual ICollection<Academician> Academicians { get; set; } = new List<Academician>();
         public virtual Rector? Rector { get; set; }
         public virtual UniversityAddress? MainAddress { get; set; }
+
+        public virtual Admin? Admin { get; set; }
+        public virtual ICollection<Staff>? StaffMembers { get; set; }
+        public virtual ICollection<Student>? Students { get; set; }
     }
 }

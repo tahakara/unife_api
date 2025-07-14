@@ -55,6 +55,7 @@ try
         // Number handling - bu önemli kısım
         options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
     });
+    builder.Services.AddMemoryCache();
     builder.Services.AddEndpointsApiExplorer();
 
     // Swagger Configuration
