@@ -828,6 +828,8 @@ namespace DataAccess.Database.Context
                 entity.Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
                 entity.Property(e => e.IsEditable).HasColumnName("is_editable").HasDefaultValue(true);
                 entity.Property(e => e.IsSystemRole).HasColumnName("is_system_role").HasDefaultValue(false);
+                entity.Property(e => e.IsAssignedToUniversity).HasColumnName("is_assigned_to_university").HasDefaultValue(false);
+                entity.Property(e => e.UniversityUuid).HasColumnName("university_uuid").HasColumnType("uuid");
                 entity.Property(e => e.CreatorAdminUuid).HasColumnName("creator_admin_uuid").HasColumnType("uuid");
                 entity.Property(e => e.CreatorStaffUuid).HasColumnName("creator_staff_uuid").HasColumnType("uuid");
                 entity.Property(e => e.CreatorStudentUuid).HasColumnName("creator_student_uuid").HasColumnType("uuid");
@@ -841,6 +843,8 @@ namespace DataAccess.Database.Context
                 entity.HasIndex(e => e.IsSystemRole).HasDatabaseName("idx_roles_system").HasFilter("is_system_role = true");
 
                 // Foreign keys
+                entity.HasOne(r => r.University).WithMany(u => u.Roles)
+                    .HasForeignKey(r => r.UniversityUuid).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_roles_university");
                 entity.HasOne(r => r.CreatorAdmin).WithMany(a => a.CreatedRoles)
                     .HasForeignKey(r => r.CreatorAdminUuid).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_roles_creator_admin");
                 entity.HasOne(r => r.CreatorStaff).WithMany(s => s.CreatedRoles)
@@ -864,6 +868,8 @@ namespace DataAccess.Database.Context
                 entity.Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
                 entity.Property(e => e.IsEditable).HasColumnName("is_editable").HasDefaultValue(true);
                 entity.Property(e => e.IsSystemPermission).HasColumnName("is_system_permission").HasDefaultValue(false);
+                entity.Property(e => e.IsAssignedToUniversity).HasColumnName("is_assigned_to_university").HasDefaultValue(false);
+                entity.Property(e => e.UniversityUuid).HasColumnName("university_uuid").HasColumnType("uuid");
                 entity.Property(e => e.CreatorAdminUuid).HasColumnName("creator_admin_uuid").HasColumnType("uuid");
                 entity.Property(e => e.CreatorStaffUuid).HasColumnName("creator_staff_uuid").HasColumnType("uuid");
                 entity.Property(e => e.CreatorStudentUuid).HasColumnName("creator_student_uuid").HasColumnType("uuid");
@@ -877,6 +883,8 @@ namespace DataAccess.Database.Context
                 entity.HasIndex(e => e.IsSystemPermission).HasDatabaseName("idx_permissions_system").HasFilter("is_system_permission = true");
 
                 // Foreign keys
+                entity.HasOne(p => p.University).WithMany(u => u.Permissions)
+                    .HasForeignKey(p => p.UniversityUuid).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_permissions_university");
                 entity.HasOne(p => p.CreatorAdmin)
                     .WithMany(a => a.CreatedPermissions)
                     .HasForeignKey(p => p.CreatorAdminUuid)

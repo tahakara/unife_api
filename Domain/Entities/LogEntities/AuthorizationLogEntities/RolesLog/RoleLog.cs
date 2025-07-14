@@ -17,6 +17,8 @@ namespace Domain.Entities.LogEntities.AuthorizationLogEntities.RolesLog
         public bool IsDeleted { get; set; }
         public bool IsEditable { get; set; }
         public bool IsSystemRole { get; set; }
+        public bool IsAssignedToUniversity { get; set; }
+        public Guid? UniversityUuid { get; set; }
         public Guid? CreatorAdminUuid { get; set; }
         public Guid? CreatorStaffUuid { get; set; }
         public Guid? CreatorStudentUuid { get; set; }

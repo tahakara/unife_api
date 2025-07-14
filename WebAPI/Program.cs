@@ -16,6 +16,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Buisness.Services.UtilityServices;
 using DataAccess.Database.Context;
+using WebAPI.Middleware.Auth;
 
 // Serilog yapılandırması
 Log.Logger = new LoggerConfiguration()
@@ -242,7 +243,9 @@ try
     }
 
     // Middleware Pipeline
-    // app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+    app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+    app.UseMiddleware<JwtAuthenticationMiddleware>();
+    app.UseMiddleware<PermissionAuthorizationMiddleware>();
 
     app.UseSerilogRequestLogging(options =>
     {
@@ -255,6 +258,7 @@ try
             diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].FirstOrDefault());
         };
     });
+
 
     if (app.Environment.IsDevelopment())
     {

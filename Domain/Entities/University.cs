@@ -1,4 +1,6 @@
 using Domain.Entities.AuthorizationEntities;
+using Domain.Entities.AuthorizationEntities.Permissions;
+using Domain.Entities.AuthorizationEntities.Roles;
 using Domain.Entities.Base.Concrete;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -37,5 +39,7 @@ namespace Domain.Entities.Base.Concrete
         public virtual Admin? Admin { get; set; }
         public virtual ICollection<Staff>? StaffMembers { get; set; }
         public virtual ICollection<Student>? Students { get; set; }
+        public virtual ICollection<Role>? Roles { get; set; } = new List<Role>();
+        public virtual ICollection<Permission>? Permissions { get; set; } = new List<Permission>();
     }
 }

@@ -17,8 +17,10 @@ namespace Domain.Entities.LogEntities.AuthorizationLogEntities.PermissionsLog
         public bool IsDeleted { get; set; }
         public bool IsEditable { get; set; }
         public bool IsSystemPermission { get; set; }
+        public bool IsAssignedToUniversity { get; set; }
+        public Guid? UniversityUuid { get; set; }
         public Guid? CreatorAdminUuid { get; set; }
-        public Guid? CreatorStaffUuid { get; set; } // CreatorPersonelUuid yerine CreatorStaffUuid
+        public Guid? CreatorStaffUuid { get; set; } 
         public Guid? CreatorStudentUuid { get; set; }
 
         public DateTime? OriginalCreatedAt { get; set; }
