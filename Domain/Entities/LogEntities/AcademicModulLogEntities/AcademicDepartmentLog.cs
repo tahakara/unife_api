@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base.Concrete;
+﻿using Core.Entities.Base.Concrete;
 
 namespace Domain.Entities.LogEntities.AcademicModulLogEntities
 {

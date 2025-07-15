@@ -38,7 +38,10 @@ namespace Buisness.Mappings
                 .ForMember(dest => dest.MainAddress, opt => opt.Ignore()) // Navigation property
                 .ForMember(dest => dest.Admin, opt => opt.Ignore()) // Navigation property
                 .ForMember(dest => dest.StaffMembers, opt => opt.Ignore()) // Navigation property
-                .ForMember(dest => dest.Students, opt => opt.Ignore()); // Navigation property
+                .ForMember(dest => dest.Students, opt => opt.Ignore()) // Navigation property
+                .ForMember(dest => dest.Roles, opt => opt.Ignore()) // Navigation property (if applicable)
+                .ForMember(dest => dest.Permissions, opt => opt.Ignore()) // Navigation property (if applicable)
+                .ForMember(dest => dest.SecurityEvents, opt => opt.Ignore()); // Navigation property (if applicable)
             #endregion
 
             #region CreateUniversityDto
@@ -63,7 +66,10 @@ namespace Buisness.Mappings
                 .ForMember(dest => dest.EstablishedYear, opt => opt.MapFrom(src => src.EstablishedYear)) // Map year directly
                 .ForMember(dest => dest.Admin, opt => opt.Ignore())
                 .ForMember(dest => dest.StaffMembers, opt => opt.Ignore()) // Staff members can be set later
-                .ForMember(dest => dest.Students, opt => opt.Ignore()); // Students can be set later
+                .ForMember(dest => dest.Students, opt => opt.Ignore()) // Students can be set later
+                .ForMember(dest => dest.Roles, opt => opt.Ignore()) // Navigation property (if applicable)
+                .ForMember(dest => dest.Permissions, opt => opt.Ignore()) // Navigation property (if applicable)
+                .ForMember(dest => dest.SecurityEvents, opt => opt.Ignore()); // Navigation property (if applicable)
 
             CreateMap<University, CreateUniversityDto>()
                 .ForMember(dest => dest.UniversityName, opt => opt.MapFrom(src => src.UniversityName))
@@ -100,7 +106,10 @@ namespace Buisness.Mappings
                 .ForMember(dest => dest.WebsiteUrl, opt => opt.MapFrom(src => src.WebsiteUrl ?? string.Empty)) // Ensure URL is not null
                 .ForMember(dest => dest.Admin, opt => opt.Ignore())
                 .ForMember(dest => dest.StaffMembers, opt => opt.Ignore()) // Staff members can be set later
-                .ForMember(dest => dest.Students, opt => opt.Ignore()); // Students can be set later
+                .ForMember(dest => dest.Students, opt => opt.Ignore())// Students can be set later
+                .ForMember(dest => dest.Roles, opt => opt.Ignore()) // Navigation property (if applicable)
+                .ForMember(dest => dest.Permissions, opt => opt.Ignore()) // Navigation property (if applicable)
+                .ForMember(dest => dest.SecurityEvents, opt => opt.Ignore()); // Navigation property (if applicable)
 
             // Entity to Update DTO (for partial updates)
             CreateMap<University, UpdateUniversityDto>()

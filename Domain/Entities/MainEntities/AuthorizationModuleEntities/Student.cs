@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base.Concrete;
+﻿using Core.Entities.Base.Concrete;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities.Permissions;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities.Roles;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;

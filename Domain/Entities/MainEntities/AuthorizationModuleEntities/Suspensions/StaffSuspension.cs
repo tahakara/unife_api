@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base.Concrete;
+﻿using Core.Entities.Base.Concrete;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 
 namespace Domain.Entities.MainEntities.AuthorizationModuleEntities.Suspensions

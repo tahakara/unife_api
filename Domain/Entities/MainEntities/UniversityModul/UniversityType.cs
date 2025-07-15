@@ -1,11 +1,11 @@
-using Domain.Entities.Base.Concrete;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
+using Core.Entities.Base.Concrete;
 
 namespace Domain.Entities.MainEntities.UniversityModul
 {
-
     public class UniversityType : BaseEntity
     {
         public int TypeId { get; set; }

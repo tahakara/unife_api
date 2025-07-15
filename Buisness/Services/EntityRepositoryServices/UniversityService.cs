@@ -8,6 +8,7 @@ using Domain.Entities.MainEntities.UniversityModul;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Core.Entities.Base;
 
 namespace Buisness.Services.EntityRepositoryServices
 {

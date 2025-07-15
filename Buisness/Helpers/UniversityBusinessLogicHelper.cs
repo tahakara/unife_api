@@ -5,6 +5,7 @@ using Buisness.DTOs.UniversityDtos;
 using Buisness.Helpers.Base;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
+using Core.Entities.Base;
 using DataAccess.Abstract;
 using Domain.Entities;
 using Domain.Entities.MainEntities.UniversityModul;

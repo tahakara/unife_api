@@ -1,4 +1,4 @@
-using Domain.Entities.Base.Concrete;
+using Core.Entities.Base.Concrete;
 using Domain.Entities.LogEntities.AcademicModulLogEntities;
 using Domain.Entities.LogEntities.AuthorizationModulLogEntities;
 using Domain.Entities.LogEntities.AuthorizationModulLogEntities.PermissionsLog;

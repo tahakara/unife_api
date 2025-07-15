@@ -1,4 +1,4 @@
-using Domain.Entities.Base.Concrete;
+using Core.Entities.Base.Concrete;
 using Domain.Entities.MainEntities;
 using Domain.Entities.MainEntities.AcademicModulEntities;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;

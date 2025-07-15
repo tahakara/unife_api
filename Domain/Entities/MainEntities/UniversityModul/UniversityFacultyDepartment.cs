@@ -1,4 +1,4 @@
-using Domain.Entities.Base.Concrete;
+using Core.Entities.Base.Concrete;
 using Domain.Entities.MainEntities.AcademicModulEntities;
 using System;
 using System.ComponentModel.DataAnnotations;

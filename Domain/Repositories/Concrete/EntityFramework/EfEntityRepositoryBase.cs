@@ -1,5 +1,5 @@
 ﻿using Core.Database.Base;
-using Domain.Entities.Base.Abstract;
+using Core.Entities.Base.Abstract;
 using Domain.Repositories.Abstract.Base;
 using Microsoft.EntityFrameworkCore;
 using System;

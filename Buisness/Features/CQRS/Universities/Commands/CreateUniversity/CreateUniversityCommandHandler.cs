@@ -8,7 +8,7 @@ using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using DataAccess.Abstract;
 using Domain.Entities;
-using Domain.Entities.Base.Concrete;
+using Core.Entities.Base;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

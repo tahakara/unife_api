@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Entities.Base.Abstract
+namespace Core.Entities.Base.Abstract
 {
     public interface IEntity
     {

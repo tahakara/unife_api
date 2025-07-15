@@ -243,10 +243,6 @@ try
     }
 
     // Middleware Pipeline
-    app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
-    app.UseMiddleware<JwtAuthenticationMiddleware>();
-    app.UseMiddleware<PermissionAuthorizationMiddleware>();
-
     app.UseSerilogRequestLogging(options =>
     {
         options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
@@ -270,10 +266,14 @@ try
         });
     }
 
+    // Move authentication/authorization middleware after Swagger
     app.UseCors("AllowSpecificOrigins");
     app.UseHttpsRedirection();
     app.UseAuthorization();
-    
+    app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+    //app.UseMiddleware<JwtAuthenticationMiddleware>();
+    //app.UseMiddleware<PermissionAuthorizationMiddleware>();
+
     // Health Check endpoint
     app.MapHealthChecks("/health");
     

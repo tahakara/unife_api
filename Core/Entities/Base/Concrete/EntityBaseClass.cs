@@ -1,11 +1,11 @@
-﻿using Domain.Entities.Base.Abstract;
+﻿using Core.Entities.Base.Abstract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Entities.Base.Concrete
+namespace Core.Entities.Base.Concrete
 {
     public abstract class EntityBaseClass : IEntity
     {
