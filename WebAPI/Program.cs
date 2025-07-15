@@ -1,21 +1,25 @@
 ﻿using Buisness.Extensions;
+using Buisness.Services.UtilityServices;
 using Core.Database.Base;
 using Core.ObjectStorage.Base;
 using Core.Security.JWT.Extensions;
 using DataAccess.Database;
+using DataAccess.Database.Context;
 using DataAccess.Extensions;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 using System.Reflection;
-using WebAPI.HealthChecks;
-using WebAPI.Middleware;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Buisness.Services.UtilityServices;
-using DataAccess.Database.Context;
+using WebAPI.Compression;
+using WebAPI.Compression.Zstd;
+using WebAPI.HealthChecks;
+using WebAPI.Middleware;
 using WebAPI.Middleware.Auth;
 
 // Serilog yapılandırması
@@ -40,6 +44,10 @@ try
         .ReadFrom.Services(services)
         .Enrich.FromLogContext());
 
+    //builder.Services.Configure<KestrelServerOptions>(options =>
+    //{
+    //    options.AllowSynchronousIO = true;
+    //});
     // Controllers
     builder.Services.AddControllers(options =>
     {
@@ -52,12 +60,56 @@ try
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
         options.JsonSerializerOptions.AllowTrailingCommas = true;
         options.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
-        
+
         // Number handling - bu önemli kısım
         options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
     });
     builder.Services.AddMemoryCache();
     builder.Services.AddEndpointsApiExplorer();
+
+    #region Compression Services
+    builder.Services.AddScoped<IZstdService, ZstdService>();
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.MimeTypes = new[]
+        {
+            "text/plain",
+            "text/css",
+            "application/javascript",
+            "text/html",
+            "application/xml",
+            "text/xml",
+            "application/json",
+            "text/json",
+        };
+
+        options.Providers.Clear();
+        options.Providers.Add<ZstdCompressionProvider>();
+        options.Providers.Add<BrotliCompressionProvider>();
+        options.Providers.Add<GzipCompressionProvider>();
+        options.Providers.Add<DeflateCompressionProvider>();
+    });
+
+    builder.Services.Configure<ZstdCompressionProviderOptions>(options =>
+    {
+        options.Level = 10; // 1-22 
+    });
+
+    builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+    {
+        options.Level = System.IO.Compression.CompressionLevel.Fastest;
+    });
+
+    builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+    {
+        options.Level = System.IO.Compression.CompressionLevel.Fastest;
+    });
+    builder.Services.Configure<DeflateCompressionProviderOptions>(options =>
+    {
+        options.Level = System.IO.Compression.CompressionLevel.Fastest; 
+    });
+    #endregion
 
     // Swagger Configuration
     builder.Services.AddSwaggerGen(c =>
@@ -114,15 +166,15 @@ try
         options.AddPolicy("AllowSpecificOrigins", policy =>
         {
             policy.WithOrigins("http://localhost:3000", "https://yourdomain.com")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
         });
     });
 
     // Layer Services
     builder.Services.AddDataAccessServices(builder.Configuration);
     builder.Services.AddBusinessServices(builder.Configuration);
-    
+
     // JWT Services
     builder.Services.AddJwtCore(builder.Configuration);
     builder.Services.AddScoped<ISessionJwtService, SessionJwtService>();
@@ -137,8 +189,8 @@ try
                 using var scope = builder.Services.BuildServiceProvider().CreateScope();
                 var objectStorageFactory = scope.ServiceProvider.GetRequiredService<IObjectStorageConnectionFactory>();
                 var testResult = objectStorageFactory.TestConnectionAsync().GetAwaiter().GetResult();
-                
-                return testResult 
+
+                return testResult
                     ? HealthCheckResult.Healthy("Redis connection is healthy")
                     : HealthCheckResult.Unhealthy("Redis connection failed");
             }
@@ -172,18 +224,18 @@ try
         try
         {
             Log.Information("Redis object storage bağlantısı test ediliyor");
-            
+
             var objectStorageFactory = scope.ServiceProvider.GetRequiredService<IObjectStorageConnectionFactory>();
-            
+
             // Connection test
             var connectionTestResult = await objectStorageFactory.TestConnectionAsync();
             if (connectionTestResult)
             {
                 Log.Information("Redis object storage bağlantısı başarılı");
-                
+
                 // Test a basic connection using the factory
                 using var connection = await objectStorageFactory.CreateConnectionAsync();
-                
+
                 // Basic connection info
                 var connectionInfo = new
                 {
@@ -192,19 +244,19 @@ try
                     CreatedAt = connection.CreatedAt,
                     Provider = "Redis"
                 };
-                
+
                 Log.Information("Redis bağlantı bilgileri: {@ConnectionInfo}", connectionInfo);
-                
+
                 // Test basic operations
                 var testKey = $"startup_test_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
                 var testValue = "Redis connection test successful";
-                
+
                 try
                 {
                     await connection.SetStringAsync(testKey, testValue, TimeSpan.FromSeconds(30));
                     var retrievedValue = await connection.GetStringAsync(testKey);
                     await connection.DeleteAsync(testKey);
-                    
+
                     if (retrievedValue == testValue)
                     {
                         Log.Information("Redis operasyonel test başarılı");
@@ -218,7 +270,7 @@ try
                 {
                     Log.Warning(testEx, "Redis operasyonel test sırasında hata");
                 }
-                
+
                 // Database size info
                 try
                 {
@@ -266,7 +318,9 @@ try
         });
     }
 
-    // Move authentication/authorization middleware after Swagger
+    // Response Compression Middleware'i etkinleştirme
+    app.UseResponseCompression();
+
     app.UseCors("AllowSpecificOrigins");
     app.UseHttpsRedirection();
     app.UseAuthorization();
@@ -276,7 +330,7 @@ try
 
     // Health Check endpoint
     app.MapHealthChecks("/health");
-    
+
     app.MapControllers();
 
     Log.Information("Unife API başarıyla başlatıldı");
