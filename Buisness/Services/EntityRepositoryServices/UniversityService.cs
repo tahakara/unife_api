@@ -4,7 +4,7 @@ using Buisness.Concrete.ServiceManager;
 using Buisness.DTOs.Common;
 using Buisness.DTOs.UniversityDtos;
 using DataAccess.Abstract;
-using Domain.Entities.Base.Concrete;
+using Domain.Entities.MainEntities.UniversityModul;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

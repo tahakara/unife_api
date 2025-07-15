@@ -1,15 +1,19 @@
-﻿using Domain.Entities.AuthorizationEntities;
-using Domain.Entities.AuthorizationEntities.Permissions;
-using Domain.Entities.AuthorizationEntities.Roles;
-using Domain.Entities.AuthorizationEntities.SecurityEvents;
-using Domain.Entities.AuthorizationEntities.Suspensions;
-using Domain.Entities.Base.Concrete;
-using Domain.Entities.LogEntities;
-using Domain.Entities.LogEntities.AuthorizationLogEntities;
-using Domain.Entities.LogEntities.AuthorizationLogEntities.PermissionsLog;
-using Domain.Entities.LogEntities.AuthorizationLogEntities.RolesLog;
-using Domain.Entities.LogEntities.AuthorizationLogEntities.SecurityEventsLog;
-using Domain.Entities.LogEntities.AuthorizationLogEntities.SuspensionsLog;
+﻿using Domain.Entities.LogEntities;
+using Domain.Entities.LogEntities.AcademicModulLogEntities;
+using Domain.Entities.LogEntities.AuthorizationModulLogEntities;
+using Domain.Entities.LogEntities.AuthorizationModulLogEntities.PermissionsLog;
+using Domain.Entities.LogEntities.AuthorizationModulLogEntities.RolesLog;
+using Domain.Entities.LogEntities.AuthorizationModulLogEntities.SecurityEventsLog;
+using Domain.Entities.LogEntities.AuthorizationModulLogEntities.SuspensionsLog;
+using Domain.Entities.LogEntities.UniversityModulLogEntities;
+using Domain.Entities.MainEntities;
+using Domain.Entities.MainEntities.AcademicModulEntities;
+using Domain.Entities.MainEntities.AuthorizationModuleEntities;
+using Domain.Entities.MainEntities.AuthorizationModuleEntities.Permissions;
+using Domain.Entities.MainEntities.AuthorizationModuleEntities.Roles;
+using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;
+using Domain.Entities.MainEntities.AuthorizationModuleEntities.Suspensions;
+using Domain.Entities.MainEntities.UniversityModul;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Security;
@@ -930,6 +934,7 @@ namespace DataAccess.Database.Context
 
                 entity.Property(e => e.SecurityEventUuid).HasColumnName("security_event_uuid").HasColumnType("uuid").HasDefaultValueSql("gen_random_uuid()");
                 entity.Property(e => e.EventTypeUuid).HasColumnName("event_type_uuid").HasColumnType("uuid");
+                entity.Property(e => e.UniversityUuid).HasColumnName("university_uuid").HasColumnType("uuid");
                 entity.Property(e => e.EventedByAdminUuid).HasColumnName("evented_by_admin_uuid").HasColumnType("uuid");
                 entity.Property(e => e.EventedByStaffUuid).HasColumnName("evented_by_staff_uuid").HasColumnType("uuid");
                 entity.Property(e => e.EventedByStudentUuid).HasColumnName("evented_by_student_uuid").HasColumnType("uuid");
@@ -951,6 +956,7 @@ namespace DataAccess.Database.Context
 
                 // Foreign keys
                 entity.HasOne(se => se.EventType).WithMany(set => set.SecurityEvents).HasForeignKey(se => se.EventTypeUuid).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_security_events_type");
+                entity.HasOne(se => se.University).WithMany(u => u.SecurityEvents).HasForeignKey(se => se.UniversityUuid).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_security_events_university");
                 entity.HasOne(se => se.EventedByAdmin).WithMany(a => a.SecurityEvents).HasForeignKey(se => se.EventedByAdminUuid).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_security_events_admin");
                 entity.HasOne(se => se.EventedByStaff).WithMany(s => s.SecurityEvents).HasForeignKey(se => se.EventedByStaffUuid).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_security_events_staff");
                 entity.HasOne(se => se.EventedByStudent).WithMany(st => st.SecurityEvents).HasForeignKey(se => se.EventedByStudentUuid).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_security_events_student");

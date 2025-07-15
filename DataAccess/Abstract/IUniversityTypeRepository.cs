@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base.Concrete;
+﻿using Domain.Entities.MainEntities.UniversityModul;
 using Domain.Repositories.Abstract.Base;
 
 namespace DataAccess.Abstract

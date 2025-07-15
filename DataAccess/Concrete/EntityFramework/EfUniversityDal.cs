@@ -2,7 +2,7 @@
 using DataAccess.Abstract;
 using DataAccess.Database.Context;
 using Domain.Entities;
-using Domain.Entities.Base.Concrete;
+using Domain.Entities.MainEntities.UniversityModul;
 using Domain.Repositories.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 

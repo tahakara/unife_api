@@ -7,7 +7,7 @@ using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using DataAccess.Abstract;
 using Domain.Entities;
-using Domain.Entities.Base.Concrete;
+using Domain.Entities.MainEntities.UniversityModul;
 using Microsoft.Extensions.Logging;
 
 namespace Buisness.Helpers

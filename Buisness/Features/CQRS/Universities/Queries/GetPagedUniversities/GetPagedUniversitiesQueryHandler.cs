@@ -6,7 +6,7 @@ using DataAccess.Abstract;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
-using Domain.Entities.Base.Concrete;
+using Domain.Entities.MainEntities.UniversityModul;
 
 namespace Buisness.Features.CQRS.Universities.Queries.GetPagedUniversities
 {

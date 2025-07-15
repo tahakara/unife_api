@@ -1,6 +1,6 @@
 using AutoMapper;
 using Buisness.DTOs.UniversityDtos;
-using Domain.Entities.Base.Concrete;
+using Domain.Entities.MainEntities.UniversityModul;
 
 namespace Buisness.Mappings
 {

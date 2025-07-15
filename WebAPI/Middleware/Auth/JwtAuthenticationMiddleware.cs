@@ -35,7 +35,7 @@ namespace WebAPI.Middleware.Auth
                 var handler = new JwtSecurityTokenHandler();
                 var jwtToken = handler.ReadJwtToken(token);
 
-                // Burada signature ve expiration doğrulaması eklenmeli
+                // TODO: Burada signature ve expiration doğrulaması eklenmeli
                 if (jwtToken == null || jwtToken.ValidTo < DateTime.UtcNow)
                 {
                     await WriteFailureResponse(context, "Invalid or expired JWT token.", StatusCodes.Status401Unauthorized);
