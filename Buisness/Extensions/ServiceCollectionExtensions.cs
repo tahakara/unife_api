@@ -6,17 +6,22 @@ using Buisness.Helpers;
 using Buisness.Helpers.Base;
 using Buisness.Mappings;
 using Buisness.Mappings.Common;
+using Buisness.Services.EntityRepositoryServices;
+using Buisness.Services.UtilityServices;
+using Buisness.Services.UtilityServices.Abtract;
 using Buisness.Validators.FluentValidation.Validators.University.Request;
+using Core.ObjectStorage.Base;
+using Core.ObjectStorage.Base.Redis;
+using Core.Security.JWT.Extensions;
 using Core.Utilities.BuisnessLogic.Base;
 using DataAccess.Database;
+using DataAccess.ObjectStorage.Redis;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
-using Core.Security.JWT.Extensions;
-using Buisness.Services.UtilityServices;
-using Buisness.Services.EntityRepositoryServices;
 
 namespace Buisness.Extensions
 {
@@ -51,7 +56,6 @@ namespace Buisness.Extensions
 
             // *** UNIFE SERVICES - Sadeleştirilmiş Yapı ***
             services.AddScoped<ICacheService, UnifeCacheService>();
-            services.AddScoped<ISessionService, UnifeSessionService>();
             services.AddScoped<ISessionJwtService, SessionJwtService>();
 
             // Business Services
@@ -64,9 +68,19 @@ namespace Buisness.Extensions
 
             // Database Management Services
             services.AddScoped<UnifeConnectionFactory>();
-            
+
             // JWT Core services
             services.AddJwtCore(configuration);
+
+            services.AddScoped<IEmailService, EmailService>();
+
+            // Verification Code Service
+            services.AddScoped<IVerificationCodeService, VerificationCodeService>();
+            services.AddKeyedScoped<IObjectStorageConnectionFactory, GenericRedisConnectionFactory>("verificationcode", (sp, key) =>
+    new GenericRedisConnectionFactory(
+        sp.GetRequiredService<IConfiguration>(),
+        sp.GetRequiredService<ILogger<GenericRedisConnectionFactory>>(),
+        RedisStorageType.VerificationCode));
 
             return services;
         }

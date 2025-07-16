@@ -1,5 +1,6 @@
 ﻿using Buisness.Extensions;
 using Buisness.Services.UtilityServices;
+using Buisness.Services.UtilityServices.Abtract;
 using Core.Database.Base;
 using Core.ObjectStorage.Base;
 using Core.Security.JWT.Extensions;
@@ -223,74 +224,84 @@ try
     {
         try
         {
-            Log.Information("Redis object storage bağlantısı test ediliyor");
+            Log.Information("Redis object storage bağlantıları test ediliyor");
 
-            var objectStorageFactory = scope.ServiceProvider.GetRequiredService<IObjectStorageConnectionFactory>();
+            var factoryKeys = new[] { "cache", "session", "verificationcode" };
 
-            // Connection test
-            var connectionTestResult = await objectStorageFactory.TestConnectionAsync();
-            if (connectionTestResult)
+            foreach (var key in factoryKeys)
             {
-                Log.Information("Redis object storage bağlantısı başarılı");
-
-                // Test a basic connection using the factory
-                using var connection = await objectStorageFactory.CreateConnectionAsync();
-
-                // Basic connection info
-                var connectionInfo = new
-                {
-                    IsConnected = connection.IsConnected,
-                    ContainerName = connection.ContainerName,
-                    CreatedAt = connection.CreatedAt,
-                    Provider = "Redis"
-                };
-
-                Log.Information("Redis bağlantı bilgileri: {@ConnectionInfo}", connectionInfo);
-
-                // Test basic operations
-                var testKey = $"startup_test_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
-                var testValue = "Redis connection test successful";
-
                 try
                 {
-                    await connection.SetStringAsync(testKey, testValue, TimeSpan.FromSeconds(30));
-                    var retrievedValue = await connection.GetStringAsync(testKey);
-                    await connection.DeleteAsync(testKey);
+                    var objectStorageFactory = scope.ServiceProvider.GetRequiredKeyedService<IObjectStorageConnectionFactory>(key);
 
-                    if (retrievedValue == testValue)
+                    // Connection test
+                    var connectionTestResult = await objectStorageFactory.TestConnectionAsync();
+                    if (connectionTestResult)
                     {
-                        Log.Information("Redis operasyonel test başarılı");
+                        Log.Information("Redis '{Key}' bağlantısı başarılı", key);
+
+                        using var connection = await objectStorageFactory.CreateConnectionAsync();
+
+                        var connectionInfo = new
+                        {
+                            IsConnected = connection.IsConnected,
+                            ContainerName = connection.ContainerName,
+                            CreatedAt = connection.CreatedAt,
+                            Provider = "Redis",
+                            Key = key
+                        };
+
+                        Log.Information("Redis '{Key}' bağlantı bilgileri: {@ConnectionInfo}", key, connectionInfo);
+
+                        // Test basic operations
+                        var testKey = $"startup_test_{key}_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
+                        var testValue = $"Redis {key} connection test successful";
+
+                        try
+                        {
+                            await connection.SetStringAsync(testKey, testValue, TimeSpan.FromSeconds(30));
+                            var retrievedValue = await connection.GetStringAsync(testKey);
+                            await connection.DeleteAsync(testKey);
+
+                            if (retrievedValue == testValue)
+                            {
+                                Log.Information("Redis '{Key}' operasyonel test başarılı", key);
+                            }
+                            else
+                            {
+                                Log.Warning("Redis '{Key}' operasyonel test başarısız - değer eşleşmiyor", key);
+                            }
+                        }
+                        catch (Exception testEx)
+                        {
+                            Log.Warning(testEx, "Redis '{Key}' operasyonel test sırasında hata", key);
+                        }
+
+                        // Database size info
+                        try
+                        {
+                            var dbSize = await connection.GetDatabaseSizeAsync();
+                            Log.Information("Redis '{Key}' veritabanı boyutu: {Size} keys", key, dbSize);
+                        }
+                        catch (Exception sizeEx)
+                        {
+                            Log.Warning(sizeEx, "Redis '{Key}' veritabanı boyutu alınırken hata", key);
+                        }
                     }
                     else
                     {
-                        Log.Warning("Redis operasyonel test başarısız - değer eşleşmiyor");
+                        Log.Warning("Redis '{Key}' bağlantısı başarısız - uygulama devam ediyor", key);
                     }
                 }
-                catch (Exception testEx)
+                catch (Exception ex)
                 {
-                    Log.Warning(testEx, "Redis operasyonel test sırasında hata");
+                    Log.Error(ex, "Redis '{Key}' başlatılırken hata oluştu - uygulama devam ediyor", key);
                 }
-
-                // Database size info
-                try
-                {
-                    var dbSize = await connection.GetDatabaseSizeAsync();
-                    Log.Information("Redis veritabanı boyutu: {Size} keys", dbSize);
-                }
-                catch (Exception sizeEx)
-                {
-                    Log.Warning(sizeEx, "Redis veritabanı boyutu alınırken hata");
-                }
-            }
-            else
-            {
-                Log.Warning("Redis object storage bağlantısı başarısız - uygulama devam ediyor");
             }
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Redis object storage başlatılırken hata oluştu - uygulama devam ediyor");
-            // Redis bağlantısı başarısız olsa da uygulama devam etsin
         }
     }
 

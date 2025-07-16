@@ -16,6 +16,7 @@ namespace Core.ObjectStorage.Base.Redis
             {
                 RedisStorageType.Cache => 0,
                 RedisStorageType.Session => 1,
+                RedisStorageType.VerificationCode => 2,
                 _ => throw new ArgumentException($"Unknown storage type: {storageType}", nameof(storageType))
             };
         }
@@ -31,6 +32,7 @@ namespace Core.ObjectStorage.Base.Redis
             {
                 RedisStorageType.Cache => TimeSpan.FromMinutes(15),
                 RedisStorageType.Session => TimeSpan.FromHours(24),
+                RedisStorageType.VerificationCode => TimeSpan.FromMinutes(5),
                 _ => TimeSpan.FromMinutes(15)
             };
         }
@@ -46,6 +48,7 @@ namespace Core.ObjectStorage.Base.Redis
             {
                 RedisStorageType.Cache => "cache",
                 RedisStorageType.Session => "session",
+                RedisStorageType.VerificationCode => "verification",
                 _ => "default"
             };
         }
@@ -61,6 +64,7 @@ namespace Core.ObjectStorage.Base.Redis
             {
                 RedisStorageType.Cache => "UnifeCache",
                 RedisStorageType.Session => "UnifeSession",
+                RedisStorageType.VerificationCode => "UnifeVerification",
                 _ => "UnifeDefault"
             };
         }

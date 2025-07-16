@@ -13,6 +13,11 @@ namespace Core.ObjectStorage.Base.Redis
         /// <summary>
         /// Session storage type - uses Redis database 1
         /// </summary>
-        Session = 1
+        Session = 1,
+
+        /// <summary>
+        /// Verification code storage type - uses Redis database 2
+        /// </summary>
+        VerificationCode = 2
     }
 }
