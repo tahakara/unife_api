@@ -1,6 +1,6 @@
 ﻿using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 
-namespace Core.Utilities.BuisnessLogic.BuisnessLogicResults
+namespace Core.Utilities.BuisnessLogic.BuisnessLogicResults.DataResults
 {
     public class BuisnessLogicDataResult<T> : BuisnessLogicResult, IBuisnessLogicDataResult<T>
     {

@@ -1,4 +1,4 @@
-﻿namespace Core.Utilities.BuisnessLogic.BuisnessLogicResults
+﻿namespace Core.Utilities.BuisnessLogic.BuisnessLogicResults.DataResults
 {
     public class BuisnessLogicErrorDataResult<T> : BuisnessLogicDataResult<T>
     {

@@ -10,6 +10,7 @@ using DataAccess.Abstract;
 using Domain.Entities;
 using Domain.Entities.MainEntities.UniversityModul;
 using Microsoft.Extensions.Logging;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults.DataResults;
 
 namespace Buisness.Helpers
 {

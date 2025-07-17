@@ -3,6 +3,7 @@ using Buisness.Abstract.ServicesBase;
 using Buisness.Behaviors;
 using Buisness.Features.CQRS.Universities.Commands.CreateUniversity;
 using Buisness.Helpers;
+using Buisness.Helpers.Auth;
 using Buisness.Helpers.Base;
 using Buisness.Mappings;
 using Buisness.Mappings.Common;
@@ -64,6 +65,7 @@ namespace Buisness.Extensions
             services.AddScoped<IRegionService, RegionService>();
 
             // Business Logic Helper
+            services.AddScoped<IAuthBuissnessLogicHelper, AuthBuissnessLogicHelper>();
             services.AddScoped<IUniversityBuisnessLogicHelper, UniversityBusinessLogicHelper>();
 
             // Database Management Services

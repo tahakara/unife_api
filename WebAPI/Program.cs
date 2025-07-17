@@ -7,10 +7,12 @@ using Core.Security.JWT.Extensions;
 using DataAccess.Database;
 using DataAccess.Database.Context;
 using DataAccess.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
@@ -21,7 +23,6 @@ using WebAPI.Compression;
 using WebAPI.Compression.Zstd;
 using WebAPI.HealthChecks;
 using WebAPI.Middleware;
-using WebAPI.Middleware.Auth;
 
 // Serilog yapılandırması
 Log.Logger = new LoggerConfiguration()
@@ -89,7 +90,7 @@ try
         options.Providers.Add<ZstdCompressionProvider>();
         options.Providers.Add<BrotliCompressionProvider>();
         options.Providers.Add<GzipCompressionProvider>();
-        options.Providers.Add<DeflateCompressionProvider>();
+        options.Providers.Add<WebAPI.Compression.DeflateCompressionProvider>();
     });
 
     builder.Services.Configure<ZstdCompressionProviderOptions>(options =>
@@ -133,24 +134,28 @@ try
             Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
             Name = "Authorization",
             In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey,
-            Scheme = "Bearer"
+            Type = SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            BearerFormat = "JWT"
         });
 
         c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
         {
+            new OpenApiSecurityScheme
             {
-                new OpenApiSecurityScheme
+                Reference = new OpenApiReference
                 {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    }
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
                 },
-                new string[] {}
-            }
-        });
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header,
+            },
+            new List<string>()
+        }
+    });
 
         // XML documentation
         var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -179,6 +184,27 @@ try
     // JWT Services
     builder.Services.AddJwtCore(builder.Configuration);
     builder.Services.AddScoped<ISessionJwtService, SessionJwtService>();
+
+    // Authentication with JWT Bearer as the default scheme
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
+        };
+    });
 
     // Health Checks
     builder.Services.AddHealthChecks()
@@ -334,7 +360,10 @@ try
 
     app.UseCors("AllowSpecificOrigins");
     app.UseHttpsRedirection();
+    
+    app.UseAuthentication();
     app.UseAuthorization();
+
     app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
     //app.UseMiddleware<JwtAuthenticationMiddleware>();
     //app.UseMiddleware<PermissionAuthorizationMiddleware>();

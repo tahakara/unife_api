@@ -43,14 +43,14 @@ namespace WebAPI.Controllers
 
                 // Additional claims
                 var additionalClaims = new List<Claim>();
-                if (!string.IsNullOrEmpty(request.Email))
-                {
-                    additionalClaims.Add(new Claim(ClaimTypes.Email, request.Email));
-                }
-                if (!string.IsNullOrEmpty(request.Role))
-                {
-                    additionalClaims.Add(new Claim(ClaimTypes.Role, request.Role));
-                }
+                //if (!string.IsNullOrEmpty(request.Email))
+                //{
+                //    additionalClaims.Add(new Claim(ClaimTypes.Email, request.Email));
+                //}
+                //if (!string.IsNullOrEmpty(request.Role))
+                //{
+                //    additionalClaims.Add(new Claim(ClaimTypes.Role, request.Role));
+                //}
 
                 // Generate tokens using session service
                 var accessToken = await _sessionJwtService.GenerateAccessTokenAsync(userUuid, sessionUuid, additionalClaims);
@@ -93,7 +93,7 @@ namespace WebAPI.Controllers
             try
             {
                 var isValid = await _sessionJwtService.ValidateTokenAsync(request.Token);
-                
+
                 if (isValid)
                 {
                     var userUuid = _sessionJwtService.GetUserUuidFromToken(request.Token);
@@ -139,6 +139,13 @@ namespace WebAPI.Controllers
         {
             try
             {
+                if (string.IsNullOrEmpty(request.RefreshToken))
+                {
+                    return BadRequest(new { Error = "Refresh token is required" });
+                }
+
+                // parse the
+
                 var refreshResult = await _sessionJwtService.RefreshAccessTokenAsync(request.RefreshToken);
 
                 if (refreshResult != null)
@@ -156,7 +163,7 @@ namespace WebAPI.Controllers
                         RedisKeys = new
                         {
                             AccessTokenKey = $"access:{refreshResult.SessionUuid}:{refreshResult.UserUuid}",
-                            RefreshTokenKey = $"refresh:{refreshResult.RefreshToken}"
+                            RefreshTokenKey = $"refresh:{refreshResult.SessionUuid}:{refreshResult.UserUuid}:{refreshResult.RefreshToken}"
                         }
                     };
 
@@ -263,13 +270,18 @@ namespace WebAPI.Controllers
             {
                 if (request.RevokeAll)
                 {
-                    await _sessionJwtService.RevokeAllUserTokensAsync(request.UserUuid);
+                    var a = await _sessionJwtService.RevokeUserAllTokensAsync(request.UserUuid);
                     return Ok(new { Message = "All user tokens revoked successfully", RevokedAt = DateTime.UtcNow });
                 }
                 else
                 {
-                    await _sessionJwtService.RevokeTokensAsync(request.UserUuid, request.SessionUuid);
-                    return Ok(new { Message = "Session tokens revoked successfully", RevokedAt = DateTime.UtcNow });
+                    var result = await _sessionJwtService.RevokeTokensAsync(request.UserUuid, request.SessionUuid);
+                    if (result)
+                    {
+                        return Ok(new { Message = "Session tokens revoked successfully", RevokedAt = DateTime.UtcNow });
+                    }
+
+                    return BadRequest(new { Error = "Token revocation failed", Message = "Invalid user or session UUID" });
                 }
             }
             catch (Exception ex)
