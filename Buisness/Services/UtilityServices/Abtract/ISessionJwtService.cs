@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace Buisness.Services.UtilityServices.Abtract
 {
@@ -11,6 +12,7 @@ namespace Buisness.Services.UtilityServices.Abtract
         Task<string> GenerateRefreshTokenAsync(string userUuid, string sessionUuid);
         Task<bool> ValidateAndStoreTokenAsync(string userUuid, string sessionUuid, string accessToken, string refreshToken);
         Task<string?> GetRefreshTokenKeyByRefreshTokenPostfixAsync(string refreshTokenPostfix);
+        Task<JsonElement?> GetRefreshTokenValue(string refreshTokenKey);
         Task<RefreshTokenResult?> RefreshAccessTokenAsync(string refreshToken);
         Task<RefreshTokenResult?> RefreshAccessTokenAsync(string userUuid, string sessionUuid, string refreshToken);
         Task<bool> ValidateTokenAsync(string token);

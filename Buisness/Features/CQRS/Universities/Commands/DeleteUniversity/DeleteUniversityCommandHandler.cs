@@ -1,6 +1,5 @@
 ﻿using Buisness.DTOs.UniversityDtos;
 using Buisness.Features.CQRS.Base;
-using Buisness.Helpers.Base;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -9,6 +8,7 @@ using Core.Entities.Base;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper;
 
 namespace Buisness.Features.CQRS.Universities.Commands.DeleteUniversity
 {

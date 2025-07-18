@@ -2,7 +2,7 @@
 using Buisness.Abstract.ServicesBase;
 using Buisness.Concrete.ServiceManager;
 using Buisness.DTOs.UniversityDtos;
-using DataAccess.Abstract;
+using DataAccess.Abstract.Repositories.UniversityModuleRepositories;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 

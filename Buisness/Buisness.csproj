@@ -26,4 +26,11 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTOs\AuthDtos\PasswordDtos\" />
+    <Folder Include="DTOs\AuthDtos\VerifyDtos\VerifyOTPDtos\" />
+    <Folder Include="DTOs\AuthDtos\VerifyDtos\VerifyPhoneDtos\" />
+    <Folder Include="DTOs\AuthDtos\VerifyDtos\VerifyEmailDtos\" />
+  </ItemGroup>
+
 </Project>

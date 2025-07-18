@@ -1,5 +1,4 @@
 using Core.Entities.Base.Concrete;
-using Domain.Entities.MainEntities;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;

@@ -1,15 +1,20 @@
 ﻿using AutoMapper;
 using Buisness.Abstract.ServicesBase;
+using Buisness.Abstract.ServicesBase.AuthorizationModuleServices;
 using Buisness.Behaviors;
+using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
 using Buisness.Features.CQRS.Universities.Commands.CreateUniversity;
-using Buisness.Helpers;
-using Buisness.Helpers.Auth;
-using Buisness.Helpers.Base;
+using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper;
 using Buisness.Mappings;
+using Buisness.Mappings.AuthMappingProfiles.LogoutMappingProfiles;
+using Buisness.Mappings.AuthMappingProfiles.RefreshTokenMappingProfiles;
 using Buisness.Mappings.Common;
 using Buisness.Services.EntityRepositoryServices;
+using Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices;
 using Buisness.Services.UtilityServices;
 using Buisness.Services.UtilityServices.Abtract;
+using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.LogoutValidators;
 using Buisness.Validators.FluentValidation.Validators.University.Request;
 using Core.ObjectStorage.Base;
 using Core.ObjectStorage.Base.Redis;
@@ -43,11 +48,20 @@ namespace Buisness.Extensions
 
             // FluentValidation
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            services.AddScoped<IValidator<LogoutRequestDto>, LogoutRequestDtoValidator>();
+            services.AddScoped<IValidator<LogoutAllRequestDto>, LogoutAllRequestDtoValidator>();
+            services.AddScoped<IValidator<LogoutOthersRequestDto>, LogoutOthersRequestDtoValidator>();
+
             services.AddScoped<IValidator<CreateUniversityCommand>, CreateUniversityDtoValidator>();
 
             // AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
+                cfg.AddProfile<LogoutMappingProfile>();
+                cfg.AddProfile<LogoutAllMappingProfile>();
+                cfg.AddProfile<LogoutOthersMappingProfile>();
+                cfg.AddProfile<RefreshTokenMappingProfile>();
+
                 cfg.AddProfile<UniversityMappingProfile>();
                 cfg.AddProfile<CommonMappingProfile>();
             });
@@ -60,6 +74,8 @@ namespace Buisness.Extensions
             services.AddScoped<ISessionJwtService, SessionJwtService>();
 
             // Business Services
+            services.AddScoped<IAdminService, AdminService>();
+
             services.AddScoped<IUniversityService, UniversityService>();
             services.AddScoped<IUniversityTypeService, UniversityTypeService>();
             services.AddScoped<IRegionService, RegionService>();

@@ -2,7 +2,6 @@
 using Buisness.Abstract.ServicesBase;
 using Buisness.DTOs.UniversityDtos;
 using Buisness.Features.CQRS.Base;
-using Buisness.Helpers.Base;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -10,6 +9,7 @@ using DataAccess.Abstract;
 using Core.Entities.Base;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper;
 
 namespace Buisness.Features.CQRS.Universities.Commands.UpdateUniversity
 {

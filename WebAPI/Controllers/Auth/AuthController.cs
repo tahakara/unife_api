@@ -1,9 +1,14 @@
-﻿using Buisness.Features.CQRS.Auth.Commands.Logout;
-using Buisness.Features.CQRS.Auth.Commands.LogoutAll;
-using Buisness.Features.CQRS.Auth.Commands.LogoutOthers;
+﻿using Buisness.Features.CQRS.Auth.Commands.Logout.Logout;
+using Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll;
+using Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers;
+using Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword;
+using Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword;
 using Buisness.Features.CQRS.Auth.Commands.RefreshToken;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Features.CQRS.Auth.Commands.SignUp;
+using Buisness.Features.CQRS.Auth.Commands.Verify.VerifyEmail;
+using Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP;
+using Buisness.Features.CQRS.Auth.Commands.Verify.VerifyPhone;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -85,5 +90,52 @@ namespace WebAPI.Controllers.Auth
                 AccessToken = accessToken
             });
         }
+
+        [HttpPost("forgot-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ForgotPassword([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] ForgotPasswordCommand command)
+        {
+            command.AccessToken = accessToken;
+            return await SendCommand(command);
+        }
+
+        [Authorize]
+        [HttpPost("cahnge-password")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ChangePassword([FromHeader(Name = "Authorization")] string accessToken, [FromBody] ChangePasswordCommand command)
+        {
+            command.AccessToken = accessToken;
+            return await SendCommand(command);
+
+        }
+
+        [HttpPost("verify-email")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifyEmail([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] VerifyEmailCommand command)
+        {
+            command.AccessToken = accessToken;
+            return await SendCommand(command);
+        }
+
+        [HttpPost("verify-phone")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifyPhone([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] VerifyPhoneCommand command)
+        {
+            command.AccessToken = accessToken;
+            return await SendCommand(command);
+        }
+
+        //[HttpPost("otp")]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+        //public async Task<IActionResult> VerifyOTP([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] VerifyOTPCommand command)
+        //{
+        //    command.AccessToken = accessToken;
+        //    return await SendCommand(command);
+        //}
     }
 }

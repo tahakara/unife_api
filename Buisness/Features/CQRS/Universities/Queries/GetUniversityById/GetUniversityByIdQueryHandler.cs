@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Buisness.DTOs.UniversityDtos;
 using Buisness.Features.CQRS.Base;
-using DataAccess.Abstract;
+using DataAccess.Abstract.Repositories.UniversityModuleRepositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

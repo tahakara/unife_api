@@ -3,12 +3,12 @@ using Buisness.Abstract.ServicesBase;
 using Buisness.Concrete.ServiceManager;
 using Buisness.DTOs.Common;
 using Buisness.DTOs.UniversityDtos;
-using DataAccess.Abstract;
-using Domain.Entities.MainEntities.UniversityModul;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Core.Entities.Base;
+using DataAccess.Abstract.Repositories.UniversityModuleRepositories;
+using Domain.Entities.MainEntities.UniversityModul;
 
 namespace Buisness.Services.EntityRepositoryServices
 {

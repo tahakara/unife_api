@@ -1,0 +1,15 @@
+﻿using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
+using Buisness.Features.CQRS.Auth.Commands.Logout.Logout;
+using Buisness.Features.CQRS.Base;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
+{
+    public class LogoutAllCommand : LogoutAllRequestDto, ICommand<BaseResponse<bool>>
+    {
+    }
+}

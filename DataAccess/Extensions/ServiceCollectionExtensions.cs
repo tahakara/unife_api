@@ -5,7 +5,6 @@ using Core.ObjectStorage.Base;
 using Core.ObjectStorage.Base.Redis;
 using DataAccess.Database;
 using DataAccess.ObjectStorage;
-using DataAccess.Abstract;
 using DataAccess.Concrete.EntityFramework;
 using Domain.Repositories.Abstract.Base;
 using Domain.Repositories.Concrete.ObjectStorage;
@@ -13,6 +12,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using DataAccess.Database.Context;
 using DataAccess.ObjectStorage.Redis;
+using DataAccess.Abstract.Repositories.UniversityModuleRepositories;
+using DataAccess.Abstract.Repositories;
+using DataAccess.Concrete.EntityFramework.UniversityModuleDal;
 
 namespace DataAccess.Extensions
 {

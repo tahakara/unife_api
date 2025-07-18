@@ -24,6 +24,8 @@ namespace WebAPI.Controllers.Base
             {
                 200 => Ok(response),
                 201 => StatusCode(201, response),
+                202 => Accepted(response),
+                204 => NoContent(),
                 400 => BadRequest(response),
                 404 => NotFound(response),
                 409 => Conflict(response),

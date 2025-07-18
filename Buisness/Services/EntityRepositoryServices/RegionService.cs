@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Buisness.Abstract.ServicesBase;
 using Buisness.Concrete.ServiceManager;
-using DataAccess.Abstract;
+using DataAccess.Abstract.Repositories;
 using Microsoft.Extensions.Logging;
 
 namespace Buisness.Services.EntityRepositoryServices

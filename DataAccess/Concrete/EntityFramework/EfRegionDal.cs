@@ -1,5 +1,5 @@
 ﻿using Core.Database.Base;
-using DataAccess.Abstract;
+using DataAccess.Abstract.Repositories;
 using DataAccess.Database.Context;
 using Domain.Entities.MainEntities;
 using Domain.Repositories.Concrete.EntityFramework;
