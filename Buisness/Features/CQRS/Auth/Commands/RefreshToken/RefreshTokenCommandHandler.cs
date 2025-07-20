@@ -36,16 +36,23 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                     string.IsNullOrEmpty(mappedRequestData.AccessToken) || string.IsNullOrWhiteSpace(mappedRequestData.AccessToken)
                         ? new BuisnessLogicSuccessResult("AccessToken not required also not given", 200)
                         : await _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestData.AccessToken),
-                    await _authBusinessLogicHelper.IsRefreshTokenValidAsync(mappedRequestData, refreshTokenResponseDto),
-                    await _authBusinessLogicHelper.RefreshAccessTokenAsync(refreshTokenResponseDto)
+                    await _authBusinessLogicHelper.IsRefreshTokenValidAsync(mappedRequestData, refreshTokenResponseDto)
                 );
 
                 if (validationResult != null)
-                {
                     return BaseResponse<RefreshTokenResponseDto>.Failure(
                         message: validationResult.Message ?? "Refresh token işlemi sırasında hata oluştu",
                         statusCode: validationResult.StatusCode);
-                }
+
+
+                IBuisnessLogicResult refreshAccessTokenResult = BuisnessLogic.Run(
+                    await _authBusinessLogicHelper.RefreshAccessTokenAsync(refreshTokenResponseDto)
+                );
+                if (refreshAccessTokenResult != null)
+                    return BaseResponse<RefreshTokenResponseDto>.Failure(
+                        message: refreshAccessTokenResult.Message ?? "Refresh token işlemi sırasında hata oluştu",
+                        statusCode: refreshAccessTokenResult.StatusCode);
+
 
                 _logger.LogInformation("Refresh token işlemi başarılı. Yeni Access Token: {AccessToken}, Yeni Refresh Token: {RefreshToken}",
                     refreshTokenResponseDto.AccessToken, refreshTokenResponseDto.RefreshToken);

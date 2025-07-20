@@ -46,6 +46,24 @@ namespace WebAPI.Controllers.Auth
             return await SendCommand(command);
         }
 
+        [HttpPost("verify-otp")]
+        [RejectAuthorizationHeader]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifyOTP([FromBody] VerifyOTPCommand command)
+        {
+            return await SendCommand(command);
+        }
+
+        [HttpPost("resend-otp")]
+        [RejectAuthorizationHeader]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ResendSignInOTP([FromBody] ResendSignInOTPCommand command)
+        {
+            return await SendCommand(command);
+        }
+
         [HttpPost("refresh-token")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -128,15 +146,6 @@ namespace WebAPI.Controllers.Auth
         public async Task<IActionResult> VerifyPhone([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] VerifyPhoneCommand command)
         {
             command.AccessToken = accessToken;
-            return await SendCommand(command);
-        }
-
-        [HttpPost("verify-otp")]
-        [RejectAuthorizationHeader]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> VerifyOTP ([FromBody] VerifyOTPCommand command)
-        {
             return await SendCommand(command);
         }
     }

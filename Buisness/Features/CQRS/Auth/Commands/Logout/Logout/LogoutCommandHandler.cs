@@ -32,17 +32,23 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.Logout
                 IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
                     await _authBusinessLogicHelper.ValidateCommandAsync(request),
                     await _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestDto),
-                    await _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken),
-                    await _authBusinessLogicHelper.BlackListSessionTokensForASingleSessionAsync(mappedRequestDto.AccessToken)
+                    await _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken)
                 );
 
                 if (buisnessResult != null)
-                {
-                    _logger.LogDebug("Logout işlemi sırasında hata oluştu: {Message}", buisnessResult.Message);
                     return BaseResponse<bool>.Failure(
                         message: buisnessResult.Message ?? "Logout işlemi sırasında hata oluştu",
                         statusCode: buisnessResult.StatusCode);
-                }
+
+
+                IBuisnessLogicResult blackListResult = BuisnessLogic.Run(
+                    await _authBusinessLogicHelper.BlackListSessionTokensForASingleSessionAsync(mappedRequestDto.AccessToken)
+                );
+                if (blackListResult != null)
+                    return BaseResponse<bool>.Failure(
+                        message: blackListResult.Message ?? "Logout işlemi sırasında hata oluştu",
+                        statusCode: blackListResult.StatusCode);
+
 
                 _logger.LogDebug("Logout işlemi başarılı. AccessToken: {AccessToken}", request.AccessToken);
                 return BaseResponse<bool>.Success(

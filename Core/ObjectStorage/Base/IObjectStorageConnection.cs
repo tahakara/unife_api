@@ -41,6 +41,7 @@ namespace Core.ObjectStorage.Base
         Task<long> DeleteBatchAsync(IEnumerable<string> keys);
 
         // Pattern operations
+        Task<string> GetKeyByPatternAsync(string pattern);
         Task<List<string>> GetKeysAsync(string pattern = "*");
 
         // Expiry operations

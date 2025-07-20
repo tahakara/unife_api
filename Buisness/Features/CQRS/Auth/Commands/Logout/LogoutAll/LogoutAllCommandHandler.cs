@@ -26,22 +26,28 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
             {
                 _logger.LogDebug("Logout işlemi başarılı. AccessToken: {AccessToken}", request.AccessToken);
 
-                LogoutAllRequestDto mappedRequestDto = new();
+                LogoutAllRequestDto logoutAllRequestDto = new();
 
                 IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
                     await _authBuissnessLogicHelper.ValidateCommandAsync(request),
-                    await _authBuissnessLogicHelper.MapToDtoAsync(request, mappedRequestDto),
-                    await _authBuissnessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken),
-                    await _authBuissnessLogicHelper.BlacklistAllSessionTokensByUserAsync(mappedRequestDto.AccessToken)
+                    await _authBuissnessLogicHelper.MapToDtoAsync(request, logoutAllRequestDto),
+                    await _authBuissnessLogicHelper.IsAccessTokenValidAsync(logoutAllRequestDto.AccessToken)
                 );
 
                 if (buisnessResult != null)
-                {
-                    _logger.LogDebug("LogoutAll işlemi sırasında hata oluştu: {Message}", buisnessResult.Message);
                     return BaseResponse<bool>.Failure(
                         message: buisnessResult.Message ?? "LogoutAll işlemi sırasında hata oluştu",
                         statusCode: buisnessResult.StatusCode);
-                }
+
+
+                IBuisnessLogicResult blackListResult = BuisnessLogic.Run(
+                    await _authBuissnessLogicHelper.BlacklistAllSessionTokensByUserAsync(logoutAllRequestDto.AccessToken)
+                );
+                if (blackListResult != null)
+                    return BaseResponse<bool>.Failure(
+                        message: blackListResult.Message ?? "LogoutAll işlemi sırasında hata oluştu",
+                        statusCode: blackListResult.StatusCode);
+
 
                 _logger.LogDebug("LogoutAll işlemi başarılı. AccessToken: {AccessToken}", request.AccessToken);
                 return BaseResponse<bool>.Success(

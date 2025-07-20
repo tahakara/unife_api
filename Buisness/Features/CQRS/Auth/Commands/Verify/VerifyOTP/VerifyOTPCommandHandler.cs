@@ -41,25 +41,20 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                     await _authBusinessLogicHelper.ValidateCommandAsync(request),
                     await _authBusinessLogicHelper.MapToDtoAsync(request, verifyOTPRequestDto),
                     await _authBusinessLogicHelper.CheckVerifyOTPAsync(verifyOTPRequestDto, verifyOTPResponseDto)
-                    
                 );
-
                 if (buisnessResult != null)
-                {
                     return BaseResponse<VerifyOTPResponseDto>.Failure(
                         message: buisnessResult.Message ?? "VerifyOTP işlemi sırasında hata oluştu",
                         statusCode: buisnessResult.StatusCode);
-                }
+
 
                 IBuisnessLogicResult createBuisnessLogicResult = BuisnessLogic.Run(
                     await _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto));
-
                 if (createBuisnessLogicResult != null)
-                {
                     return BaseResponse<VerifyOTPResponseDto>.Failure(
                         message: buisnessResult.Message ?? "VerifyOTP işlemi sırasında hata oluştu",
                         statusCode: buisnessResult.StatusCode);
-                }
+
 
                 _logger.LogDebug("VerifyOTP işlemi başarılı. UserType: {UserType}", request.UserTypeId);
                 return BaseResponse<VerifyOTPResponseDto>.Success(

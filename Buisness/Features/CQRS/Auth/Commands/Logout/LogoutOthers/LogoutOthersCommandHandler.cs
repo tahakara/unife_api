@@ -31,17 +31,23 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
                 IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
                     await _authBusinessLogicHelper.ValidateCommandAsync(request),
                     await _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestDto),
-                    await _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken),
-                    await _authBusinessLogicHelper.BlacklistSessionsExcludedByOneAsync(mappedRequestDto.AccessToken)
+                    await _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken)
                 );
 
                 if (buisnessResult != null)
-                {
-                    _logger.LogDebug("LogoutOthers işlemi sırasında hata oluştu: {Message}", buisnessResult.Message);
                     return BaseResponse<bool>.Failure(
                         message: buisnessResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu",
                         statusCode: buisnessResult.StatusCode);
-                }
+
+
+                IBuisnessLogicResult blackListResult = BuisnessLogic.Run(
+                    await _authBusinessLogicHelper.BlacklistAllSessionTokensByUserAsync(mappedRequestDto.AccessToken)
+                );
+                if (blackListResult != null)
+                    return BaseResponse<bool>.Failure(
+                        message: blackListResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu",
+                        statusCode: blackListResult.StatusCode);
+
 
                 _logger.LogDebug("LogoutOthers işlemi başarılı. Access Token: {AccessToken}", request.AccessToken);
                 return BaseResponse<bool>.Success(

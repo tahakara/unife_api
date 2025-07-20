@@ -268,5 +268,18 @@ namespace DataAccess.ObjectStorage.Redis
         {
             _connectionMultiplexer?.Dispose();
         }
+
+        public async Task<string> GetKeyByPatternAsync(string pattern)
+        {
+            var server = _connectionMultiplexer.GetServer(_connectionMultiplexer.GetEndPoints().First());
+            var prefixedPattern = GetPrefixedKey(pattern);
+            var keys = server.Keys(database: _database.Database, pattern: prefixedPattern).ToArray();
+            if (keys.Length == 0)
+            {
+                throw new KeyNotFoundException($"No keys found matching pattern: {pattern}");
+            }
+            // Return the first matching key
+            return keys.First().ToString().Replace($"{_keyPrefix}:", "");
+        }
     }
 }

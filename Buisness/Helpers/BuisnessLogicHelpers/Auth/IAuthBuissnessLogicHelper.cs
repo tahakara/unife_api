@@ -63,6 +63,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         Task<IBuisnessLogicResult> SendSignInOTPAsync(SignInRequestDto signInRequestDto, SignInResponseDto signInResponseDto);
         Task<IBuisnessLogicResult> CheckVerifyOTPAsync(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
         Task<IBuisnessLogicResult> CreatSession(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
+        Task<IBuisnessLogicResult> RevokeOldOTPAsync(SignInRequestDto signInRequestDto);
     }
 
     public class AuthBuisnessLogicHelper : ServiceManagerBase, IAuthBuisnessLogicHelper
@@ -703,6 +704,28 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             {
                 _logger.LogError(ex, "CreatSession işlemi sırasında hata oluştu");
                 return new BuisnessLogicErrorResult("CreatSession işlemi sırasında hata oluştu", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> RevokeOldOTPAsync(SignInRequestDto signInRequestDto)
+        {
+            try
+            {
+                _logger.LogDebug("RevokeOldOTP işlemi başlatıldı. UserType: {UserType}, SessionUuid: {SessionUuid}, OtpTypeId: {OtpTypeId}",
+                    signInRequestDto.UserTypeId, signInRequestDto.SessionUuid, signInRequestDto.OtpTypeId);
+                bool isRevoked = await _OTPCodeService.RevokeCodeByUserUuid(signInRequestDto.UserUuid.ToString());
+                if (!isRevoked)
+                {
+                    return new BuisnessLogicErrorResult("Failed to revoke old OTP", 500);
+                }
+                _logger.LogDebug("RevokeOldOTP işlemi başarılı. UserType: {UserType}, SessionUuid: {SessionUuid}, OtpTypeId: {OtpTypeId}",
+                    signInRequestDto.UserTypeId, signInRequestDto.SessionUuid, signInRequestDto.OtpTypeId);
+                return new BuisnessLogicSuccessResult("RevokeOldOTP işlemi başarılı", 200);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "RevokeOldOTP işlemi sırasında hata oluştu");
+                return new BuisnessLogicErrorResult("RevokeOldOTP işlemi sırasında hata oluştu", 500);
             }
         }
     }

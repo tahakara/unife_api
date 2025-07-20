@@ -59,25 +59,6 @@ public class VerificationCodeService : IOTPCodeService
 
     }
 
-    public async Task<Dictionary<string, string>?> GetCodeAsync(string sessionUuid, string userUuid, string otpTypeId, string otpCode)
-    {
-        using var connection = await GetVerificationConnectionAsync();
-        var redisKey = GetKey(sessionUuid, userUuid, otpTypeId, otpCode);
-        var value = await connection.GetStringAsync(redisKey);
-        if (string.IsNullOrEmpty(value))
-            return null;
-
-        try
-        {
-            var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(value);
-            return dict;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     public async Task<bool> IsCodeExistAsync(string sessionUuid, string userUuid, string otpTypeId, string otpCode)
     {
         try
@@ -112,6 +93,40 @@ public class VerificationCodeService : IOTPCodeService
         catch (Exception ex)
         {
             _logger.LogError(ex, "An error occurred while removing the OTP code.");
+            return false;
+        }
+    }
+
+    public async Task<bool> RevokeCodeByUserUuid(string userUuid)
+    {
+        try
+        {
+            _logger.LogDebug("Revoking all OTP codes for user {UserUuid}", userUuid);
+            using var connection = await GetVerificationConnectionAsync();
+            var keys = await connection.GetKeysAsync($"OTP:*:{userUuid}:*");
+
+            if (keys.Count == 0)
+            {
+                _logger.LogInformation("No OTP codes found for user {UserUuid}.", userUuid);
+                return true; // No codes to revoke, considered successful
+            }
+
+            _logger.LogDebug("Found {Count} OTP codes for user {UserUuid}.", keys.Count, userUuid);
+
+            var tasks = keys.Select(key => connection.DeleteAsync(key)).ToList();
+            var results = await Task.WhenAll(tasks);
+            bool allRevoked = results.All(result => result);
+            if (!allRevoked)
+            {
+                return false;
+            }
+
+            _logger.LogDebug("Successfully revoked all OTP codes for user {UserUuid}.", userUuid);
+            return true; // All codes successfully revoked
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while revoking OTP codes for user {UserUuid}.", userUuid);
             return false;
         }
     }
