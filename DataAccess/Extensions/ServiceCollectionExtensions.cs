@@ -15,6 +15,8 @@ using DataAccess.ObjectStorage.Redis;
 using DataAccess.Abstract.Repositories.UniversityModuleRepositories;
 using DataAccess.Abstract.Repositories;
 using DataAccess.Concrete.EntityFramework.UniversityModuleDal;
+using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories;
+using DataAccess.Concrete.EntityFramework.AuthorizationModuleDal;
 
 namespace DataAccess.Extensions
 {
@@ -75,6 +77,10 @@ namespace DataAccess.Extensions
             });
             
             // Database Repositories
+            services.AddScoped<IAdminRepository, EfAdminDal>();
+            services.AddScoped<IStaffRepository, EfStaffDal>();
+            services.AddScoped<IStudentRepository, EfStudentDal>();
+
             services.AddScoped<IUniversityRepository, EfUniversityDal>();
             services.AddScoped<IUniversityTypeRepository, EfUniversityTypeDal>();
             services.AddScoped<IRegionRepository, EfRegionDal>();

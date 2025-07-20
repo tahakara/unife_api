@@ -1,4 +1,4 @@
-using Buisness.Services.UtilityServices.Abtract;
+using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
 using Core.Security.JWT.Abstractions;
 using Core.Security.JWT.Extensions;
 using Microsoft.AspNetCore.Mvc;

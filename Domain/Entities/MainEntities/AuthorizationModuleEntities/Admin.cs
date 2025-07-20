@@ -14,7 +14,7 @@ namespace Domain.Entities.MainEntities.AuthorizationModuleEntities
 {
     public class Admin : BaseEntity
     {
-        public Guid AdminUuid { get; set; }
+        public Guid AdminUuid { get; set; } = new Guid();
         public Guid? UniversityUuid { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }

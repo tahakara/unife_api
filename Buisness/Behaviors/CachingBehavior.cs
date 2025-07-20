@@ -3,7 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Buisness.Features.CQRS.Base;
-using Buisness.Abstract.ServicesBase;
+using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
 
 namespace Buisness.Behaviors
 {

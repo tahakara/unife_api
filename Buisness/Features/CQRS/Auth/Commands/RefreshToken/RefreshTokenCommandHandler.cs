@@ -10,11 +10,11 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
 {
     public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, BaseResponse<RefreshTokenResponseDto>>
     {
-        private readonly IAuthBuissnessLogicHelper _authBusinessLogicHelper;
+        private readonly IAuthBuisnessLogicHelper _authBusinessLogicHelper;
         private readonly ILogger<RefreshTokenCommand> _logger;
 
         public RefreshTokenCommandHandler(
-            IAuthBuissnessLogicHelper authBusinessLogicHelper,
+            IAuthBuisnessLogicHelper authBusinessLogicHelper,
             ILogger<RefreshTokenCommand> logger)
         {
             _authBusinessLogicHelper = authBusinessLogicHelper;
@@ -30,7 +30,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                 RefreshTokenRequestDto mappedRequestData = new();
                 RefreshTokenResponseDto refreshTokenResponseDto = new();
 
-                var validationResult = BuisnessLogic.Run(
+                IBuisnessLogicResult validationResult = BuisnessLogic.Run(
+                    await _authBusinessLogicHelper.ValidateCommandAsync(request),
                     await _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestData),
                     string.IsNullOrEmpty(mappedRequestData.AccessToken) || string.IsNullOrWhiteSpace(mappedRequestData.AccessToken)
                         ? new BuisnessLogicSuccessResult("AccessToken not required also not given", 200)

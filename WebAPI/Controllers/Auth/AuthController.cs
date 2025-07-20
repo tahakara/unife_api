@@ -13,6 +13,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.Controllers.Base;
+using WebAPI.Filters;
 
 namespace WebAPI.Controllers.Auth
 {
@@ -26,22 +27,22 @@ namespace WebAPI.Controllers.Auth
         }
         
         [HttpPost("signup")]
+        [RejectAuthorizationHeader]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> SignUp([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] SignUpCommand command) 
+        public async Task<IActionResult> SignUp([FromBody] SignUpCommand command) 
         {
-            command.AccessToken = accessToken;
             return await SendCommand(command);
         }
 
         [HttpPost("signin")]
+        [RejectAuthorizationHeader]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> SignIn([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] SignInCommand command)
+        public async Task<IActionResult> SignIn([FromBody] SignInCommand command)
         {
-            command.AccessToken = accessToken;
             return await SendCommand(command);
         }
 
@@ -92,6 +93,7 @@ namespace WebAPI.Controllers.Auth
         }
 
         [HttpPost("forgot-password")]
+        [RejectAuthorizationHeader]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ForgotPassword([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] ForgotPasswordCommand command)
@@ -129,13 +131,13 @@ namespace WebAPI.Controllers.Auth
             return await SendCommand(command);
         }
 
-        //[HttpPost("otp")]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-        //public async Task<IActionResult> VerifyOTP([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] VerifyOTPCommand command)
-        //{
-        //    command.AccessToken = accessToken;
-        //    return await SendCommand(command);
-        //}
+        [HttpPost("verify-otp")]
+        [RejectAuthorizationHeader]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifyOTP ([FromBody] VerifyOTPCommand command)
+        {
+            return await SendCommand(command);
+        }
     }
 }

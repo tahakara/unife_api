@@ -1,6 +1,6 @@
 ﻿using Buisness.Extensions;
-using Buisness.Services.UtilityServices;
-using Buisness.Services.UtilityServices.Abtract;
+using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
+using Buisness.Services.UtilityServices.ObjectStorageServices;
 using Core.Database.Base;
 using Core.ObjectStorage.Base;
 using Core.Security.JWT.Extensions;
@@ -22,7 +22,7 @@ using System.Text.Json.Serialization;
 using WebAPI.Compression;
 using WebAPI.Compression.Zstd;
 using WebAPI.HealthChecks;
-using WebAPI.Middleware;
+using WebAPI.Mİddlewares;
 
 // Serilog yapılandırması
 Log.Logger = new LoggerConfiguration()

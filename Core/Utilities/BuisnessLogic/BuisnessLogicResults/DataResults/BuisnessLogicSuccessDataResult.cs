@@ -1,6 +1,6 @@
 ﻿namespace Core.Utilities.BuisnessLogic.BuisnessLogicResults.DataResults
 {
-    public class BuisnessLogicSuccessDataResult<T> : BuisnessLogicDataResult<T>
+    public sealed record BuisnessLogicSuccessDataResult<T> : BuisnessLogicDataResult<T>
     {
         public BuisnessLogicSuccessDataResult(T data, int statusCode, string message) : base(data, true, statusCode, message)
         {

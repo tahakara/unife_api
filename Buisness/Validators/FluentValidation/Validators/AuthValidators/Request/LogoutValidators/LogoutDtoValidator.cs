@@ -1,4 +1,5 @@
 ﻿using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
+using Buisness.Validators.FluentValidation.Validators.Common;
 using FluentValidation;
 using System;
 using System.Collections.Generic;
@@ -15,8 +16,7 @@ namespace Buisness.Validators.FluentValidation.Validators.AuthValidators.Request
             RuleFor(x => x.AccessToken)
                 .NotEmpty().NotNull()
                 .WithMessage("Access token is required.")
-                .Matches(@"^[a-zA-Z0-9\-_]+$")
-                .WithMessage("Access token contains invalid characters.");
+                .Must(ValidationHelper.BeAValidJWTToken).WithMessage("Access token must be a valid JWT token.");
         }
     }
 }

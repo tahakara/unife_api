@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Core.Utilities.BuisnessLogic
 {
-    public class BuisnessLogic
+    public sealed class BuisnessLogic
     {
         public static IBuisnessLogicResult Run(params IBuisnessLogicResult[] logics)
         {

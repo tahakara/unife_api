@@ -3,17 +3,18 @@ using Buisness.DTOs.UniversityDtos;
 using Buisness.Features.CQRS.Base;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using Microsoft.Extensions.Logging;
 
 namespace Buisness.Features.CQRS.Auth.Commands.Logout.Logout
 {
     public class LogoutCommandHandler : ICommandHandler<LogoutCommand, BaseResponse<bool>>
     {
-        private readonly IAuthBuissnessLogicHelper _authBusinessLogicHelper;
+        private readonly IAuthBuisnessLogicHelper _authBusinessLogicHelper;
         private readonly ILogger<LogoutCommand> _logger;
 
         public LogoutCommandHandler(
-            IAuthBuissnessLogicHelper authBuissnessLogicHelper,
+            IAuthBuisnessLogicHelper authBuissnessLogicHelper,
             ILogger<LogoutCommand> logger)
         {
             _authBusinessLogicHelper = authBuissnessLogicHelper;
@@ -28,7 +29,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.Logout
 
                 LogoutRequestDto mappedRequestDto = new();
 
-                var buisnessResult = BuisnessLogic.Run(
+                IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
+                    await _authBusinessLogicHelper.ValidateCommandAsync(request),
                     await _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestDto),
                     await _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken),
                     await _authBusinessLogicHelper.BlackListSessionTokensForASingleSessionAsync(mappedRequestDto.AccessToken)

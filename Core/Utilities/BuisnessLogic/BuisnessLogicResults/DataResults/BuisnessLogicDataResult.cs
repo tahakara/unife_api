@@ -2,7 +2,7 @@
 
 namespace Core.Utilities.BuisnessLogic.BuisnessLogicResults.DataResults
 {
-    public class BuisnessLogicDataResult<T> : BuisnessLogicResult, IBuisnessLogicDataResult<T>
+    public record BuisnessLogicDataResult<T> : BuisnessLogicResult, IBuisnessLogicDataResult<T>
     {
         // Tam constructor
         public BuisnessLogicDataResult(T data, bool success, int statusCode, string? message = null) 

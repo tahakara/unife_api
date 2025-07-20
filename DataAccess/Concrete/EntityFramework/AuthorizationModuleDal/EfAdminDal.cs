@@ -23,7 +23,7 @@ namespace DataAccess.Concrete.EntityFramework.AuthorizationModuleDal
 
         public async Task<IEnumerable<Admin>> GetByEmailAsync(string email, bool isDeleted = false)
         {
-            using var context = _connectionFactory.CreateContext();
+            using var context = await _connectionFactory.CreateContextAsync();
             return await context.Admins
                 .Where(a => a.Email == email && a.IsDeleted == isDeleted)
                 .ToListAsync();
@@ -31,7 +31,7 @@ namespace DataAccess.Concrete.EntityFramework.AuthorizationModuleDal
 
         public async Task<IEnumerable<Admin>> GetByPhoneNumberAndEmailAsync(string phoneCountryCode, string phoneNumber, string email, bool isDeleted = false)
         {
-            using var context = _connectionFactory.CreateContext();
+            using var context = await _connectionFactory.CreateContextAsync();
             return await context.Admins
                 .Where(a => a.PhoneCountryCode == phoneCountryCode 
                             && a.PhoneNumber == phoneNumber 
@@ -42,7 +42,7 @@ namespace DataAccess.Concrete.EntityFramework.AuthorizationModuleDal
 
         public async Task<IEnumerable<Admin>> GetByPhoneNumberAsync(string phoneCountryCode, string phoneNumber, bool isDeleted = false)
         {
-            using var context = _connectionFactory.CreateContext();
+            using var context = await _connectionFactory.CreateContextAsync();
             return await context.Admins
                 .Where(a => a.PhoneCountryCode == phoneCountryCode 
                             && a.PhoneNumber == phoneNumber 
@@ -52,21 +52,21 @@ namespace DataAccess.Concrete.EntityFramework.AuthorizationModuleDal
 
         public async Task<Admin?> GetByUuidAsync(Guid uuid, bool isDeleted = false)
         {
-            var context = _connectionFactory.CreateContext();
+            var context = await _connectionFactory.CreateContextAsync();
             return await context.Admins
                 .FirstOrDefaultAsync(a => a.AdminUuid == uuid && a.IsDeleted == isDeleted);
         }
 
         public async Task<bool> IsEmailExistsAsync(string email, bool isDeleted = false)
         {
-            var context = _connectionFactory.CreateContext();
+            var context = await _connectionFactory.CreateContextAsync();
             return await context.Admins
                 .AnyAsync(a => a.Email == email && a.IsDeleted == isDeleted);
         }
 
         public async Task<bool> IsPhoneNumberExistsAsync(string phoneCountryCode, string phoneNumber, bool isDeleted = false)
         {
-            var context = _connectionFactory.CreateContext();
+            var context = await _connectionFactory.CreateContextAsync();
             return await context.Admins
                 .AnyAsync(a => a.PhoneCountryCode == phoneCountryCode 
                                && a.PhoneNumber == phoneNumber 

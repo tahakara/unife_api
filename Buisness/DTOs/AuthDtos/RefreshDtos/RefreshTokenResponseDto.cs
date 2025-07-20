@@ -1,0 +1,13 @@
+﻿using Buisness.Abstract.DtoBase.Base;
+using Buisness.Concrete.Dto;
+
+namespace Buisness.DTOs.AuthDtos.RefreshDtos
+{
+    public class RefreshTokenResponseDto : DtoBase, IDtoBase
+    {
+        public string RefreshToken { get; set; } = string.Empty;
+        public string AccessToken { get; set; } = string.Empty;
+        public string UserUuid { get; set; } = string.Empty;
+        public string SessionUuid { get; set; } = string.Empty;
+    }
+}

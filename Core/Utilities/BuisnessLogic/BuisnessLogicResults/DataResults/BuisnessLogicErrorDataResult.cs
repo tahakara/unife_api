@@ -1,6 +1,6 @@
 ﻿namespace Core.Utilities.BuisnessLogic.BuisnessLogicResults.DataResults
 {
-    public class BuisnessLogicErrorDataResult<T> : BuisnessLogicDataResult<T>
+    public sealed record BuisnessLogicErrorDataResult<T> : BuisnessLogicDataResult<T>
     {
         // Data + mesaj + özel status code
         public BuisnessLogicErrorDataResult(T data, string message, int statusCode = 400) 

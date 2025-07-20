@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Core.Utilities.BuisnessLogic.BuisnessLogicResults
 {
-    public class BuisnessLogicResult : IBuisnessLogicResult
+    public record BuisnessLogicResult : IBuisnessLogicResult
     {
         // Ana constructor
         public BuisnessLogicResult(bool success, int statusCode, string? message = null)

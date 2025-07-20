@@ -96,7 +96,7 @@
 
         public static BaseResponse<T> Failure(string message, List<string>? errors = null, int statusCode = 400)
         {
-            if (errors != null && errors.Count > 1)
+            if (errors != null && errors.Count >= 1)
             {
                 return new BaseResponseFailWithErrors<T>
                 {
