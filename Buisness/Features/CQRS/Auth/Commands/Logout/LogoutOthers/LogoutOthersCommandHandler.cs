@@ -41,7 +41,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
 
 
                 IBuisnessLogicResult blackListResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.BlacklistAllSessionTokensByUserAsync(mappedRequestDto.AccessToken)
+                    await _authBusinessLogicHelper.BlacklistSessionsExcludedByOneAsync(mappedRequestDto.AccessToken)
                 );
                 if (blackListResult != null)
                     return BaseResponse<bool>.Failure(

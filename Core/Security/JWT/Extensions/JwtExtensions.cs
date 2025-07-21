@@ -1,6 +1,7 @@
 using Core.Security.JWT.Abstractions;
 using Core.Security.JWT.Configuration;
 using Core.Security.JWT.Providers;
+using Core.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -50,13 +51,14 @@ namespace Core.Security.JWT.Extensions
         /// <param name="sessionUuid">Session UUID</param>
         /// <param name="additionalClaims">Additional claims</param>
         /// <returns>Collection of claims</returns>
-        public static IEnumerable<Claim> CreateUserSessionClaims(string userUuid, string sessionUuid, IEnumerable<Claim>? additionalClaims = null)
+        public static IEnumerable<Claim> CreateUserSessionClaims(string usertypeId, string userUuid, string sessionUuid, IEnumerable<Claim>? additionalClaims = null)
         {
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, userUuid),
                 new("userUuid", userUuid),
-                new("sessionUuid", sessionUuid)
+                new("sessionUuid", sessionUuid),
+                new("userTypeId", usertypeId),
             };
 
             if (additionalClaims != null)
@@ -85,6 +87,11 @@ namespace Core.Security.JWT.Extensions
         public static string? GetSessionUuid(this ClaimsPrincipal principal)
         {
             return principal.FindFirst("sessionUuid")?.Value;
+        }
+
+        public static string? GetUserTypeId(this ClaimsPrincipal principal)
+        {
+            return principal.FindFirst("userTypeId")?.Value;
         }
     }
 }

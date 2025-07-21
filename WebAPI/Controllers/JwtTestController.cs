@@ -40,6 +40,7 @@ namespace WebAPI.Controllers
 
                 var userUuid = Guid.NewGuid().ToString();
                 var sessionUuid = Guid.NewGuid().ToString();
+                var userTypeId = 1;
 
                 // Additional claims
                 var additionalClaims = new List<Claim>();
@@ -53,14 +54,15 @@ namespace WebAPI.Controllers
                 //}
 
                 // Generate tokens using session service
-                var accessToken = await _sessionJwtService.GenerateAccessTokenAsync(userUuid, sessionUuid, additionalClaims);
-                var refreshToken = await _sessionJwtService.GenerateRefreshTokenAsync(userUuid, sessionUuid);
+                var accessToken = await _sessionJwtService.GenerateAccessTokenAsync(userTypeId.ToString(), userUuid, sessionUuid, additionalClaims);
+                var refreshToken = await _sessionJwtService.GenerateRefreshTokenAsync(userTypeId.ToString(), userUuid, sessionUuid);
 
                 var response = new
                 {
                     AccessToken = accessToken,
                     RefreshToken = refreshToken,
                     UserUuid = userUuid,
+                    UserTypeId = userTypeId,
                     SessionUuid = sessionUuid,
                     ExpiresAt = DateTime.UtcNow.AddMinutes(15), // Default expiration
                     TokenType = "Bearer",
@@ -193,10 +195,17 @@ namespace WebAPI.Controllers
         {
             try
             {
+                if (request == null)
+                {
+                    return BadRequest(new { Error = "Request cannot be null" });
+                }
                 var userUuid = request.UserUuid ?? Guid.NewGuid().ToString();
                 var sessionUuid = request.SessionUuid ?? Guid.NewGuid().ToString();
+                var userTypeId = !string.IsNullOrEmpty(request.UserUuid)
+                    ? request.UserUuid
+                    : (request.UserTypeId.HasValue ? request.UserTypeId.Value.ToString() : "0");
 
-                var claims = JwtExtensions.CreateUserSessionClaims(userUuid, sessionUuid);
+                var claims = JwtExtensions.CreateUserSessionClaims(userTypeId, userUuid, sessionUuid);
                 var token = _jwtTokenProvider.GenerateAccessToken(claims);
 
                 var response = new
@@ -204,6 +213,7 @@ namespace WebAPI.Controllers
                     Token = token,
                     UserUuid = userUuid,
                     SessionUuid = sessionUuid,
+                    UserTypeId = userTypeId,
                     GeneratedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddMinutes(15),
                     Note = "This token is NOT stored in Redis"
@@ -275,7 +285,7 @@ namespace WebAPI.Controllers
                 }
                 else
                 {
-                    var result = await _sessionJwtService.RevokeTokensAsync(request.UserUuid, request.SessionUuid);
+                    var result = await _sessionJwtService.RevokeTokensAsync(request.UserUuid, request.SessionUuid, request.UserTypeId.ToString());
                     if (result)
                     {
                         return Ok(new { Message = "Session tokens revoked successfully", RevokedAt = DateTime.UtcNow });
@@ -349,6 +359,7 @@ namespace WebAPI.Controllers
     {
         public string? UserUuid { get; set; }
         public string? SessionUuid { get; set; }
+        public byte? UserTypeId { get; set; }
     }
 
     public class ExtractClaimsRequest
@@ -360,6 +371,7 @@ namespace WebAPI.Controllers
     {
         public string UserUuid { get; set; } = string.Empty;
         public string SessionUuid { get; set; } = string.Empty;
+        public byte? UserTypeId { get; set; } = 0;
         public bool RevokeAll { get; set; } = false;
     }
 }

@@ -1,12 +1,12 @@
 ﻿using Core.Database.Base;
-using DataAccess.Abstract.Repositories.UniversityModuleRepositories;
-using DataAccess.Database.Context;
+using Core.Abstract.Repositories.UniversityModuleRepositories;
+using Core.Database.Context;
 using Domain.Entities;
 using Domain.Entities.MainEntities.UniversityModul;
 using Domain.Repositories.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Concrete.EntityFramework.UniversityModuleDal
+namespace Core.Concrete.EntityFramework.UniversityModuleDal
 {
     public class EfUniversityDal : EfGenericRepositoryBase<University, UnifeContext>, IUniversityRepository
     {

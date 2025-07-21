@@ -1,11 +1,11 @@
 ﻿using Core.Database.Base;
-using DataAccess.Database.Context;
+using Core.Database.Context;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using Domain.Repositories.Concrete.EntityFramework;
-using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories;
+using Core.Abstract.Repositories.AuthorizationModuleRepositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Concrete.EntityFramework.AuthorizationModuleDal
+namespace Core.Concrete.EntityFramework.AuthorizationModuleDal
 {
     public class EfStudentDal : EfGenericRepositoryBase<Student, UnifeContext>, IStudentRepository
     {

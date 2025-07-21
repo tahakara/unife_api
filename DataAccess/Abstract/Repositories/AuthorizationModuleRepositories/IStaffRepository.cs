@@ -1,7 +1,7 @@
 ﻿using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using Domain.Repositories.Abstract.Base;
 
-namespace DataAccess.Abstract.Repositories.AuthorizationModuleRepositories
+namespace Core.Abstract.Repositories.AuthorizationModuleRepositories
 {
     public interface IStaffRepository : IGenericRepository<Staff>
     {

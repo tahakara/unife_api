@@ -1,11 +1,11 @@
 ﻿using Core.Database.Base;
-using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories;
-using DataAccess.Database.Context;
+using Core.Abstract.Repositories.AuthorizationModuleRepositories;
+using Core.Database.Context;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using Domain.Repositories.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Concrete.EntityFramework.AuthorizationModuleDal
+namespace Core.Concrete.EntityFramework.AuthorizationModuleDal
 {
     public class EfStaffDal : EfGenericRepositoryBase<Staff, UnifeContext>, IStaffRepository
     {

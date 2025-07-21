@@ -1,7 +1,7 @@
 ﻿using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;
 using Domain.Repositories.Abstract.Base;
 
-namespace DataAccess.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories
+namespace Core.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories
 {
     public interface ISecurityEventTypeRepository : IGenericRepository<SecurityEventType>
     {   

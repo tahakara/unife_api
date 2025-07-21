@@ -7,7 +7,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
-namespace DataAccess.ObjectStorage.Redis
+namespace Core.ObjectStorage.Redis
 {
     public class GenericRedisConnectionFactory : ObjectStorageConnectionFactoryBase
     {

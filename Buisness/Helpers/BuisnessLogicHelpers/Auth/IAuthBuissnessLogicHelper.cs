@@ -32,8 +32,8 @@ using Core.Utilities.OTPUtilities;
 using Core.Utilities.OTPUtilities.Base;
 using Core.Utilities.PasswordUtilities;
 using Core.Utilities.PasswordUtilities.Base;
-using DataAccess.Abstract;
-using DataAccess.Enums;
+using Core.Abstract;
+using Core.Enums;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;
 using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
@@ -165,13 +165,14 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                 var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
                 var sessionUuid = await _sessionJwtService.GetSessionUuidFromTokenAsync(accessToken);
+                var userTypeId = await _sessionJwtService.GetUserTypeIdFromTokenAsync(accessToken);
 
-                if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(sessionUuid))
+                if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(sessionUuid) || string.IsNullOrEmpty(userTypeId))
                 {
                     return new BuisnessLogicErrorResult("User UUID and Session UUID are not found on AccessToken", 400);
                 }
 
-                var revokeResult = await _sessionJwtService.RevokeTokensAsync(userUuid, sessionUuid);
+                var revokeResult = await _sessionJwtService.RevokeTokensAsync(userUuid, sessionUuid, userTypeId);
                 if (!revokeResult)
                 {
                     return new BuisnessLogicErrorResult("Failed to revoke tokens", 500);
@@ -276,7 +277,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         return new BuisnessLogicErrorResult("Refresh token invalid or expired", 400);
                     }
 
-                    if (!postfixSearchResult.HasValue || !postfixSearchResult.Value.TryGetProperty("UserUuid", out var userUuid) || !postfixSearchResult.Value.TryGetProperty("SessionUuid", out var sessionUuid))
+                    if (!postfixSearchResult.HasValue || !postfixSearchResult.Value.TryGetProperty("UserUuid", out var userUuid) || !postfixSearchResult.Value.TryGetProperty("SessionUuid", out var sessionUuid) || !postfixSearchResult.Value.TryGetProperty("UserTypeId", out var userTypeId))
                     {
                         return new BuisnessLogicErrorResult("Refresh token is not valid or expired", 400);
                     }
@@ -284,6 +285,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     refreshTokenResponseDto.UserUuid = userUuid.GetString() ?? string.Empty;
                     refreshTokenResponseDto.SessionUuid = sessionUuid.GetString() ?? string.Empty;
                     refreshTokenResponseDto.RefreshToken = refreshTokenRequestDto.RefreshToken;
+                    refreshTokenResponseDto.UserTypeId = byte.TryParse(userTypeId.GetString(), out var parsedUserTypeId) ? parsedUserTypeId : (byte)0;
 
                     return new BuisnessLogicSuccessResult("Refresh token is valid", 200);
 
@@ -319,7 +321,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             {
                 await LogDebugAsync("RefreshAccessTokenAsync Started", refreshTokenResponseDto.RefreshToken);
 
-                var refreshResult = await _sessionJwtService.RefreshAccessTokenAsync(refreshTokenResponseDto.UserUuid, refreshTokenResponseDto.SessionUuid, refreshTokenResponseDto.RefreshToken);
+                var refreshResult = await _sessionJwtService.RefreshAccessTokenAsync(refreshTokenResponseDto.UserTypeId.ToString(), refreshTokenResponseDto.UserUuid, refreshTokenResponseDto.SessionUuid, refreshTokenResponseDto.RefreshToken);
                 if (refreshResult == null)
                 {
                     return new BuisnessLogicErrorResult("Refresh token işlemi başarısız oldu", 500);
@@ -352,7 +354,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                 switch (signUpRequestDto.UserTypeId)
                 {
-                    case (int)UserTypeId.Admin:
+                    case (byte)UserTypeId.Admin:
                         bool emailResult = await _adminService.IsEmailExistsAsync(signUpRequestDto.Email);
                         if (emailResult)
                         {
@@ -386,7 +388,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         return new BuisnessLogicSuccessResult("New admin created successfully", 200);
                         break;
 
-                    case (int)UserTypeId.Staff:
+                    case (byte)UserTypeId.Staff:
                         bool staffEmailResult = await _staffService.IsEmailExistsAsync(signUpRequestDto.Email);
                         if (staffEmailResult)
                         {
@@ -415,7 +417,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                         return new BuisnessLogicSuccessResult("New staff created successfully", 200);
                         break;
-                    case (int)UserTypeId.Student:
+                    case (byte)UserTypeId.Student:
 
                         bool studentEmailResult = await _studentService.IsEmailExistsAsync(signUpRequestDto.Email);
                         if (studentEmailResult)
@@ -470,7 +472,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                 switch (signInRequestDto.UserTypeId)
                 {
-                    case (int)UserTypeId.Admin:
+                    case (byte)UserTypeId.Admin:
                         Admin? currentAdmin = new();
 
                         bool hasEmailLogin = !string.IsNullOrEmpty(signInRequestDto.Email) &&
@@ -506,7 +508,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         signInResponseDto.UserTypeId = (int)UserTypeId.Admin;
                         break;
 
-                    case (int)UserTypeId.Staff:
+                    case (byte)UserTypeId.Staff:
                         Staff? currentStaff = new();
 
                         if (string.IsNullOrEmpty(signInRequestDto.Email) && string.IsNullOrEmpty(signInRequestDto.Password))
@@ -536,7 +538,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         signInResponseDto.UserTypeId = (int)UserTypeId.Staff;
                         break;
 
-                    case (int)UserTypeId.Student:
+                    case (byte)UserTypeId.Student:
                         Student? currentStudent = new();
 
                         if (string.IsNullOrEmpty(signInRequestDto.Email) && string.IsNullOrEmpty(signInRequestDto.Password))
@@ -698,10 +700,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 await LogDebugAsync("CreatSession Started", verifyOTPRequestDto);
 
                 string newAccessTOken = await _sessionJwtService.GenerateAccessTokenAsync(
+                    verifyOTPRequestDto.UserTypeId.ToString(),
                     verifyOTPRequestDto.UserUuid.ToString(),
                     verifyOTPRequestDto.SessionUuid.ToString());
 
                 string newRefreshToken = await _sessionJwtService.GenerateRefreshTokenAsync(
+                    verifyOTPRequestDto.UserTypeId.ToString(),
                     verifyOTPRequestDto.UserUuid.ToString(),
                     verifyOTPRequestDto.SessionUuid.ToString());
 

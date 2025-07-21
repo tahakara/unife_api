@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.Abstract.Repositories.AuthorizationModuleRepositories
+namespace Core.Abstract.Repositories.AuthorizationModuleRepositories
 {
     public interface IAdminRepository : IGenericRepository<Admin>
     {

@@ -1,7 +1,7 @@
 ﻿using Domain.Entities.MainEntities;
 using Domain.Repositories.Abstract.Base;
 
-namespace DataAccess.Abstract.Repositories
+namespace Core.Abstract.Repositories
 {
     public interface IRegionRepository : IGenericRepository<Region>
     {

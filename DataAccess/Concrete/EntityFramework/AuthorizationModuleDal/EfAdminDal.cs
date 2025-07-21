@@ -1,7 +1,7 @@
 ﻿using Core.Database.Base;
-using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories;
-using DataAccess.Abstract.Repositories.UniversityModuleRepositories;
-using DataAccess.Database.Context;
+using Core.Abstract.Repositories.AuthorizationModuleRepositories;
+using Core.Abstract.Repositories.UniversityModuleRepositories;
+using Core.Database.Context;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using Domain.Entities.MainEntities.UniversityModul;
 using Domain.Repositories.Concrete.EntityFramework;
@@ -12,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.Concrete.EntityFramework.AuthorizationModuleDal
+namespace Core.Concrete.EntityFramework.AuthorizationModuleDal
 {
     public class EfAdminDal : EfGenericRepositoryBase<Admin, UnifeContext>, IAdminRepository
     {

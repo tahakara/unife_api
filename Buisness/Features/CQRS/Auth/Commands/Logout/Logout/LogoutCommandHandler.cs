@@ -5,7 +5,7 @@ using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
-using DataAccess.Enums;
+using Core.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 

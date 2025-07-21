@@ -3,24 +3,24 @@ using Microsoft.Extensions.Configuration;
 using Core.Database.Base;
 using Core.ObjectStorage.Base;
 using Core.ObjectStorage.Base.Redis;
-using DataAccess.Database;
-using DataAccess.ObjectStorage;
-using DataAccess.Concrete.EntityFramework;
+using Core.Database;
+using Core.ObjectStorage;
+using Core.Concrete.EntityFramework;
 using Domain.Repositories.Abstract.Base;
 using Domain.Repositories.Concrete.ObjectStorage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using DataAccess.Database.Context;
-using DataAccess.ObjectStorage.Redis;
-using DataAccess.Abstract.Repositories.UniversityModuleRepositories;
-using DataAccess.Abstract.Repositories;
-using DataAccess.Concrete.EntityFramework.UniversityModuleDal;
-using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories;
-using DataAccess.Concrete.EntityFramework.AuthorizationModuleDal;
-using DataAccess.Concrete.EntityFramework.AuthorizationModuleDal.SecurityEventDal;
-using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories;
+using Core.Database.Context;
+using Core.ObjectStorage.Redis;
+using Core.Abstract.Repositories.UniversityModuleRepositories;
+using Core.Abstract.Repositories;
+using Core.Concrete.EntityFramework.UniversityModuleDal;
+using Core.Abstract.Repositories.AuthorizationModuleRepositories;
+using Core.Concrete.EntityFramework.AuthorizationModuleDal;
+using Core.Concrete.EntityFramework.AuthorizationModuleDal.SecurityEventDal;
+using Core.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories;
 
-namespace DataAccess.Extensions
+namespace Core.Extensions
 {
     public static class ServiceCollectionExtensions
     {

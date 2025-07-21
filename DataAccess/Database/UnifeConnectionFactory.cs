@@ -1,9 +1,9 @@
 ﻿using Core.Database.Base;
-using DataAccess.Database.Context;
+using Core.Database.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace DataAccess.Database
+namespace Core.Database
 {
     public class UnifeConnectionFactory : DbConnectionFactoryBase<UnifeContext>
     {

@@ -1,11 +1,11 @@
 ﻿using Core.Database.Base;
-using DataAccess.Abstract.Repositories;
-using DataAccess.Database.Context;
+using Core.Abstract.Repositories;
+using Core.Database.Context;
 using Domain.Entities.MainEntities;
 using Domain.Repositories.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Concrete.EntityFramework
+namespace Core.Concrete.EntityFramework
 {
     public class EfRegionDal : EfGenericRepositoryBase<Region, UnifeContext>, IRegionRepository
     {

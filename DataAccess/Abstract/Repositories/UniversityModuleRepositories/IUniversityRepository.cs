@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Core.Entities.Base;
 using Domain.Entities.MainEntities.UniversityModul;
 
-namespace DataAccess.Abstract.Repositories.UniversityModuleRepositories
+namespace Core.Abstract.Repositories.UniversityModuleRepositories
 {
     public interface IUniversityRepository : IGenericRepository<University>
     {

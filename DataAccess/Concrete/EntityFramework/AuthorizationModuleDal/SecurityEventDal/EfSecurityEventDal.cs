@@ -1,6 +1,6 @@
 ﻿using Core.Database.Base;
-using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories;
-using DataAccess.Database.Context;
+using Core.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories;
+using Core.Database.Context;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;
 using Domain.Repositories.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.Concrete.EntityFramework.AuthorizationModuleDal.SecurityEventDal
+namespace Core.Concrete.EntityFramework.AuthorizationModuleDal.SecurityEventDal
 {
     public class EfSecurityEventDal : EfGenericRepositoryBase<SecurityEvent, UnifeContext>, ISecurityEventRepository
     {

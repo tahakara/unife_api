@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories
+namespace Core.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories
 {
     public interface ISecurityEventRepository : IGenericRepository<SecurityEvent>
     {

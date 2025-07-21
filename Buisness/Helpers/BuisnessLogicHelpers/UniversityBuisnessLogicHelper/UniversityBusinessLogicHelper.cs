@@ -9,7 +9,7 @@ using Domain.Entities;
 //using Domain.Entities.MainEntities.UniversityModul;
 using Microsoft.Extensions.Logging;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.DataResults;
-using DataAccess.Abstract.Repositories.UniversityModuleRepositories;
+using Core.Abstract.Repositories.UniversityModuleRepositories;
 using Domain.Entities.MainEntities.UniversityModul;
 
 namespace Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper

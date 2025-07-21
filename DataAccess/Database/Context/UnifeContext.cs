@@ -18,7 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Security;
 
-namespace DataAccess.Database.Context
+namespace Core.Database.Context
 {
     public class UnifeContext : DbContext
     {

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DataAccess.ObjectStorage.Redis
+namespace Core.ObjectStorage.Redis
 {
     public class RedisObjectStorageConnection : IObjectStorageConnection
     {

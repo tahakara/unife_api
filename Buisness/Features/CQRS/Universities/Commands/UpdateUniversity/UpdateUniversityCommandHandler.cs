@@ -5,7 +5,7 @@ using Buisness.Features.CQRS.Base;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
-using DataAccess.Abstract;
+using Core.Abstract;
 using Core.Entities.Base;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

@@ -1,5 +1,5 @@
-﻿using DataAccess.Database.Context;
-using DataAccess.Database;
+﻿using Core.Database.Context;
+using Core.Database;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

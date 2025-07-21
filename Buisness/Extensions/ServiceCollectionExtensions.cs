@@ -19,6 +19,7 @@ using Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper;
 using Buisness.Mappings;
 using Buisness.Mappings.AuthMappingProfiles.LogoutMappingProfiles;
 using Buisness.Mappings.AuthMappingProfiles.RefreshTokenMappingProfiles;
+using Buisness.Mappings.AuthMappingProfiles.ResendSignInOTPProfiles;
 using Buisness.Mappings.AuthMappingProfiles.SignInMappingProfiles;
 using Buisness.Mappings.AuthMappingProfiles.SignUpMappingProfiles;
 using Buisness.Mappings.AuthMappingProfiles.VerifyMappingProfiles;
@@ -44,8 +45,8 @@ using Core.Utilities.OTPUtilities;
 using Core.Utilities.OTPUtilities.Base;
 using Core.Utilities.PasswordUtilities;
 using Core.Utilities.PasswordUtilities.Base;
-using DataAccess.Database;
-using DataAccess.ObjectStorage.Redis;
+using Core.Database;
+using Core.ObjectStorage.Redis;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -93,6 +94,7 @@ namespace Buisness.Extensions
                 cfg.AddProfile<LogoutOthersMappingProfile>();
                 cfg.AddProfile<SignUpMappingProfile>();
                 cfg.AddProfile<SignInMappingProfile>();
+                cfg.AddProfile<ResendSignInOTPProfile>();
                 cfg.AddProfile<VerifyOTPMappingProfile>();
 
                 cfg.AddProfile<RefreshTokenMappingProfile>();

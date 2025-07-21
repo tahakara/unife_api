@@ -1,5 +1,5 @@
 ﻿using Core.ObjectStorage.Base;
-using DataAccess.ObjectStorage.Redis;
+using Core.ObjectStorage.Redis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.ObjectStorage
+namespace Core.ObjectStorage
 {
     public class UnifeObjectStorageConnectionFactory : ObjectStorageConnectionFactoryBase
     {

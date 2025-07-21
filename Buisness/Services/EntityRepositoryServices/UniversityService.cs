@@ -7,7 +7,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Core.Entities.Base;
-using DataAccess.Abstract.Repositories.UniversityModuleRepositories;
+using Core.Abstract.Repositories.UniversityModuleRepositories;
 using Domain.Entities.MainEntities.UniversityModul;
 
 namespace Buisness.Services.EntityRepositoryServices

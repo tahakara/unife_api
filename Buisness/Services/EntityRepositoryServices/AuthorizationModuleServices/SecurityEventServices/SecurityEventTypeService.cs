@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Buisness.Abstract.ServicesBase.AuthorizationModuleServices.SecurityEventServices;
 using Buisness.Concrete.ServiceManager;
-using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories;
+using Core.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;
 using Microsoft.Extensions.Logging;
 

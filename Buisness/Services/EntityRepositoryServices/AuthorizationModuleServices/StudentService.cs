@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Buisness.Abstract.ServicesBase.AuthorizationModuleServices;
 using Buisness.Concrete.ServiceManager;
-using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories;
+using Core.Abstract.Repositories.AuthorizationModuleRepositories;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using Microsoft.Extensions.Logging;
 

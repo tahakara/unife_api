@@ -1,12 +1,13 @@
 using Buisness.Abstract.ServicesBase;
+using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
+using Core.ObjectStorage.Base;
 using Core.Security.JWT.Abstractions;
 using Core.Security.JWT.Extensions;
-using Core.ObjectStorage.Base;
+using Core.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using System.Text.Json;
-using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
 
 namespace Buisness.Services.UtilityServices.ObjectStorageServices
 {
@@ -20,6 +21,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
         public string RefreshToken { get; set; } = string.Empty;
         public string UserUuid { get; set; } = string.Empty;
         public string SessionUuid { get; set; } = string.Empty;
+        public string UserTypeId { get; set; } = string.Empty;
         public DateTime ExpiresAt { get; set; }
         public DateTime RefreshExpiresAt { get; set; }
 
@@ -47,31 +49,32 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             return await sessionFactory.CreateConnectionAsync();
         }
 
-        private string GetAccessTokenKey(string sessionUuid, string userUuid)
+        private string GetAccessTokenKey(string sessionUuid, string userUuid, string userTypeId)
         {
-            return $"access:{sessionUuid}:{userUuid}";
+            return $"access:{sessionUuid}:{userUuid}:{userTypeId}";
         }
 
-        private string GetRefreshTokenKey(string sessionUuid, string userUuid, string refreshToken)
+        private string GetRefreshTokenKey(string sessionUuid, string userUuid, string userTypeId, string refreshToken)
         {
-            return $"refresh:{sessionUuid}:{userUuid}:{refreshToken}";
+            return $"refresh:{sessionUuid}:{userUuid}:{userTypeId}:{refreshToken}";
         }
 
-        public async Task<string> GenerateAccessTokenAsync(string userUuid, string sessionUuid, IEnumerable<Claim>? additionalClaims = null)
+        public async Task<string> GenerateAccessTokenAsync(string userTypeId, string userUuid, string sessionUuid, IEnumerable<Claim>? additionalClaims = null)
         {
-            var claims = JwtExtensions.CreateUserSessionClaims(userUuid, sessionUuid, additionalClaims);
+            var claims = JwtExtensions.CreateUserSessionClaims(userTypeId, userUuid, sessionUuid, additionalClaims);
             var accessToken = _jwtTokenProvider.GenerateAccessToken(claims);
 
             // Store access token with new key structure
             try
             {
                 using var connection = await GetSessionConnectionAsync();
-                var accessKey = GetAccessTokenKey(sessionUuid, userUuid);
+                var accessKey = GetAccessTokenKey(sessionUuid, userUuid, userTypeId);
 
                 var tokenData = new
                 {
                     Token = accessToken,
                     UserUuid = userUuid,
+                    UserTypeId = userTypeId,
                     SessionUuid = sessionUuid,
                     CreatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddMinutes(15) // Default expiration
@@ -90,7 +93,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             return accessToken;
         }
 
-        public async Task<string> GenerateRefreshTokenAsync(string userUuid, string sessionUuid)
+        public async Task<string> GenerateRefreshTokenAsync(string userTypeId, string userUuid, string sessionUuid)
         {
             var refreshToken = _jwtTokenProvider.GenerateRefreshToken();
 
@@ -98,13 +101,14 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             try
             {
                 using var connection = await GetSessionConnectionAsync();
-                var refreshKey = GetRefreshTokenKey(sessionUuid, userUuid, refreshToken);
+                var refreshKey = GetRefreshTokenKey(sessionUuid, userUuid, userTypeId, refreshToken);
 
                 var tokenData = new
                 {
                     Token = refreshToken,
                     UserUuid = userUuid,
                     SessionUuid = sessionUuid,
+                    UserTypeId = userTypeId,
                     CreatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddDays(7) // Default expiration
                 };
@@ -122,7 +126,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             return refreshToken;
         }
 
-        public async Task<bool> ValidateAndStoreTokenAsync(string userUuid, string sessionUuid, string accessToken, string refreshToken)
+        public async Task<bool> ValidateAndStoreTokenAsync(string userTypeId, string userUuid, string sessionUuid, string accessToken, string refreshToken)
         {
             try
             {
@@ -136,6 +140,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 // Verify token belongs to the correct user and session
                 var tokenUserUuid = principal?.GetUserUuid();
                 var tokenSessionUuid = principal?.GetSessionUuid();
+                var tokenUserTypeId = principal?.GetUserTypeId();
 
                 if (tokenUserUuid != userUuid || tokenSessionUuid != sessionUuid)
                 {
@@ -147,24 +152,26 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 using var connection = await GetSessionConnectionAsync();
 
                 // Store access token
-                var accessKey = GetAccessTokenKey(sessionUuid, userUuid);
+                var accessKey = GetAccessTokenKey(sessionUuid, userUuid, userTypeId);
                 var accessTokenData = new
                 {
                     Token = accessToken,
                     UserUuid = userUuid,
                     SessionUuid = sessionUuid,
+                    UserTypeId = userTypeId,
                     CreatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddMinutes(15)
                 };
                 await connection.SetStringAsync(accessKey, JsonSerializer.Serialize(accessTokenData), TimeSpan.FromMinutes(15));
 
                 // Store refresh token
-                var refreshKey = GetRefreshTokenKey(userUuid, sessionUuid, refreshToken);
+                var refreshKey = GetRefreshTokenKey(userUuid, sessionUuid, userTypeId, refreshToken);
                 var refreshTokenData = new
                 {
                     Token = refreshToken,
                     UserUuid = userUuid,
                     SessionUuid = sessionUuid,
+                    UserTypeId = userTypeId,
                     CreatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddDays(7)
                 };
@@ -185,7 +192,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             try
             {
                 using var connection = await GetSessionConnectionAsync();
-                var pattern = $"refresh:*:*:{refreshTokenPostfix}";
+                var pattern = $"refresh:*:*:*:{refreshTokenPostfix}";
                 var keys = await connection.GetKeysAsync(pattern);
                 if (keys.Count == 0)
                 {
@@ -220,6 +227,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 }
 
                 var parts = key.Split(':');
+                var userTypeId = string.Empty;
                 var userUuid = string.Empty;
                 var sessionUuid = string.Empty;
                 // Defensive: Ensure at least 4 parts
@@ -229,10 +237,11 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 }
                 // Last part is refreshToken, second last is userUuid, third last is sessionUuid
                 refreshToken = parts[^1];
-                userUuid = parts[^2];
-                sessionUuid = parts[^3];
+                userTypeId = parts[^2];
+                userUuid = parts[^3];
+                sessionUuid = parts[^4];
 
-                return await RefreshAccessTokenAsync(userUuid, sessionUuid, refreshToken);
+                return await RefreshAccessTokenAsync(userTypeId, userUuid, sessionUuid, refreshToken);
 
             }
 
@@ -244,12 +253,12 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
         }
 
 
-        public async Task<RefreshTokenResult?> RefreshAccessTokenAsync(string userUuid, string sessionUuid, string refreshToken)
+        public async Task<RefreshTokenResult?> RefreshAccessTokenAsync(string userTypeId, string userUuid, string sessionUuid, string refreshToken)
         {
             try
             {
                 using var connection = await GetSessionConnectionAsync();
-                var refreshKey = GetRefreshTokenKey(sessionUuid, userUuid, refreshToken);
+                var refreshKey = GetRefreshTokenKey(sessionUuid, userUuid, userTypeId, refreshToken);
 
                 // Get refresh token data
                 var refreshTokenJson = await connection.GetStringAsync(refreshKey);
@@ -264,6 +273,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
 
                 var storedUserUuid = root.GetProperty("UserUuid").GetString();
                 var storedSessionUuid = root.GetProperty("SessionUuid").GetString();
+                var storedUserTypeId = root.GetProperty("UserTypeId").GetString();
 
                 if (string.IsNullOrEmpty(storedUserUuid) || string.IsNullOrEmpty(storedSessionUuid))
                 {
@@ -275,20 +285,21 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 await connection.DeleteAsync(refreshKey);
                 
                 // Remove old access token
-                var oldAccessKey = GetAccessTokenKey(storedSessionUuid, storedUserUuid);
+                var oldAccessKey = GetAccessTokenKey(storedSessionUuid, storedUserUuid, userTypeId);
                 await connection.DeleteAsync(oldAccessKey);                
 
                 // Generate new access token
-                var claims = JwtExtensions.CreateUserSessionClaims(storedUserUuid, storedSessionUuid);
+                var claims = JwtExtensions.CreateUserSessionClaims(userTypeId, storedUserUuid, storedSessionUuid);
                 var newAccessToken = _jwtTokenProvider.GenerateAccessToken(claims);
 
                 // Store new access token using existing connection
-                var accessKey = GetAccessTokenKey(storedSessionUuid, storedUserUuid);
+                var accessKey = GetAccessTokenKey(storedSessionUuid, storedUserUuid, userTypeId);
                 var accessTokenData = new
                 {
                     Token = newAccessToken,
                     UserUuid = storedUserUuid,
                     SessionUuid = storedSessionUuid,
+                    UserTypeId = userTypeId,
                     CreatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddMinutes(15)
                 };
@@ -297,12 +308,13 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
 
                 // Generate new refresh token using existing connection
                 var newRefreshToken = _jwtTokenProvider.GenerateRefreshToken();
-                var newRefreshKey = GetRefreshTokenKey(storedSessionUuid, storedUserUuid, newRefreshToken);
+                var newRefreshKey = GetRefreshTokenKey(storedSessionUuid, storedUserUuid, userTypeId, newRefreshToken);
                 var refreshTokenData = new
                 {
                     Token = newRefreshToken,
                     UserUuid = storedUserUuid,
                     SessionUuid = storedSessionUuid,
+                    UserTypeId = userTypeId,
                     CreatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddDays(7)
                 };
@@ -317,6 +329,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                     RefreshToken = newRefreshToken,
                     UserUuid = storedUserUuid,
                     SessionUuid = sessionUuid,
+                    UserTypeId = userTypeId,
                     ExpiresAt = DateTime.UtcNow.AddMinutes(15),
                     RefreshExpiresAt = DateTime.UtcNow.AddDays(7)
                 };
@@ -337,8 +350,9 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
 
             var userUuid = principal?.GetUserUuid();
             var sessionUuid = principal?.GetSessionUuid();
+            var userTypeId = principal?.GetUserTypeId();
 
-            if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(sessionUuid))
+            if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(sessionUuid) || string.IsNullOrEmpty(userTypeId))
             {
                 return false;
             }
@@ -346,7 +360,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             try
             {
                 using var connection = await GetSessionConnectionAsync();
-                var accessKey = GetAccessTokenKey(sessionUuid, userUuid);
+                var accessKey = GetAccessTokenKey(sessionUuid, userUuid, userTypeId);
 
                 var storedTokenJson = await connection.GetStringAsync(accessKey);
                 if (string.IsNullOrEmpty(storedTokenJson))
@@ -373,14 +387,14 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             }
         }
 
-        public async Task<bool> RevokeTokensAsync(string userUuid, string sessionUuid)
+        public async Task<bool> RevokeTokensAsync(string userUuid, string sessionUuid, string userTypeId)
         {
             try
             {
                 using var connection = await GetSessionConnectionAsync();
 
                 // Remove refresh tokens for this user/session
-                var refreshPattern = $"refresh:{sessionUuid}:{userUuid}:*";
+                var refreshPattern = $"refresh:{sessionUuid}:{userUuid}:{userTypeId}*";
                 var refreshKeys = await connection.GetKeysAsync(refreshPattern);
 
                 var keysToDelete = new List<string>();
@@ -395,8 +409,9 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                             var root = jsonDoc.RootElement;
                             var tokenUserUuid = root.GetProperty("UserUuid").GetString();
                             var tokenSessionUuid = root.GetProperty("SessionUuid").GetString();
+                            var tokenUserTypeId = root.GetProperty("UserTypeId").GetString();
 
-                            if (tokenUserUuid == userUuid && tokenSessionUuid == sessionUuid)
+                            if (tokenUserUuid == userUuid && tokenSessionUuid == sessionUuid && tokenUserTypeId == userTypeId)
                             {
                                 keysToDelete.Add(key);
                             }
@@ -414,7 +429,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 }
 
                 // Remove access token
-                var accessKey = GetAccessTokenKey(sessionUuid, userUuid);
+                var accessKey = GetAccessTokenKey(sessionUuid, userUuid, userTypeId);
                 await connection.DeleteAsync(accessKey);
 
                 _logger.LogInformation("Tokens revoked for user: {UserUuid}, session: {SessionUuid}", userUuid, sessionUuid);
@@ -435,7 +450,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 using var connection = await GetSessionConnectionAsync();
 
                 // Remove all refresh tokens for user
-                var refreshPattern = $"refresh:*:{userUuid}:*";
+                var refreshPattern = $"refresh:*:{userUuid}:*:*";
                 var refreshKeys = await connection.GetKeysAsync(refreshPattern);
                 var refreshKeysToDelete = new List<string>();
                 foreach (var key in refreshKeys)
@@ -444,7 +459,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 }
 
                 // Remove all access tokens for user
-                var accessPattern = $"access:*:{userUuid}*";
+                var accessPattern = $"access:*:{userUuid}*:*";
                 var accessKeys = await connection.GetKeysAsync(accessPattern);
                 var accessKeysToDelete = new List<string>();
                 foreach (var key in accessKeys)
@@ -476,7 +491,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 using var connection = await GetSessionConnectionAsync();
                 
                 // Remove all refresh tokens for user except the excluded session
-                var refreshPattern = $"refresh:*:{userUuid}:*";
+                var refreshPattern = $"refresh:*:{userUuid}:*:*";
                 var refreshKeys = await connection.GetKeysAsync(refreshPattern);
                 var refreshKeysToDelete = new List<string>();
                 foreach (var key in refreshKeys)
@@ -487,7 +502,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                     }
                 }
                 // Remove all access tokens for user except the excluded session
-                var accessPattern = $"access:*:{userUuid}:*";
+                var accessPattern = $"access:*:{userUuid}:*:*";
                 var accessKeys = await connection.GetKeysAsync(accessPattern);
                 var accessKeysToDelete = new List<string>();
                 foreach (var key in accessKeys)
@@ -546,6 +561,15 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             if (_jwtTokenProvider.ValidateToken(token, out var principal))
             {
                 return await Task.FromResult(principal?.GetSessionUuid());
+            }
+            return await Task.FromResult<string?>(null);
+        }
+
+        public async Task<string?> GetUserTypeIdFromTokenAsync(string token)
+        {
+            if (_jwtTokenProvider.ValidateToken(token, out var principal))
+            {
+                return await Task.FromResult(principal?.GetUserTypeId());
             }
             return await Task.FromResult<string?>(null);
         }
