@@ -12,9 +12,8 @@ public class SignUpRequestDtoValidator : AbstractValidator<SignUpRequestDto>
             .GreaterThan(0)
             .WithMessage("User type ID must be greater than 0.");
 
-        //RuleFor(x => x.UniversityUuid)
-        //    .Must(ValidationHelper.BeAValidUuid())
-        //    .WithMessage("University UUID must be a valid UUID format.");
+        RuleFor(x => x.UniversityUuid)
+            .Null();
 
         RuleFor(x => x.FirstName)
             .NotEmpty().WithMessage("First name cannot be empty.")

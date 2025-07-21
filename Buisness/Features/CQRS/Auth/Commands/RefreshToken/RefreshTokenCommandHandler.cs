@@ -31,7 +31,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                 RefreshTokenResponseDto refreshTokenResponseDto = new();
 
                 IBuisnessLogicResult validationResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateCommandAsync(request),
+                    await _authBusinessLogicHelper.ValidateAsync(request),
                     await _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestData),
                     string.IsNullOrEmpty(mappedRequestData.AccessToken) || string.IsNullOrWhiteSpace(mappedRequestData.AccessToken)
                         ? new BuisnessLogicSuccessResult("AccessToken not required also not given", 200)

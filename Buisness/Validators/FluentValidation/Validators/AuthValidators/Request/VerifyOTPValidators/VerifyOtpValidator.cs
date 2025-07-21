@@ -17,18 +17,22 @@ namespace Buisness.Validators.FluentValidation.Validators.AuthValidators.Request
         {
             RuleFor(x => x.UserTypeId)
                 .NotNull().WithMessage("UserTypeId cannot be null.")
+                .NotEmpty().WithMessage("UserTypeId cannot be empty.")
                 .Must(ValidationHelper.BeAValidByte).WithMessage("UserTypeId must be between 1 and 255.");
 
             RuleFor(x => x.UserUuid)
                 .NotNull().WithMessage("UserUuid cannot be null.")
+                .NotEmpty().WithMessage("UserUuid cannot be empty.")
                 .Must(uuid => ValidationHelper.BeAValidUuid(uuid.ToString())).WithMessage("UserUuid must be a valid UUID.");
 
             RuleFor(x => x.SessionUuid)
                 .NotNull().WithMessage("SessionUuid cannot be null.")
+                .NotEmpty().WithMessage("SessionUuid cannot be empty.")
                 .Must(uuid => ValidationHelper.BeAValidUuid(uuid.ToString())).WithMessage("SessionUuid must be a valid UUID.");
 
             RuleFor(x => x.OtpTypeId)
                 .NotNull().WithMessage("OtpTypeId cannot be null.")
+                .NotEmpty().WithMessage("OtpTypeId cannot be empty.")
                 .Must(ValidationHelper.BeAValidByte).WithMessage("OtpTypeId must be between 1 and 255.");
 
             RuleFor(x => x.OtpCode)

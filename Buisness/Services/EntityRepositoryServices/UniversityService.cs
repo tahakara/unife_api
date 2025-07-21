@@ -15,7 +15,6 @@ namespace Buisness.Services.EntityRepositoryServices
     public class UniversityService : ServiceManagerBase, IUniversityService
     {
         private readonly IUniversityRepository _universityRepository;
-        private readonly IMapper _mapper;
         private readonly IValidator<CreateUniversityDto> _createValidator;
         private readonly IValidator<UpdateUniversityDto> _updateValidator;
 
@@ -25,10 +24,9 @@ namespace Buisness.Services.EntityRepositoryServices
             IValidator<CreateUniversityDto> createValidator,
             IValidator<UpdateUniversityDto> updateValidator,
             ILogger<UniversityService> logger,
-            IServiceProvider serviceProvider) : base(logger, serviceProvider)
+            IServiceProvider serviceProvider) : base(mapper, logger, serviceProvider)
         {
             _universityRepository = universityRepository;
-            _mapper = mapper;
             _createValidator = createValidator;
             _updateValidator = updateValidator;
         }

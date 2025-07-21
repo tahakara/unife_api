@@ -226,7 +226,7 @@ try
                 return HealthCheckResult.Unhealthy("Redis connection error", ex);
             }
         });
-
+    builder.Services.AddHttpContextAccessor();
     var app = builder.Build();
 
     // Database Migration
@@ -252,7 +252,7 @@ try
         {
             Log.Information("Redis object storage bağlantıları test ediliyor");
 
-            var factoryKeys = new[] { "cache", "session", "verificationcode" };
+            var factoryKeys = new[] { "cache", "session", "verification" };
 
             foreach (var key in factoryKeys)
             {

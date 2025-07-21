@@ -3,7 +3,10 @@ using Buisness.DTOs.UniversityDtos;
 using Buisness.Features.CQRS.Base;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
+using DataAccess.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Buisness.Features.CQRS.Auth.Commands.Logout.Logout
@@ -11,13 +14,16 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.Logout
     public class LogoutCommandHandler : ICommandHandler<LogoutCommand, BaseResponse<bool>>
     {
         private readonly IAuthBuisnessLogicHelper _authBusinessLogicHelper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<LogoutCommand> _logger;
 
         public LogoutCommandHandler(
             IAuthBuisnessLogicHelper authBuissnessLogicHelper,
+            IHttpContextAccessor httpContextAccessor,
             ILogger<LogoutCommand> logger)
         {
             _authBusinessLogicHelper = authBuissnessLogicHelper;
+            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
@@ -27,12 +33,14 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.Logout
             {
                 _logger.LogDebug("Logout işlemi başlatıldı. AccessToken: {AccessToken}", request.AccessToken);
 
-                LogoutRequestDto mappedRequestDto = new();
+                var httpContext = _httpContextAccessor.HttpContext;
+
+                    LogoutRequestDto logoutRequestDto = new();
 
                 IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateCommandAsync(request),
-                    await _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestDto),
-                    await _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken)
+                    await _authBusinessLogicHelper.ValidateAsync(request),
+                    await _authBusinessLogicHelper.MapToDtoAsync(request, logoutRequestDto),
+                    await _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutRequestDto.AccessToken)
                 );
 
                 if (buisnessResult != null)
@@ -42,7 +50,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.Logout
 
 
                 IBuisnessLogicResult blackListResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.BlackListSessionTokensForASingleSessionAsync(mappedRequestDto.AccessToken)
+                    await _authBusinessLogicHelper.AddLogoutSecurityEventRecordAsync(httpContext, logoutRequestDto, true),
+                    await _authBusinessLogicHelper.BlackListSessionTokensForASingleSessionAsync(logoutRequestDto.AccessToken)
                 );
                 if (blackListResult != null)
                     return BaseResponse<bool>.Failure(

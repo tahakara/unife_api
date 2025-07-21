@@ -29,7 +29,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
                 LogoutOthersRequestDto mappedRequestDto = new();
 
                 IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateCommandAsync(request),
+                    await _authBusinessLogicHelper.ValidateAsync(request),
                     await _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestDto),
                     await _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken)
                 );

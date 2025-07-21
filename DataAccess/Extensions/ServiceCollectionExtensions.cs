@@ -17,6 +17,8 @@ using DataAccess.Abstract.Repositories;
 using DataAccess.Concrete.EntityFramework.UniversityModuleDal;
 using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories;
 using DataAccess.Concrete.EntityFramework.AuthorizationModuleDal;
+using DataAccess.Concrete.EntityFramework.AuthorizationModuleDal.SecurityEventDal;
+using DataAccess.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories;
 
 namespace DataAccess.Extensions
 {
@@ -75,11 +77,22 @@ namespace DataAccess.Extensions
                     options.EnableDetailedErrors();
                 }
             });
-            
+
             // Database Repositories
+            #region University Module Repositories
+            
+            #region Authorization Module Repositories
             services.AddScoped<IAdminRepository, EfAdminDal>();
             services.AddScoped<IStaffRepository, EfStaffDal>();
             services.AddScoped<IStudentRepository, EfStudentDal>();
+            
+            #region Security Event Repositories
+            services.AddScoped<ISecurityEventRepository, EfSecurityEventDal>();
+            services.AddScoped<ISecurityEventTypeRepository, EfSecurityEventTypeDal>();
+            #endregion
+            
+            #endregion
+            #endregion
 
             services.AddScoped<IUniversityRepository, EfUniversityDal>();
             services.AddScoped<IUniversityTypeRepository, EfUniversityTypeDal>();

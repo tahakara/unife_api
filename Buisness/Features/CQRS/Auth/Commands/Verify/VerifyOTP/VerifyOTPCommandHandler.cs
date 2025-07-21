@@ -38,7 +38,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                 VerifyOTPResponseDto verifyOTPResponseDto = new();
 
                 IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateCommandAsync(request),
+                    await _authBusinessLogicHelper.ValidateAsync(request),
                     await _authBusinessLogicHelper.MapToDtoAsync(request, verifyOTPRequestDto),
                     await _authBusinessLogicHelper.CheckVerifyOTPAsync(verifyOTPRequestDto, verifyOTPResponseDto)
                 );

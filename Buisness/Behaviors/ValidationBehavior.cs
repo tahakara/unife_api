@@ -42,7 +42,7 @@ namespace Buisness.Behaviors
             {
                 var errors = failures.Select(f => f.ErrorMessage).ToList();
                 _logger.LogWarning("Validation başarısız: {RequestName} - Hatalar: {@Errors}", requestName, errors);
-                
+
                 throw new ValidationException("Validation hatası", failures);
             }
 

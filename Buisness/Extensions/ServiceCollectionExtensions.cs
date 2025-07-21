@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Buisness.Abstract.ServicesBase;
 using Buisness.Abstract.ServicesBase.AuthorizationModuleServices;
+using Buisness.Abstract.ServicesBase.AuthorizationModuleServices.SecurityEventServices;
 using Buisness.Behaviors;
 using Buisness.DTOs.AuthDtos;
 using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
@@ -24,6 +25,7 @@ using Buisness.Mappings.AuthMappingProfiles.VerifyMappingProfiles;
 using Buisness.Mappings.Common;
 using Buisness.Services.EntityRepositoryServices;
 using Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices;
+using Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices.SecurityEventServices;
 using Buisness.Services.UtilityServices.Base.EmailServices;
 using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
 using Buisness.Services.UtilityServices.EmailServices;
@@ -62,6 +64,7 @@ namespace Buisness.Extensions
             {
                 cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
             });
+
 
             // Pipeline Behaviors
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
@@ -111,6 +114,8 @@ namespace Buisness.Extensions
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IStaffService, StaffService>();
             services.AddScoped<IStudentService, StudentService>();
+            services.AddScoped<ISecurityEventService, SecurityEventService>();
+            services.AddScoped<ISecurityEventTypeService, SecurityEventTypeService>();
 
             services.AddScoped<IUniversityService, UniversityService>();
             services.AddScoped<IUniversityTypeService, UniversityTypeService>();

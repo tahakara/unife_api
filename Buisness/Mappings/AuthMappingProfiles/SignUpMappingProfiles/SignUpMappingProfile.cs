@@ -18,7 +18,7 @@ namespace Buisness.Mappings.AuthMappingProfiles.SignUpMappingProfiles
             // SignUpCommand -> SignUpRequestDto Mapping
             CreateMap<SignUpCommand, SignUpRequestDto>()
             .ForMember(dest => dest.UserTypeId, opt => opt.MapFrom(src => src.UserTypeId))
-            .ForMember(dest => dest.UniversityUuid, opt => opt.MapFrom(src => src.UniversityUuid))
+            .ForMember(dest => dest.UniversityUuid, opt => opt.Ignore())
             .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName == null ? null : src.FirstName.Trim()))
             .ForMember(dest => dest.MiddleName, opt => opt.MapFrom(src => src.MiddleName == null ? null : src.MiddleName.Trim()))
             .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName == null ? null : src.LastName.Trim()))

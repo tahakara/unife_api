@@ -6,7 +6,7 @@ namespace Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvent
 {
     public class SecurityEvent : BaseEntity
     {
-        public Guid SecurityEventUuid { get; set; }
+        public Guid SecurityEventUuid { get; set; } = Guid.NewGuid();
         public Guid? EventTypeUuid { get; set; }
         public Guid? UniversityUuid { get; set; } 
         public Guid? EventedByAdminUuid { get; set; }
@@ -16,7 +16,7 @@ namespace Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvent
         public string IpAddress { get; set; } = string.Empty;
         public string? UserAgent { get; set; }
         public string? AdditionalData { get; set; }
-        public DateTime EventTime { get; set; }
+        public DateTime EventTime { get; set; } = DateTime.UtcNow;
         public override DateTime CreatedAt { get; set; }
         public override DateTime UpdatedAt { get; set; }
 

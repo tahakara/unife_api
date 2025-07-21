@@ -10,16 +10,14 @@ namespace Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices
     public class StaffService : ServiceManagerBase, IStaffService
     {
         private readonly IStaffRepository _staffRepository;
-        private readonly IMapper _mapper;
         public StaffService(
             IStaffRepository staffRepository,
             IMapper mapper,
             ILogger<StaffService> logger, 
             IServiceProvider serviceProvider) 
-            : base(logger, serviceProvider)
+            : base(mapper, logger, serviceProvider)
         {
             _staffRepository = staffRepository;
-            _mapper = mapper;
         }
 
         public async Task<Staff> CreateNewStaffAsync(Staff staff)

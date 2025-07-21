@@ -1,0 +1,28 @@
+﻿using Buisness.Abstract.ServicesBase.Base;
+using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Buisness.Abstract.ServicesBase.AuthorizationModuleServices.SecurityEventServices
+{
+    public interface ISecurityEventService : IServiceManagerBase
+    {
+        Task<bool> RecordSecurityEventAsync(SecurityEvent securityEvent);
+        Task<SecurityEvent?> GetByUuid(Guid eventUuid);
+        Task<IEnumerable<SecurityEvent>> GetAllUniversityUuidAsync(Guid universityUuid);
+        Task<IEnumerable<SecurityEvent>> GetAllByUniversityUuidAsync(Guid universityUuid);
+        Task<IEnumerable<SecurityEvent>> GetAllByEventExecuterAdminUuidAsync(Guid executerAdminUuid);
+        Task<IEnumerable<SecurityEvent>> GetAllByEventExecuterStaffUuidAsync(Guid executerStaffUuid);
+        Task<IEnumerable<SecurityEvent>> GetAllByEventExecuterStudentUuidAsync(Guid executerStudentUuid);
+
+        Task<IEnumerable<SecurityEvent>> GetAllByEventTypeUuidAsync(Guid eventTypeUuid);
+
+        Task<IEnumerable<SecurityEvent>> GetAllByEventTimeAsync(DateTime eventTime);
+        Task<IEnumerable<SecurityEvent>> GetAllByEventTimeRangeAsync(DateTime startTime, DateTime endTime);
+        Task<IEnumerable<SecurityEvent>> GetAllByIpAddressAsync(string ipAddress);
+        Task<IEnumerable<SecurityEvent>> GetAllByUserAgentAsync(string userAgent);
+    }
+}

@@ -1,4 +1,7 @@
-﻿using Buisness.Abstract.ServicesBase.Base;
+﻿using AutoMapper;
+using Buisness.Abstract.ServicesBase.Base;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -8,31 +11,92 @@ namespace Buisness.Concrete.ServiceManager
     public abstract class ServiceManagerBase : IServiceManagerBase
     {
         protected readonly ILogger<ServiceManagerBase> _logger;
+        protected readonly IMapper _mapper;
         protected readonly IServiceProvider _serviceProvider;
 
-        protected ServiceManagerBase(ILogger<ServiceManagerBase> logger, IServiceProvider serviceProvider)
+        protected ServiceManagerBase(IMapper mapper, ILogger<ServiceManagerBase> logger, IServiceProvider serviceProvider)
         {
             _logger = logger;
+            _mapper = mapper;
             _serviceProvider = serviceProvider;
         }
 
-        public virtual async Task ValidateAsync<T>(T dto) where T : class
+        public virtual async Task<IBuisnessLogicResult> ValidateAsync<T>(T dto) where T : class
         {
-            var validator = _serviceProvider.GetService<IValidator<T>>();
-            if (validator != null)
+            _logger.LogDebug("Validation started for {DtoType}", typeof(T).Name);
+
+            if (dto == null)
             {
-                var validationResult = await validator.ValidateAsync(dto);
-                if (!validationResult.IsValid)
+                return new BuisnessLogicErrorResult("Validation failed: DTO is null", 400);
+            }
+
+            try
+            {
+                var validator = _serviceProvider.GetService<IValidator<T>>();
+
+                if (validator != null)
                 {
-                    var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
-                    throw new ValidationException($"Validation failed: {errors}");
+                    var validationResult = await validator.ValidateAsync(dto);
+                    if (!validationResult.IsValid)
+                    {
+                        var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+                        _logger.LogWarning("Validation errors for {DtoType}: {Errors}", typeof(T).Name, errors);
+                        return new BuisnessLogicErrorResult($"Validation failed: {errors}", 400);
+                    }
                 }
+
+                _logger.LogDebug("Validation successful for {DtoType}", typeof(T).Name);
+                return new BuisnessLogicSuccessResult("Validation successful", 200);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Validation failed for {DtoType}", typeof(T).Name);
+                return new BuisnessLogicErrorResult("Validation failed", 500);
+            }
+        }
+
+        public virtual async Task<IBuisnessLogicResult> MapToDtoAsync<TSource, TDestination>(TSource source, TDestination target)
+            where TSource : class, new()
+            where TDestination : class, new()
+        {
+            try
+            {
+                _logger.LogDebug("Mapping {SourceType} to {TargetType} started",
+                    typeof(TSource).Name, typeof(TDestination).Name);
+
+                if (source == null || target == null)
+                {
+                    return new BuisnessLogicErrorResult("Mapping failed: null input", 400);
+                }
+
+                _mapper.Map(source, target); // AutoMapper: source -> destination
+
+                _logger.LogDebug("Mapping {SourceType} to {TargetType} completed successfully",
+                    typeof(TSource).Name, typeof(TDestination).Name);
+                return new BuisnessLogicSuccessResult("Mapping successful", 200);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Mapping failed due to exception");
+                return new BuisnessLogicErrorResult("Mapping failed", 500);
             }
         }
 
         public virtual async Task LogOperationAsync(string operation, object? data = null)
         {
             _logger.LogInformation("Operation: {Operation}, Data: {@Data}", operation, data);
+            await Task.CompletedTask;
+        }
+
+        public virtual async Task LogWarningAsync(string operation, string message, object? data = null)
+        {
+            _logger.LogWarning("Warning in operation: {Operation}, Message: {Message}, Data: {@Data}", operation, message, data);
+            await Task.CompletedTask;
+        }
+
+        public virtual async Task LogDebugAsync(string operation, object? data = null)
+        {
+            _logger.LogDebug("Debugging operation: {Operation}, Data: {@Data}", operation, data);
             await Task.CompletedTask;
         }
 

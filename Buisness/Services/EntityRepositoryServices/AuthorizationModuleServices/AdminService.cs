@@ -19,16 +19,14 @@ namespace Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices
     public class AdminService : ServiceManagerBase, IAdminService
     {
         private readonly IAdminRepository _adminRepository;
-        private readonly IMapper _mapper;
         public AdminService(
             IAdminRepository adminRepository,
             IMapper mapper,
             ILogger<AdminService> logger, 
             IServiceProvider serviceProvider) : 
-            base(logger, serviceProvider)
+            base(mapper, logger, serviceProvider)
         {
             _adminRepository = adminRepository;
-            _mapper = mapper;
         }
 
         public Task<Admin> CreateNewAdminAsync(Admin admin)

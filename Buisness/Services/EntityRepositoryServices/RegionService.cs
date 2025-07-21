@@ -9,15 +9,13 @@ namespace Buisness.Services.EntityRepositoryServices
     public class RegionService : ServiceManagerBase, IRegionService
     {
         private readonly IRegionRepository _regionRepository;
-        private readonly IMapper _mapper;
         public RegionService(
             IRegionRepository regionRepository,
             IMapper mapper,
             ILogger<RegionService> logger,
-            IServiceProvider serviceProvider) : base(logger, serviceProvider)
+            IServiceProvider serviceProvider) : base(mapper, logger, serviceProvider)
         {
             _regionRepository = regionRepository;
-            _mapper = mapper;
         }
 
         public async Task<bool> IsRegionCodeAlpha2ExistsAsync(string regionCodeAlpha2)

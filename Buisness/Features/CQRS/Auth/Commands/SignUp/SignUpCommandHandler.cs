@@ -33,7 +33,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignUp
                 SignUpResponseDto signUpResponsetDto = new();
 
                 IBuisnessLogicResult buisnessLogicResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateCommandAsync(request),
+                    await _authBusinessLogicHelper.ValidateAsync(request),
                     await _authBusinessLogicHelper.MapToDtoAsync(request, signUpRequestDto)                    
                 );
                 if (buisnessLogicResult != null)

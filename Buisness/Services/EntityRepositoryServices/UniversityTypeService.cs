@@ -11,7 +11,6 @@ namespace Buisness.Services.EntityRepositoryServices
     public class UniversityTypeService : ServiceManagerBase, IUniversityTypeService
     {
         private readonly IUniversityTypeRepository _universityTypeRepository;
-        private readonly IMapper _mapper;
 
         public UniversityTypeService(
             IUniversityTypeRepository universityTypeRepository,
@@ -19,10 +18,9 @@ namespace Buisness.Services.EntityRepositoryServices
             IValidator<CreateUniversityDto> createValidator,
             IValidator<UpdateUniversityDto> updateValidator,
             ILogger<UniversityService> logger,
-            IServiceProvider serviceProvider) : base(logger, serviceProvider)
+            IServiceProvider serviceProvider) : base(mapper, logger, serviceProvider)
         {
             _universityTypeRepository = universityTypeRepository;
-            _mapper = mapper;
         }
 
         public async Task<bool> IsTypeIdExistsAsync(int typeId)

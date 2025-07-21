@@ -4,7 +4,7 @@ namespace Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvent
 {
     public class SecurityEventType : BaseEntity
     {
-        public Guid SecurityEventTypeUuid { get; set; }
+        public Guid SecurityEventTypeUuid { get; set; } = Guid.NewGuid();
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public bool IsActive { get; set; } = true;
@@ -17,6 +17,4 @@ namespace Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvent
         // Navigation properties
         public virtual ICollection<SecurityEvent>? SecurityEvents { get; set; }
     }
-
-
 }

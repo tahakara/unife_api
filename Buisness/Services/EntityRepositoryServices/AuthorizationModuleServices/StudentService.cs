@@ -10,16 +10,14 @@ namespace Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices
     public class StudentService : ServiceManagerBase, IStudentService
     {
         private readonly IStudentRepository _studentRepository;
-        private readonly IMapper _mapper;
         public StudentService(
             IStudentRepository studentRepository,
             IMapper mapper,
             ILogger<StudentService> logger,
             IServiceProvider serviceProvider)
-            : base(logger, serviceProvider)
+            : base(mapper, logger, serviceProvider)
         {
             _studentRepository = studentRepository;
-            _mapper = mapper;
         }
 
         public async Task<Student> CreateNewStudentAsync(Student student)

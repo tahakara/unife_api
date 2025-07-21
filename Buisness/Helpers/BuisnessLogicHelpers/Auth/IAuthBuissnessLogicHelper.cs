@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Buisness.Abstract.DtoBase.Base;
 using Buisness.Abstract.ServicesBase.AuthorizationModuleServices;
+using Buisness.Abstract.ServicesBase.AuthorizationModuleServices.SecurityEventServices;
+using Buisness.Abstract.ServicesBase.Base;
 using Buisness.Concrete.Dto;
 using Buisness.Concrete.ServiceManager;
 using Buisness.DTOs.AuthDtos;
@@ -33,8 +35,11 @@ using Core.Utilities.PasswordUtilities.Base;
 using DataAccess.Abstract;
 using DataAccess.Enums;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
+using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;
+using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -46,12 +51,8 @@ using System.Windows.Input;
 
 namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 {
-    public interface IAuthBuisnessLogicHelper : IBuisnessLogicHelper
+    public interface IAuthBuisnessLogicHelper : IBuisnessLogicHelper, IServiceManagerBase
     {
-        Task<IBuisnessLogicResult> ValidateCommandAsync<T>(T command) where T : class, new();
-        Task<IBuisnessLogicResult> MapToDtoAsync<TSource, TDestination>(TSource source, TDestination target)
-            where TSource : class, new()
-            where TDestination : class, new();
         Task<IBuisnessLogicResult> IsAccessTokenValidAsync(string accessToken);
         Task<IBuisnessLogicResult> BlackListSessionTokensForASingleSessionAsync(string accessToken);
         Task<IBuisnessLogicResult> BlacklistAllSessionTokensByUserAsync(string accessToken);
@@ -64,6 +65,34 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         Task<IBuisnessLogicResult> CheckVerifyOTPAsync(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
         Task<IBuisnessLogicResult> CreatSession(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
         Task<IBuisnessLogicResult> RevokeOldOTPAsync(SignInRequestDto signInRequestDto);
+
+        /// <summary>
+        /// Adds a security event record to the database.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the additional data key.</typeparam>
+        /// <typeparam name="TValue">The type of the additional data value.</typeparam>
+        /// <param name="httpContext">The HTTP context for retrieving request details.</param>
+        /// <param name="eventTypeUuid">The unique identifier of the event type.</param>
+        /// <param name="securityEventTypeGuid">The GUID of the security event type.</param>
+        /// <param name="userTypeId">The ID of the user type related to the event.</param>
+        /// <param name="userUuid">The unique identifier of the user related to the event.</param>
+        /// <param name="description">
+        /// The event description text.  
+        /// Only the first 1000 characters will be stored;  
+        /// if a longer string is provided, it will be automatically truncated.
+        /// </param>
+        /// <param name="additionalData">Additional data related to the security event.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        Task<IBuisnessLogicResult> AddSecurityEventRecordAsync<TKey, TValue>(HttpContext? httpContext, Guid securityEventTypeGuid, UserTypeId userTypeId, Guid userUuid, Guid? universityUuid, string description, Dictionary<TKey, TValue>? additionalData);
+        Task<IBuisnessLogicResult> AddLogoutSecurityEventRecordAsync(HttpContext? httpContext ,LogoutRequestDto logoutRequestDto, bool isEventSuccess=false, string? failureMessage = null);
+        //Task<IBuisnessLogicResult> AddLogoutAllSecurityEventRecordAsync();
+        //Task<IBuisnessLogicResult> AddLogoutOthersSecurityEventRecordAsync();
+        //Task<IBuisnessLogicResult> AddRefreshTokenSecurityEventRecordAsync();
+        //Task<IBuisnessLogicResult> AddSignInSecurityEventRecordAsync();
+        //Task<IBuisnessLogicResult> AddSignUpSecurityEventRecordAsync();
+        //Task<IBuisnessLogicResult> AddVerifyOTPSecurityEventRecordAsync();
+
+
     }
 
     public class AuthBuisnessLogicHelper : ServiceManagerBase, IAuthBuisnessLogicHelper
@@ -76,8 +105,8 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         private readonly IAdminService _adminService;
         private readonly IStaffService _staffService;
         private readonly IStudentService _studentService;
-        private readonly IMapper _mapper;
-
+        private readonly ISecurityEventTypeService _securityEventTypeService;
+        private readonly ISecurityEventService _securityEventService;
 
         public AuthBuisnessLogicHelper(
             ISessionJwtService sessionJwtService,
@@ -88,9 +117,11 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             IAdminService adminService,
             IStaffService staffService,
             IStudentService studentService,
+            ISecurityEventTypeService securityEventTypeService,
+            ISecurityEventService securityEventService,
             IMapper mapper,
             ILogger<AuthBuisnessLogicHelper> logger,
-            IServiceProvider serviceProvider) : base(logger, serviceProvider)
+            IServiceProvider serviceProvider) : base(mapper, logger, serviceProvider)
         {
             _sessionJwtService = sessionJwtService;
             _OTPCodeService = OTPCodeService;
@@ -100,64 +131,15 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             _adminService = adminService;
             _staffService = staffService;
             _studentService = studentService;
-            _mapper = mapper;
-            //_logger = logger;
-        }
-
-        public async Task<IBuisnessLogicResult> ValidateCommandAsync<T>(T command) where T : class, new()
-        {
-            try
-            {
-                _logger.LogDebug("Validation started for {DtoType}", typeof(T).Name);
-                if (command == null)
-                {
-                    return new BuisnessLogicErrorResult("Validation failed: DTO is null", 400);
-                }
-
-                await ValidateAsync(command);
-
-                _logger.LogDebug("Validation successful for {DtoType}", typeof(T).Name);
-                return new BuisnessLogicSuccessResult("Validation successful", 200);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Validation failed for {DtoType}", typeof(T).Name);
-                return new BuisnessLogicErrorResult("Validation failed", 500);
-            }
-        }
-
-        public async Task<IBuisnessLogicResult> MapToDtoAsync<TSource, TDestination>(TSource source, TDestination target)
-            where TSource : class, new()
-            where TDestination : class, new()
-        {
-            try
-            {
-                _logger.LogDebug("Mapping {SourceType} to {TargetType} started",
-                    typeof(TSource).Name, typeof(TDestination).Name);
-
-                if (source == null || target == null)
-                {
-                    return new BuisnessLogicErrorResult("Mapping failed: null input", 400);
-                }
-
-                _mapper.Map(source, target); // AutoMapper: source -> destination
-
-                _logger.LogDebug("Mapping {SourceType} to {TargetType} completed successfully",
-                    typeof(TSource).Name, typeof(TDestination).Name);
-                return new BuisnessLogicSuccessResult("Mapping successful", 200);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Mapping failed due to exception");
-                return new BuisnessLogicErrorResult("Mapping failed", 500);
-            }
+            _securityEventTypeService = securityEventTypeService;
+            _securityEventService = securityEventService;
         }
 
         public async Task<IBuisnessLogicResult> IsAccessTokenValidAsync(string accessToken)
         {
             try
             {
-                _logger.LogDebug("Validating access token {AccessToken}", accessToken);
+                await LogDebugAsync("IsAccessTokenValidAsync Started", accessToken);
 
                 bool isValid = await _sessionJwtService.ValidateTokenAsync(accessToken);
                 if (!isValid)
@@ -165,12 +147,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     return new BuisnessLogicErrorResult("AccessToken invalid or expired");
                 }
 
-                _logger.LogDebug("Access token validation successful for {AccessToken}", accessToken);
+                await LogDebugAsync("IsAccessTokenValidAsync Completed", accessToken);
                 return new BuisnessLogicSuccessResult("Access token validation successful", 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Access token validation failed");
+                await LogErrorAsync("IsAccessTokenValidAsync Excepted", ex, accessToken);
                 return new BuisnessLogicErrorResult("Access token validation failed", 500);
             }
         }
@@ -179,8 +161,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("Blacklisting access token {AccessToken}", accessToken);
-
+                await LogDebugAsync("BlackListSessionTokensForASingleSessionAsync Started", accessToken);
 
                 var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
                 var sessionUuid = await _sessionJwtService.GetSessionUuidFromTokenAsync(accessToken);
@@ -196,13 +177,13 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     return new BuisnessLogicErrorResult("Failed to revoke tokens", 500);
                 }
 
-                _logger.LogDebug("Access token blacklisted successfully for user {UserUuid} and session {SessionUuid}", userUuid, sessionUuid);
+                await LogDebugAsync("BlackListSessionTokensForASingleSessionAsync Completed", new { AccessToken = accessToken , UserUuid = userUuid, SessionUuid = sessionUuid });
                 return new BuisnessLogicSuccessResult("Access token blacklisted successfully", 200);
 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error blacklisting access token {AccessToken}", accessToken);
+                await LogErrorAsync("BlackListSessionTokensForASingleSessionAsync Excepted", ex, accessToken);
                 return new BuisnessLogicErrorResult("Error blacklisting access token", 500);
             }
         }
@@ -211,7 +192,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("Blacklisting access token {AccessToken} excluding one session", accessToken);
+                await LogDebugAsync("BlacklistSessionsExcludedByOneAsync Started", accessToken);
 
                 var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
                 var currentSessionUuid = await _sessionJwtService.GetSessionUuidFromTokenAsync(accessToken);
@@ -228,12 +209,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     return new BuisnessLogicErrorResult("Failed to revoke tokens", 500);
                 }
 
-                _logger.LogDebug("Access token blacklisted successfully for user {UserUuid} excluding session {cURRENTSessionUuid}", userUuid, currentSessionUuid);
+                await LogDebugAsync("BlacklistSessionsExcludedByOneAsync Completed", new { AccessToken = accessToken, UserUuid = userUuid, CurrentSessionUuid = currentSessionUuid });
                 return new BuisnessLogicSuccessResult("Access token blacklisted successfully", 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error blacklisting access token {AccessToken}", accessToken);
+                await LogErrorAsync("BlacklistSessionsExcludedByOneAsync Excepted", ex, accessToken);
                 return new BuisnessLogicErrorResult("Error blacklisting access token", 500);
             }
         }
@@ -242,7 +223,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("Blacklisting all session tokens for user with access token {AccessToken}", accessToken);
+                await LogDebugAsync("BlacklistAllSessionTokensByUserAsync Started", accessToken);
 
                 var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
                 if (string.IsNullOrEmpty(userUuid))
@@ -257,12 +238,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     return new BuisnessLogicErrorResult("Failed to revoke all session tokens", 500);
                 }
 
-                _logger.LogDebug("All session tokens blacklisted successfully for user {UserUuid}", userUuid);
+                await LogDebugAsync("BlacklistAllSessionTokensByUserAsync Completed", new { AccessToken = accessToken, UserUuid = userUuid });
                 return new BuisnessLogicSuccessResult("All session tokens blacklisted successfully", 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error blacklisting all session tokens for user with access token {AccessToken}", accessToken);
+                await LogErrorAsync("BlacklistAllSessionTokensByUserAsync Excepted", ex, accessToken);
                 return new BuisnessLogicErrorResult("Error blacklisting all session tokens by user", 500);
             }
         }
@@ -271,7 +252,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("IsRefreshTokenValid işlemi başlatıldı. Refresh Token: {RefreshToken}", refreshTokenRequestDto.RefreshToken);
+                await LogDebugAsync("IsRefreshTokenValidAsync Started", refreshTokenRequestDto.RefreshToken);
 
                 await ValidateAsync(refreshTokenRequestDto);
 
@@ -316,11 +297,18 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     return new BuisnessLogicErrorResult("User UUID and Session UUID are not found on AccessToken", 400);
                 }
 
+                await LogDebugAsync("IsRefreshTokenValidAsync Completed", new
+                {
+                    AccessToken = refreshTokenRequestDto.AccessToken,
+                    UserUuid = refreshTokenResponseDto.UserUuid,
+                    SessionUuid = refreshTokenResponseDto.SessionUuid,
+                    RefreshToken = refreshTokenResponseDto.RefreshToken
+                });
                 return new BuisnessLogicSuccessResult("Refresh token is valid", 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "IsRefreshTokenValid işlemi sırasında hata oluştu");
+                await LogErrorAsync("IsRefreshTokenValidAsync Excepted", ex, refreshTokenRequestDto.RefreshToken);
                 return new BuisnessLogicErrorResult("IsRefreshTokenValid işlemi sırasında hata oluştu", 500);
             }
         }
@@ -329,7 +317,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("Refresh token işlemi başlatıldı. Refresh Token: {RefreshToken}", refreshTokenResponseDto.RefreshToken);
+                await LogDebugAsync("RefreshAccessTokenAsync Started", refreshTokenResponseDto.RefreshToken);
 
                 var refreshResult = await _sessionJwtService.RefreshAccessTokenAsync(refreshTokenResponseDto.UserUuid, refreshTokenResponseDto.SessionUuid, refreshTokenResponseDto.RefreshToken);
                 if (refreshResult == null)
@@ -340,12 +328,18 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 refreshTokenResponseDto.AccessToken = refreshResult.AccessToken;
                 refreshTokenResponseDto.RefreshToken = refreshResult.RefreshToken;
 
-                _logger.LogDebug("Refresh token işlemi başarılı. Yeni Access Token: {AccessToken}, Yeni Refresh Token: {RefreshToken }", refreshTokenResponseDto.AccessToken, refreshTokenResponseDto.RefreshToken);
-                return new BuisnessLogicSuccessResult("Refresh token işlemi başarılı", 200);
+                await LogDebugAsync("RefreshAccessTokenAsync Completed", new
+                {
+                    AccessToken = refreshTokenResponseDto.AccessToken,
+                    RefreshToken = refreshTokenResponseDto.RefreshToken,
+                    UserUuid = refreshTokenResponseDto.UserUuid,
+                    SessionUuid = refreshTokenResponseDto.SessionUuid
+                });
+                return new BuisnessLogicSuccessResult("Refresh token Completed", 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Refresh token işlemi sırasında hata oluştu");
+                await LogErrorAsync("RefreshAccessTokenAsync Excepted", ex, refreshTokenResponseDto.RefreshToken);
                 return new BuisnessLogicErrorResult("Refresh token işlemi sırasında hata oluştu", 500);
             }
         }
@@ -354,9 +348,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("CheckSignUpCredentials işlemi başlatıldı. UserTypeId: {UserTypeId}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",
-                    signUpRequestDto.UserTypeId, signUpRequestDto.Email, signUpRequestDto.PhoneCountryCode, signUpRequestDto.PhoneNumber);
-
+                await LogDebugAsync("CheckSignUpCredentialsAsync Started", signUpRequestDto);
 
                 switch (signUpRequestDto.UserTypeId)
                 {
@@ -465,7 +457,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "CheckSignUpCredentials işlemi sırasında hata oluştu");
+                 await LogErrorAsync("CheckSignUpCredentialsAsync Excepted", ex, signUpRequestDto);
                 return new BuisnessLogicErrorResult("CheckSignUpCredentials işlemi sırasında hata oluştu", 500);
             }
         }
@@ -474,20 +466,26 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("CheckSignInCredentials işlemi başlatıldı. UserType: {UserType}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",
-                    signInRequestDto.UserTypeId, signInRequestDto.Email, signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
+                await LogDebugAsync("CheckSignInCredentialsAsync Started", signInRequestDto);
 
                 switch (signInRequestDto.UserTypeId)
                 {
                     case (int)UserTypeId.Admin:
                         Admin? currentAdmin = new();
 
-                        if (!(string.IsNullOrEmpty(signInRequestDto.Email) && string.IsNullOrEmpty(signInRequestDto.Password)))
+                        bool hasEmailLogin = !string.IsNullOrEmpty(signInRequestDto.Email) &&
+                                                !string.IsNullOrEmpty(signInRequestDto.Password);
+
+                        bool hasPhoneLogin = !string.IsNullOrEmpty(signInRequestDto.PhoneCountryCode) &&
+                                             !string.IsNullOrEmpty(signInRequestDto.PhoneNumber) &&
+                                             !string.IsNullOrEmpty(signInRequestDto.Password);
+
+
+                        if (hasEmailLogin)
                         {
                             currentAdmin = await _adminService.GetAdminByEmailAsync(signInRequestDto.Email);
                         }
-                        else if (!((string.IsNullOrEmpty(signInRequestDto.PhoneCountryCode) && string.IsNullOrEmpty(signInRequestDto.PhoneNumber)) &&
-                            string.IsNullOrEmpty(signInRequestDto.Password)))
+                        else if (hasPhoneLogin)
                         {
                             currentAdmin = await _adminService.GetAdminByPhoneNumberAsync(signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
                         }
@@ -572,13 +570,13 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         return new BuisnessLogicErrorResult("Invalid user type", 400);
                         break;
                 }
-                _logger.LogDebug("CheckSignInCredentials işlemi başarılı. UserType: {UserType}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",
-                    signInRequestDto.UserTypeId, signInRequestDto.Email, signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
+
+                await LogDebugAsync("CheckSignInCredentialsAsync Completed", signInRequestDto);
                 return new BuisnessLogicSuccessResult("SignIn credentials are valid", 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "CheckSignInCredentials işlemi sırasında hata oluştu");
+                await LogErrorAsync("CheckSignInCredentialsAsync Excepted", ex, signInRequestDto);
                 return new BuisnessLogicErrorResult("CheckSignInCredentials işlemi sırasında hata oluştu", 500);
             }
         }
@@ -587,8 +585,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("SendSignInOTP işlemi başlatıldı. UserType: {UserType}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",
-                    signInRequestDto.UserTypeId, signInRequestDto.Email, signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
+                await LogDebugAsync("SendSignInOTPAsync Started", signInRequestDto);
 
                 signInRequestDto.SessionUuid = Guid.NewGuid();
                 signInRequestDto.OtpCode = _otpUtilitiy.GenerateOTP();
@@ -629,13 +626,21 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         break;
                 }
 
-                _logger.LogDebug("SendSignInOTP işlemi başlatıldı. UserType: {UserType}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",
-                    signInRequestDto.UserTypeId, signInRequestDto.Email, signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
-                return new BuisnessLogicSuccessResult("SendSignInOTP işlemi başarılı", 200);
+                await LogDebugAsync("SendSignInOTP Completed", new
+                {
+                    UserType = signInRequestDto.UserTypeId,
+                    Email = signInRequestDto.Email,
+                    PhoneCountryCode = signInRequestDto.PhoneCountryCode,
+                    PhoneNumber = signInRequestDto.PhoneNumber,
+                    SessionUuid = signInRequestDto.SessionUuid,
+                    OtpTypeId = signInRequestDto.OtpTypeId,
+                    OtpCode = signInRequestDto.OtpCode
+                });
+                return new BuisnessLogicSuccessResult("SendSignInOTP Completed", 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "SendSignInOTP işlemi sırasında hata oluştu");
+                await LogErrorAsync("SendSignInOTPAsync Excepted", ex, signInRequestDto);
                 return new BuisnessLogicErrorResult("SendSignInOTP işlemi sırasında hata oluştu", 500);
             }
         }
@@ -644,8 +649,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("CheckVerifyOTP işlemi başlatıldı. UserType: {UserType}, SessionUuid: {SessionUuid}, OtpTypeId: {OtpTypeId}, OtpCode: {OtpCode}",
-                    verifyOTPRequestDto.UserTypeId, verifyOTPRequestDto.SessionUuid, verifyOTPRequestDto.OtpTypeId, verifyOTPRequestDto.OtpCode);
+                await LogDebugAsync("CheckVerifyOTPAsync Started", verifyOTPRequestDto);
 
                 bool isExist = await _OTPCodeService.IsCodeExistAsync(verifyOTPRequestDto.SessionUuid.ToString(),
                     verifyOTPRequestDto.UserUuid.ToString(),
@@ -671,11 +675,18 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 verifyOTPResponseDto.OtpTypeId = verifyOTPRequestDto.OtpTypeId;
                 verifyOTPResponseDto.UserUuid = verifyOTPRequestDto.UserUuid;
 
+                await LogDebugAsync("CheckVerifyOTP Completed", new
+                {
+                    UserType = verifyOTPRequestDto.UserTypeId,
+                    SessionUuid = verifyOTPRequestDto.SessionUuid,
+                    OtpTypeId = verifyOTPRequestDto.OtpTypeId,
+                    OtpCode = verifyOTPRequestDto.OtpCode
+                });
                 return new BuisnessLogicSuccessResult("OTP code is valid", 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "CheckVerifyOTP işlemi sırasında hata oluştu");
+                await LogErrorAsync("CheckVerifyOTPAsync Excepted", ex, verifyOTPRequestDto);
                 return new BuisnessLogicErrorResult("CheckVerifyOTP işlemi sırasında hata oluştu", 500);
             }
         }
@@ -684,8 +695,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("CreatSession işlemi başlatıldı. UserType: {UserType}, SessionUuid: {SessionUuid}, OtpTypeId: {OtpTypeId}, OtpCode: {OtpCode}",
-                    verifyOTPRequestDto.UserTypeId, verifyOTPRequestDto.SessionUuid, verifyOTPRequestDto.OtpTypeId, verifyOTPRequestDto.OtpCode);
+                await LogDebugAsync("CreatSession Started", verifyOTPRequestDto);
 
                 string newAccessTOken = await _sessionJwtService.GenerateAccessTokenAsync(
                     verifyOTPRequestDto.UserUuid.ToString(),
@@ -698,11 +708,19 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 verifyOTPResponseDto.AccessToken = newAccessTOken;
                 verifyOTPResponseDto.RefreshToken = newRefreshToken;
 
+                await LogDebugAsync("CreatSession Completed", new
+                {
+                    UserType = verifyOTPRequestDto.UserTypeId,
+                    SessionUuid = verifyOTPRequestDto.SessionUuid,
+                    OtpTypeId = verifyOTPRequestDto.OtpTypeId,
+                    AccessToken = newAccessTOken,
+                    RefreshToken = newRefreshToken
+                });
                 return new BuisnessLogicSuccessResult("Session created successfully", 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "CreatSession işlemi sırasında hata oluştu");
+                await LogErrorAsync("CreatSession Excepted", ex, verifyOTPRequestDto);
                 return new BuisnessLogicErrorResult("CreatSession işlemi sırasında hata oluştu", 500);
             }
         }
@@ -711,21 +729,142 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                _logger.LogDebug("RevokeOldOTP işlemi başlatıldı. UserType: {UserType}, SessionUuid: {SessionUuid}, OtpTypeId: {OtpTypeId}",
-                    signInRequestDto.UserTypeId, signInRequestDto.SessionUuid, signInRequestDto.OtpTypeId);
+                await LogDebugAsync("RevokeOldOTP Started", signInRequestDto);
+
                 bool isRevoked = await _OTPCodeService.RevokeCodeByUserUuid(signInRequestDto.UserUuid.ToString());
                 if (!isRevoked)
                 {
                     return new BuisnessLogicErrorResult("Failed to revoke old OTP", 500);
                 }
-                _logger.LogDebug("RevokeOldOTP işlemi başarılı. UserType: {UserType}, SessionUuid: {SessionUuid}, OtpTypeId: {OtpTypeId}",
-                    signInRequestDto.UserTypeId, signInRequestDto.SessionUuid, signInRequestDto.OtpTypeId);
-                return new BuisnessLogicSuccessResult("RevokeOldOTP işlemi başarılı", 200);
+
+                await LogDebugAsync("RevokeOldOTP Completed", new
+                {
+                    UserType = signInRequestDto.UserTypeId,
+                    SessionUuid = signInRequestDto.SessionUuid,
+                    OtpTypeId = signInRequestDto.OtpTypeId
+                });
+                return new BuisnessLogicSuccessResult("RevokeOldOTP Completed", 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "RevokeOldOTP işlemi sırasında hata oluştu");
+                await LogErrorAsync("RevokeOldOTPAsync Excepted", ex, signInRequestDto);
                 return new BuisnessLogicErrorResult("RevokeOldOTP işlemi sırasında hata oluştu", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> AddSecurityEventRecordAsync<TKey, TValue>(HttpContext? httpContext, Guid securityEventTypeGuid, UserTypeId userTypeId, Guid userUuid, Guid? universityUuid, string description, Dictionary<TKey, TValue>? additionalData)
+        {
+            try
+            {
+                await LogDebugAsync("AddSecurityEventRecordAsync Started", new
+                {
+                    SecurityEventTypeGuid = securityEventTypeGuid,
+                    UserTypeId = userTypeId,
+                    UserUuid = userUuid,
+                    Description = description,
+                    AdditionalData = additionalData
+                });
+
+                SecurityEvent securityEvent = new SecurityEvent{
+                    EventTypeUuid = securityEventTypeGuid,
+                    UniversityUuid = universityUuid,
+                    EventedByAdminUuid = userTypeId == UserTypeId.Admin ? userUuid : null,
+                    EventedByStaffUuid = userTypeId == UserTypeId.Staff ? userUuid : null,
+                    EventedByStudentUuid = userTypeId == UserTypeId.Student ? userUuid : null,
+                    Description = description,
+                    IpAddress = httpContext?.Connection?.RemoteIpAddress?.IsIPv4MappedToIPv6 == true
+                        ? httpContext.Connection.RemoteIpAddress.MapToIPv4().ToString()
+    :                   httpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown",
+                    UserAgent = httpContext?.Request?.Headers["User-Agent"].ToString(),
+                    AdditionalData = additionalData != null ? JsonSerializer.Serialize(additionalData) : null
+                };
+
+                bool isAdded = await _securityEventService.RecordSecurityEventAsync(securityEvent);
+                if (!isAdded)
+                {
+                    return new BuisnessLogicErrorResult("Failed to add security event record", 500);
+                }
+                return new BuisnessLogicErrorResult("Security event record added successfully", 200);
+
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("AddSecurityEventRecordAsync Excepted", ex, new { securityEventTypeGuid, userTypeId, userUuid, description, additionalData });
+                return new BuisnessLogicErrorResult("AddSecurityEventRecord işlemi sırasında hata oluştu", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> AddLogoutSecurityEventRecordAsync(HttpContext? httpContext, LogoutRequestDto logoutRequestDto, bool isEventSuccess = false, string? failureMessage = null)
+        {
+            // TODO: After Jwt Update this method should be updated to use the new JWT structure and logic.
+            try
+            {
+                await LogDebugAsync("AddLogoutSecurityEventRecordAsync Started", new
+                {
+                    LogoutRequestDto = logoutRequestDto,
+                    IsEventSuccess = isEventSuccess,
+                    FailureMessage = failureMessage
+                });
+
+                var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(logoutRequestDto.AccessToken);
+
+                if (string.IsNullOrEmpty(userUuid))
+                {
+                    return new BuisnessLogicErrorResult("User UUID is not found on AccessToken", 400);
+                }
+
+                UserTypeId userTypeId = UserTypeId._;
+                Guid securityEventUserUuid = Guid.Parse(userUuid);
+                Guid? userUniversityUuid = null;
+
+                Admin ? userAdmin = await _adminService.GetByUuidAsync(securityEventUserUuid);
+                Staff? userStaff = await _staffService.GetByUuidAsync(securityEventUserUuid);
+                Student? UserStudent = await _studentService.GetByUuidAsync(securityEventUserUuid);
+                if (userAdmin != null)
+                {
+                    userTypeId = UserTypeId.Admin;
+                    userUniversityUuid = userAdmin.UniversityUuid;
+                }
+                else if (userStaff != null)
+                {
+                    userTypeId = UserTypeId.Staff;
+                    userUniversityUuid = userStaff.UniversityUuid;
+                }
+                else if (UserStudent != null)
+                {
+                    userTypeId = UserTypeId.Student;
+                    userUniversityUuid = UserStudent.UniversityUuid;
+                }
+                else
+                {
+                    return new BuisnessLogicErrorResult("User not found", 404);
+                }
+
+                Guid securityEventTypeUuid = SecurityEventTypeGuids.EventGuids[SecurityEventTypeGuid.Logout];
+
+
+                IBuisnessLogicResult result = await AddSecurityEventRecordAsync<object, object>(httpContext, securityEventTypeUuid, userTypeId, securityEventUserUuid, userUniversityUuid, "Logout", null);
+
+                if (!result.Success)
+                {
+                    return new BuisnessLogicErrorResult("Failed to add logout security event record", 500);
+                }
+
+                await LogDebugAsync("AddLogoutSecurityEventRecordAsync Completed", new
+                {
+                    LogoutRequestDto = logoutRequestDto,
+                    IsEventSuccess = isEventSuccess,
+                    FailureMessage = failureMessage,
+                    UserUuid = securityEventUserUuid,
+                    UserTypeId = userTypeId,
+                    UniversityUuid = userUniversityUuid
+                });
+                return new BuisnessLogicSuccessResult("Logout security event record added successfully", 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("AddLogoutSecurityEventRecordAsync Excepted", ex, new { logoutRequestDto, isEventSuccess, failureMessage });
+                return new BuisnessLogicErrorResult("AddLogoutSecurityEventRecord işlemi sırasında hata oluştu", 500);
             }
         }
     }

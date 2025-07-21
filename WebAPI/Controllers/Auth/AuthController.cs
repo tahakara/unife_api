@@ -4,6 +4,7 @@ using Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers;
 using Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword;
 using Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword;
 using Buisness.Features.CQRS.Auth.Commands.RefreshToken;
+using Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Features.CQRS.Auth.Commands.SignUp;
 using Buisness.Features.CQRS.Auth.Commands.Verify.VerifyEmail;
