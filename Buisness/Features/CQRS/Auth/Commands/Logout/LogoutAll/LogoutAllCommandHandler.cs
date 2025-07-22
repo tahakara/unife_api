@@ -1,27 +1,24 @@
 ﻿using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
+using Buisness.Features.CQRS.Auth.Commands.Logout.Logout;
 using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
+using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
 {
-    public class LogoutAllCommandHandler : ICommandHandler<LogoutAllCommand, BaseResponse<bool>>
+    public class LogoutAllCommandHandler : AuthCommandHandlerBase<LogoutAllCommand>, ICommandHandler<LogoutAllCommand, BaseResponse<bool>>
     {
-        private readonly IAuthBuisnessLogicHelper _authBuissnessLogicHelper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ILogger<LogoutAllCommand> _logger;
-
         public LogoutAllCommandHandler(
             IAuthBuisnessLogicHelper authbusinessLogicHelper,
             IHttpContextAccessor httpContextAccessor,
-            ILogger<LogoutAllCommand> logger)
+            ILogger<LogoutAllCommand> logger) 
+            : base(authbusinessLogicHelper, httpContextAccessor, logger)
         {
-            _authBuissnessLogicHelper = authbusinessLogicHelper;
-            _httpContextAccessor = httpContextAccessor;
-            _logger = logger;
         }
 
         public async Task<BaseResponse<bool>> Handle(LogoutAllCommand request, CancellationToken cancellationToken)
@@ -35,36 +32,46 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
                 LogoutAllRequestDto logoutAllRequestDto = new();
 
                 IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
-                    await _authBuissnessLogicHelper.ValidateAsync(request),
-                    await _authBuissnessLogicHelper.MapToDtoAsync(request, logoutAllRequestDto),
-                    await _authBuissnessLogicHelper.IsAccessTokenValidAsync(logoutAllRequestDto.AccessToken)
+                    await _authBusinessLogicHelper.ValidateAsync(request),
+                    await _authBusinessLogicHelper.MapToDtoAsync(request, logoutAllRequestDto),
+                    await _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutAllRequestDto.AccessToken)
                 );
 
                 if (buisnessResult != null)
-                {
-                    //await _authBuissnessLogicHelper.AddLogoutAllSecurityEventRecordAsync(httpContext, logoutAllRequestDto, false, buisnessResult.Message);
                     return BaseResponse<bool>.Failure(
                             message: buisnessResult.Message ?? "LogoutAll işlemi sırasında hata oluştu",
                             statusCode: buisnessResult.StatusCode);
-                }
 
 
                 IBuisnessLogicResult blackListResult = BuisnessLogic.Run(
-
-                    //await _authBuissnessLogicHelper.AddLogoutAllSecurityEventRecordAsync(httpContext, logoutAllRequestDto, false),
-                    await _authBuissnessLogicHelper.BlacklistAllSessionTokensByUserAsync(logoutAllRequestDto.AccessToken)
+                    await _authBusinessLogicHelper.BlacklistAllSessionTokensByUserAsync(logoutAllRequestDto.AccessToken)
                 );
                 if (blackListResult != null)
                 {
-                    //await _authBuissnessLogicHelper.AddLogoutAllSecurityEventRecordAsync(httpContext, logoutAllRequestDto, false, blackListResult.Message);
+                    await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                        httpContext,
+                        logoutAllRequestDto.AccessToken,
+                        SecurityEventTypeGuid.Logout,
+                        nameof(LogoutCommandHandler),
+                        "Logout All",
+                        false,
+                        blackListResult.Message ?? "Logout işlemi sırasında hata oluştu"
+                    );
                     return BaseResponse<bool>.Failure(
                         message: blackListResult.Message ?? "LogoutAll işlemi sırasında hata oluştu",
                         statusCode: blackListResult.StatusCode);
                 }
 
 
+                await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                    httpContext,
+                    logoutAllRequestDto.AccessToken,
+                    SecurityEventTypeGuid.Logout,
+                    nameof(LogoutAllCommandHandler),
+                    "Logout All",
+                    true
+                );
                 _logger.LogDebug("LogoutAll işlemi başarılı. AccessToken: {AccessToken}", request.AccessToken);
-                //await _authBuissnessLogicHelper.AddLogoutAllSecurityEventRecordAsync(httpContext, logoutAllRequestDto, true);
                 return BaseResponse<bool>.Success(
                     data: true,
                     message: "LogoutAll işlemi başarılı");

@@ -2,10 +2,14 @@
 using Buisness.DTOs.AuthDtos.VerifyDtos.VerifyOTPDtos;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
+using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -15,17 +19,14 @@ using System.Threading.Tasks;
 
 namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
 {
-    public class VerifyOTPCommandHandler : ICommandHandler<VerifyOTPCommand, BaseResponse<VerifyOTPResponseDto>>
+    public class VerifyOTPCommandHandler : AuthCommandHandlerBase<VerifyOTPCommand>, ICommandHandler<VerifyOTPCommand, BaseResponse<VerifyOTPResponseDto>>
     {
-        private readonly IAuthBuisnessLogicHelper _authBusinessLogicHelper;
-        private readonly ILogger<VerifyOTPCommandHandler> _logger;
-
         public VerifyOTPCommandHandler(
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
-            ILogger<VerifyOTPCommandHandler> logger)
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<VerifyOTPCommand> logger) 
+            : base (authBusinessLogicHelper, httpContextAccessor, logger)
         {
-            _authBusinessLogicHelper = authBusinessLogicHelper;
-            _logger = logger;
         }
 
         public async Task<BaseResponse<VerifyOTPResponseDto>> Handle(VerifyOTPCommand request, CancellationToken cancellationToken)
@@ -51,11 +52,30 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                 IBuisnessLogicResult createBuisnessLogicResult = BuisnessLogic.Run(
                     await _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto));
                 if (createBuisnessLogicResult != null)
+                {
+                    await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                        _httpContextAccessor.HttpContext,
+                        verifyOTPResponseDto.AccessToken,
+                        SecurityEventTypeGuid.VerificationOTPFailed,
+                        nameof(VerifyOTPCommandHandler),
+                        "VerifyOTP",
+                        false,
+                        createBuisnessLogicResult.Message ?? "VerifyOTP işlemi sırasında hata oluştu"
+                    );
                     return BaseResponse<VerifyOTPResponseDto>.Failure(
                         message: buisnessResult.Message ?? "VerifyOTP işlemi sırasında hata oluştu",
                         statusCode: buisnessResult.StatusCode);
+                }
 
-
+                await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                    _httpContextAccessor.HttpContext,
+                    verifyOTPResponseDto.AccessToken,
+                    SecurityEventTypeGuid.VerificationOTPSuccess,
+                    nameof(VerifyOTPCommandHandler),
+                    "VerifyOTP",
+                    true,
+                    "VerifyOTP işlemi başarılı"
+                );
                 _logger.LogDebug("VerifyOTP işlemi başarılı. UserType: {UserType}", request.UserTypeId);
                 return BaseResponse<VerifyOTPResponseDto>.Success(
                     data: verifyOTPResponseDto,

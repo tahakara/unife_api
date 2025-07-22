@@ -48,6 +48,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Domain.Entities.MainEntities.UniversityModul;
 
 namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 {
@@ -83,10 +84,44 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         /// </param>
         /// <param name="additionalData">Additional data related to the security event.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        Task<IBuisnessLogicResult> AddSecurityEventRecordAsync<TKey, TValue>(HttpContext? httpContext, Guid securityEventTypeGuid, UserTypeId userTypeId, Guid userUuid, Guid? universityUuid, string description, Dictionary<TKey, TValue>? additionalData);
-        Task<IBuisnessLogicResult> AddLogoutSecurityEventRecordAsync(HttpContext? httpContext ,LogoutRequestDto logoutRequestDto, bool isEventSuccess=false, string? failureMessage = null);
+        Task<IBuisnessLogicResult> AddSecurityEventRecordAsync<TKey, TValue>(
+            HttpContext? httpContext, 
+            Guid securityEventTypeGuid, 
+            UserTypeId userTypeId, 
+            Guid userUuid, 
+            Guid? universityUuid, 
+            string description, 
+            Dictionary<TKey, TValue>? additionalData);
+        Task<IBuisnessLogicResult> AddGenericSecurityEventRecordAsync(
+            HttpContext? httpContext,
+            SecurityEventTypeGuid eventTypeGuidKey,
+            string methodName,
+            string description,
+            Guid? userGuid = null,
+            UserTypeId userTypeId = UserTypeId._,
+            string? accessToken = null,
+            bool isEventSuccess = false,
+            string? failureMessage = null);
+        Task<IBuisnessLogicResult> AddSecurityEventRecordByTypeAsync(
+            HttpContext? httpContext,
+            string accessToken,
+            SecurityEventTypeGuid eventTypeGuidKey,
+            string methodName,
+            string description,
+            bool isEventSuccess = false,
+            string? failureMessage = null);
+
+        Task<IBuisnessLogicResult> AddResendSignInOTPSecurityEventRecordAsync(HttpContext? httpContext,
+            SecurityEventTypeGuid eventTypeGuidKey,
+            string methodName,
+            string description,
+            Guid? userGuid = null,
+            byte userTypeId = 0,
+            string? accessToken = null,
+            bool isEventSuccess = false,
+            string? failureMessage = null);
+
         //Task<IBuisnessLogicResult> AddLogoutAllSecurityEventRecordAsync();
-        //Task<IBuisnessLogicResult> AddLogoutOthersSecurityEventRecordAsync();
         //Task<IBuisnessLogicResult> AddRefreshTokenSecurityEventRecordAsync();
         //Task<IBuisnessLogicResult> AddSignInSecurityEventRecordAsync();
         //Task<IBuisnessLogicResult> AddSignUpSecurityEventRecordAsync();
@@ -178,7 +213,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     return new BuisnessLogicErrorResult("Failed to revoke tokens", 500);
                 }
 
-                await LogDebugAsync("BlackListSessionTokensForASingleSessionAsync Completed", new { AccessToken = accessToken , UserUuid = userUuid, SessionUuid = sessionUuid });
+                await LogDebugAsync("BlackListSessionTokensForASingleSessionAsync Completed", new { AccessToken = accessToken, UserUuid = userUuid, SessionUuid = sessionUuid });
                 return new BuisnessLogicSuccessResult("Access token blacklisted successfully", 200);
 
             }
@@ -459,7 +494,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
             catch (Exception ex)
             {
-                 await LogErrorAsync("CheckSignUpCredentialsAsync Excepted", ex, signUpRequestDto);
+                await LogErrorAsync("CheckSignUpCredentialsAsync Excepted", ex, signUpRequestDto);
                 return new BuisnessLogicErrorResult("CheckSignUpCredentials işlemi sırasında hata oluştu", 500);
             }
         }
@@ -563,7 +598,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         }
 
                         signInRequestDto.UserUuid = currentStudent.StudentUuid;
-                        
+
                         signInResponseDto.UserUuid = currentStudent.StudentUuid;
                         signInResponseDto.UserTypeId = (int)UserTypeId.Student;
                         break;
@@ -756,7 +791,14 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
         }
 
-        public async Task<IBuisnessLogicResult> AddSecurityEventRecordAsync<TKey, TValue>(HttpContext? httpContext, Guid securityEventTypeGuid, UserTypeId userTypeId, Guid userUuid, Guid? universityUuid, string description, Dictionary<TKey, TValue>? additionalData)
+        public async Task<IBuisnessLogicResult> AddSecurityEventRecordAsync<TKey, TValue>(
+            HttpContext? httpContext, 
+            Guid securityEventTypeGuid, 
+            UserTypeId userTypeId, 
+            Guid userUuid, 
+            Guid? universityUuid, 
+            string description, 
+            Dictionary<TKey, TValue>? additionalData)
         {
             try
             {
@@ -769,7 +811,8 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     AdditionalData = additionalData
                 });
 
-                SecurityEvent securityEvent = new SecurityEvent{
+                SecurityEvent securityEvent = new SecurityEvent
+                {
                     EventTypeUuid = securityEventTypeGuid,
                     UniversityUuid = universityUuid,
                     EventedByAdminUuid = userTypeId == UserTypeId.Admin ? userUuid : null,
@@ -778,7 +821,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     Description = description,
                     IpAddress = httpContext?.Connection?.RemoteIpAddress?.IsIPv4MappedToIPv6 == true
                         ? httpContext.Connection.RemoteIpAddress.MapToIPv4().ToString()
-    :                   httpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown",
+    : httpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown",
                     UserAgent = httpContext?.Request?.Headers["User-Agent"].ToString(),
                     AdditionalData = additionalData != null ? JsonSerializer.Serialize(additionalData) : null
                 };
@@ -788,7 +831,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 {
                     return new BuisnessLogicErrorResult("Failed to add security event record", 500);
                 }
-                return new BuisnessLogicErrorResult("Security event record added successfully", 200);
+                return new BuisnessLogicSuccessResult("Security event record added successfully", 200);
 
             }
             catch (Exception ex)
@@ -798,78 +841,165 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
         }
 
-        public async Task<IBuisnessLogicResult> AddLogoutSecurityEventRecordAsync(HttpContext? httpContext, LogoutRequestDto logoutRequestDto, bool isEventSuccess = false, string? failureMessage = null)
+
+        public async Task<IBuisnessLogicResult> AddGenericSecurityEventRecordAsync(
+            HttpContext? httpContext,
+            SecurityEventTypeGuid eventTypeGuidKey,
+            string methodName,
+            string description,
+            Guid? userGuid = null,
+            UserTypeId userTypeId = UserTypeId._,
+            string? accessToken = null,
+            bool isEventSuccess = false,
+            string? failureMessage = null)
         {
-            // TODO: After Jwt Update this method should be updated to use the new JWT structure and logic.
             try
             {
-                await LogDebugAsync("AddLogoutSecurityEventRecordAsync Started", new
+                await LogDebugAsync($"{methodName} Started", new
                 {
-                    LogoutRequestDto = logoutRequestDto,
+                    AccessToken = accessToken,
+                    UserGuid = userGuid,
+                    UserTypeId = userTypeId,
                     IsEventSuccess = isEventSuccess,
                     FailureMessage = failureMessage
                 });
 
-                var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(logoutRequestDto.AccessToken);
+                Guid resolvedUserGuid = Guid.Empty;
+                UserTypeId resolvedUserTypeId = UserTypeId._;
 
-                if (string.IsNullOrEmpty(userUuid))
+                if (userGuid.HasValue && userGuid.Value != Guid.Empty && userTypeId != UserTypeId._)
                 {
-                    return new BuisnessLogicErrorResult("User UUID is not found on AccessToken", 400);
+                    resolvedUserGuid = userGuid.Value;
+                    resolvedUserTypeId = userTypeId;
                 }
+                else if (!string.IsNullOrWhiteSpace(accessToken))
+                {
+                    var sessionUserUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
+                    var sessionUserTypeId = await _sessionJwtService.GetUserTypeIdFromTokenAsync(accessToken);
 
-                UserTypeId userTypeId = UserTypeId._;
-                Guid securityEventUserUuid = Guid.Parse(userUuid);
-                Guid? userUniversityUuid = null;
+                    if (string.IsNullOrEmpty(sessionUserUuid))
+                    {
+                        return new BuisnessLogicErrorResult("User UUID is not found on AccessToken", 400);
+                    }
+                    if (string.IsNullOrEmpty(sessionUserTypeId))
+                    {
+                        return new BuisnessLogicErrorResult("User Type ID is not found on AccessToken", 400);
+                    }
 
-                Admin ? userAdmin = await _adminService.GetByUuidAsync(securityEventUserUuid);
-                Staff? userStaff = await _staffService.GetByUuidAsync(securityEventUserUuid);
-                Student? UserStudent = await _studentService.GetByUuidAsync(securityEventUserUuid);
-                if (userAdmin != null)
-                {
-                    userTypeId = UserTypeId.Admin;
-                    userUniversityUuid = userAdmin.UniversityUuid;
-                }
-                else if (userStaff != null)
-                {
-                    userTypeId = UserTypeId.Staff;
-                    userUniversityUuid = userStaff.UniversityUuid;
-                }
-                else if (UserStudent != null)
-                {
-                    userTypeId = UserTypeId.Student;
-                    userUniversityUuid = UserStudent.UniversityUuid;
+                    resolvedUserGuid = Guid.Parse(sessionUserUuid);
+                    resolvedUserTypeId = (UserTypeId)byte.Parse(sessionUserTypeId);
                 }
                 else
                 {
-                    return new BuisnessLogicErrorResult("User not found", 404);
+                    return new BuisnessLogicErrorResult("Either userGuid/userTypeId or accessToken must be provided", 400);
                 }
 
-                Guid securityEventTypeUuid = SecurityEventTypeGuids.EventGuids[SecurityEventTypeGuid.Logout];
+                if (resolvedUserGuid == Guid.Empty)
+                {
+                    return new BuisnessLogicErrorResult("User UUID could not be resolved", 400);
+                }
+                if (resolvedUserTypeId == UserTypeId._)
+                {
+                    return new BuisnessLogicErrorResult("User Type ID could not be resolved", 400);
+                }
 
+                var eventTypeUuid = SecurityEventTypeGuids.EventGuids[eventTypeGuidKey];
 
-                IBuisnessLogicResult result = await AddSecurityEventRecordAsync<object, object>(httpContext, securityEventTypeUuid, userTypeId, securityEventUserUuid, userUniversityUuid, "Logout", null);
+                Guid? universityUuid = null;
+                switch (resolvedUserTypeId)
+                {
+                    case UserTypeId.Admin:
+                        var admin = await _adminService.GetByUuidAsync(resolvedUserGuid);
+                        universityUuid = admin?.UniversityUuid;
+                        break;
+                    case UserTypeId.Staff:
+                        var staff = await _staffService.GetByUuidAsync(resolvedUserGuid);
+                        universityUuid = staff?.UniversityUuid;
+                        break;
+                    case UserTypeId.Student:
+                        var student = await _studentService.GetByUuidAsync(resolvedUserGuid);
+                        universityUuid = student?.UniversityUuid;
+                        break;
+                    default:
+                        return new BuisnessLogicErrorResult("Unknown or invalid user type", 400);
+                }
+
+                IBuisnessLogicResult result = await AddSecurityEventRecordAsync<object, object>(
+                    httpContext,
+                    eventTypeUuid,
+                    resolvedUserTypeId,
+                    resolvedUserGuid,
+                    universityUuid,
+                    description,
+                    null);
 
                 if (!result.Success)
                 {
-                    return new BuisnessLogicErrorResult("Failed to add logout security event record", 500);
+                    return new BuisnessLogicErrorResult($"Failed to add {methodName} security event record", 500);
                 }
 
-                await LogDebugAsync("AddLogoutSecurityEventRecordAsync Completed", new
+                await LogDebugAsync($"{methodName} Completed", new
                 {
-                    LogoutRequestDto = logoutRequestDto,
+                    ResolvedUserGuid = resolvedUserGuid,
+                    ResolvedUserTypeId = resolvedUserTypeId,
                     IsEventSuccess = isEventSuccess,
-                    FailureMessage = failureMessage,
-                    UserUuid = securityEventUserUuid,
-                    UserTypeId = userTypeId,
-                    UniversityUuid = userUniversityUuid
+                    FailureMessage = failureMessage
                 });
-                return new BuisnessLogicSuccessResult("Logout security event record added successfully", 200);
+
+                return new BuisnessLogicSuccessResult($"{methodName} security event record added successfully", 200);
             }
             catch (Exception ex)
             {
-                await LogErrorAsync("AddLogoutSecurityEventRecordAsync Excepted", ex, new { logoutRequestDto, isEventSuccess, failureMessage });
-                return new BuisnessLogicErrorResult("AddLogoutSecurityEventRecord işlemi sırasında hata oluştu", 500);
+                await LogErrorAsync($"{methodName} Excepted", ex, new { userGuid, userTypeId, accessToken, isEventSuccess, failureMessage });
+                return new BuisnessLogicErrorResult($"{methodName} işlemi sırasında hata oluştu", 500);
             }
         }
+
+
+        public async Task<IBuisnessLogicResult> AddSecurityEventRecordByTypeAsync(
+            HttpContext? httpContext,
+            string accessToken,
+            SecurityEventTypeGuid eventTypeGuidKey,
+            string methodName,
+            string description,
+            bool isEventSuccess = false,
+            string? failureMessage = null)
+        {
+            return await AddGenericSecurityEventRecordAsync(
+                httpContext,
+                eventTypeGuidKey,
+                methodName,
+                description,
+                null,
+                UserTypeId._,
+                accessToken,
+                isEventSuccess,
+                failureMessage);
+        }
+
+
+        public async Task<IBuisnessLogicResult> AddResendSignInOTPSecurityEventRecordAsync(HttpContext? httpContext,
+            SecurityEventTypeGuid eventTypeGuidKey,
+            string methodName,
+            string description,
+            Guid? userGuid = null,
+            byte userTypeId = 0,
+            string? accessToken = null,
+            bool isEventSuccess = false,
+            string? failureMessage = null)
+        {
+            return await AddGenericSecurityEventRecordAsync(
+                httpContext,
+                eventTypeGuidKey,
+                methodName,
+                description,
+                userGuid,
+                (UserTypeId)userTypeId,
+                accessToken,
+                isEventSuccess,
+                failureMessage);
+        }
+
+       
     }
 }

@@ -2,9 +2,12 @@
 using Buisness.DTOs.AuthDtos.SignInDtos.Response;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
+using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -14,17 +17,14 @@ using System.Threading.Tasks;
 
 namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
 {
-    public class ResendSignInOTPCommandHandler : ICommandHandler<ResendSignInOTPCommand, BaseResponse<SignInResponseDto>>
+    public class ResendSignInOTPCommandHandler : AuthCommandHandlerBase<ResendSignInOTPCommand>, ICommandHandler<ResendSignInOTPCommand, BaseResponse<SignInResponseDto>>
     {
-        private readonly IAuthBuisnessLogicHelper _authBusinessLogicHelper;
-        private readonly ILogger<ResendSignInOTPCommand> _logger;
-
         public ResendSignInOTPCommandHandler(
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
-            ILogger<ResendSignInOTPCommand> logger)
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<ResendSignInOTPCommand> logger) 
+            : base(authBusinessLogicHelper, httpContextAccessor, logger)
         {
-            _authBusinessLogicHelper = authBusinessLogicHelper;
-            _logger = logger;
         }
 
         public async Task<BaseResponse<SignInResponseDto>> Handle(ResendSignInOTPCommand request, CancellationToken cancellationToken)
@@ -33,6 +33,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
             {
                 _logger.LogDebug("SignIn işlemi başlatıldı. UserType: {UserType}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",
                     request.UserTypeId, request.Email, request.PhoneCountryCode, request.PhoneNumber);
+                var httpContext = _httpContextAccessor.HttpContext;
 
                 SignInRequestDto signInRequestDto = new();
                 SignInResponseDto signInResponseDto = new();
@@ -53,11 +54,33 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
                 IBuisnessLogicResult sendOtpResult = BuisnessLogic.Run(
                     await _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto));
                 if (sendOtpResult != null)
+                {
+                    await _authBusinessLogicHelper.AddResendSignInOTPSecurityEventRecordAsync(
+                        httpContext, 
+                        SecurityEventTypeGuid.VerificationOTPResend, 
+                        nameof(ResendSignInOTPCommandHandler), 
+                        "Resnd SignIn OTP", 
+                        signInResponseDto.UserUuid, 
+                        signInResponseDto.UserTypeId ?? 0, 
+                        null, 
+                        false, 
+                        sendOtpResult.Message ?? "ResendSignInOTP işlemi sırasında hata oluştu");
+
                     return BaseResponse<SignInResponseDto>.Failure(
                         message: sendOtpResult.Message ?? "ResendSignInOTP işlemi sırasında hata oluştu",
                         statusCode: sendOtpResult.StatusCode);
+                }
 
-
+                await _authBusinessLogicHelper.AddResendSignInOTPSecurityEventRecordAsync(
+                    httpContext, 
+                    SecurityEventTypeGuid.VerificationOTPResend, 
+                    nameof(ResendSignInOTPCommandHandler), 
+                    "Resnd SignIn OTP", 
+                    signInResponseDto.UserUuid, 
+                    signInResponseDto.UserTypeId ?? 0, 
+                    null, 
+                    true, 
+                    "ResendSignInOTP işlemi başarılı");
                 _logger.LogDebug("ResendSignInOTP işlemi başarılı. UserType: {UserType}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",
                     request.UserTypeId, request.Email, request.PhoneCountryCode, request.PhoneNumber);
                 return BaseResponse<SignInResponseDto>.Success(

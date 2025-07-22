@@ -1,23 +1,23 @@
 ﻿using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
 using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
+using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
 {
-    public class LogoutOthersCommandHandler : ICommandHandler<LogoutOthersCommand, BaseResponse<bool>>
+    public class LogoutOthersCommandHandler : AuthCommandHandlerBase<LogoutOthersCommand>, ICommandHandler<LogoutOthersCommand, BaseResponse<bool>>
     {
-        private readonly IAuthBuisnessLogicHelper _authBusinessLogicHelper;
-        private readonly ILogger<LogoutOthersCommand> _logger;
-
         public LogoutOthersCommandHandler(
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
-            ILogger<LogoutOthersCommand> logger)
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<LogoutOthersCommand> logger) 
+            : base(authBusinessLogicHelper, httpContextAccessor, logger)
         {
-            _authBusinessLogicHelper = authBusinessLogicHelper;
-            _logger = logger;
         }
 
         public async Task<BaseResponse<bool>> Handle(LogoutOthersCommand request, CancellationToken cancellationToken)
@@ -26,6 +26,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
             {
                 _logger.LogDebug("LogoutOthers işlemi başlatıldı. AccessToken: {AccessToken}", request.AccessToken);
 
+                var httpContext = _httpContextAccessor.HttpContext;
                 LogoutOthersRequestDto mappedRequestDto = new();
 
                 IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
@@ -44,11 +45,29 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
                     await _authBusinessLogicHelper.BlacklistSessionsExcludedByOneAsync(mappedRequestDto.AccessToken)
                 );
                 if (blackListResult != null)
+                {
+                    await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                        httpContext,
+                        mappedRequestDto.AccessToken,
+                        SecurityEventTypeGuid.LogoutOthers,
+                        nameof(LogoutOthersCommandHandler),
+                        "Logout Others",
+                        false,
+                        blackListResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu"
+                    );
                     return BaseResponse<bool>.Failure(
                         message: blackListResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu",
                         statusCode: blackListResult.StatusCode);
+                }
 
-
+                await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                    httpContext,
+                    mappedRequestDto.AccessToken,
+                    SecurityEventTypeGuid.LogoutOthers,
+                    nameof(LogoutOthersCommandHandler),
+                    "Logout Others",
+                    true
+                );
                 _logger.LogDebug("LogoutOthers işlemi başarılı. Access Token: {AccessToken}", request.AccessToken);
                 return BaseResponse<bool>.Success(
                     data: true,
