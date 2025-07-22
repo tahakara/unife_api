@@ -37,7 +37,10 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
                     () => _authBusinessLogicHelper.ValidateAsync(request),
                     () => _authBusinessLogicHelper.MapToDtoAsync(request, signInRequestDto),
-                    () => _authBusinessLogicHelper.CheckSignInCredentialsAsync(signInRequestDto, signInResponseDto)
+                    () => _authBusinessLogicHelper.PreventSignInBruteForceAsync(signInRequestDto),
+                    () => _authBusinessLogicHelper.RevokeOldOTPAsync(signInRequestDto),
+                    () => _authBusinessLogicHelper.CheckSignInCredentialsAsync(signInRequestDto, signInResponseDto),
+                    () => _authBusinessLogicHelper.CheckUserSessionCountExceededAsync(signInResponseDto)
                 );
                 if (buisnessResult != null)
                     return BaseResponse<SignInResponseDto>.Failure(

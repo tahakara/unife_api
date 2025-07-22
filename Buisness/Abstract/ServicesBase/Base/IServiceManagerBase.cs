@@ -9,6 +9,7 @@ namespace Buisness.Abstract.ServicesBase.Base
 {
     public interface IServiceManagerBase
     {
+        Task<TEntity> UpdateAsync<TEntity>(TEntity entity);
         // Transaction Management
         Task<TResult> ExecuteInTransactionAsync<TResult>(Func<Task<TResult>> operation);
         Task ExecuteInTransactionAsync(Func<Task> operation);

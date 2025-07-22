@@ -150,5 +150,20 @@ namespace Buisness.Concrete.ServiceManager
                 throw;
             }
         }
+
+        public virtual async Task<TEntity> UpdateAsync<TEntity>(TEntity entity)
+        {
+            // Basit implementation, gerçek update sonra eklenecek
+            try
+            {
+                await LogOperationAsync("Update", entity);
+                return entity;
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("Update", ex, entity);
+                throw;
+            }
+        }
     }
 }

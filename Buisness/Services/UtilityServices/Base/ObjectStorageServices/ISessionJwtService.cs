@@ -29,5 +29,17 @@ namespace Buisness.Services.UtilityServices.Base.ObjectStorageServices
         Task<string?> GetUserUuidFromTokenAsync(string token);
         Task<string?> GetSessionUuidFromTokenAsync(string token);
         Task<string?> GetUserTypeIdFromTokenAsync(string token);
+
+        Task<int> GetSessionCountByUserUuid(string useUuid);
+
+        #region Brute Force Protection
+        string GenerateBruteForceProtectionKey(string? email, string? phoneCode, string? phoneNumber);
+        Task<bool> IsBruteForceProtectionKeyExistsAsync(string key);
+        Task<bool> RemoveBruteForceProtectionKeyAsync(string key);
+        Task<bool> SetBruteForceProtectionKeyAsync(string key, int attempts, TimeSpan? expiration = null);
+        Task<int> GetBruteForceProtectionAttemptsByKeyAsync(string key);
+        Task<bool> IncrementBruteForceProtectionAttemptsAsync(string key);
+        Task<bool> ResetBruteForceProtectionAttemptsAsync(string key);
+        #endregion
     }
 }

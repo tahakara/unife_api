@@ -61,6 +61,8 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         Task<IBuisnessLogicResult> IsRefreshTokenValidAsync(RefreshTokenRequestDto refreshTokenRequestDto, RefreshTokenResponseDto refreshTokenResponseDto);
         Task<IBuisnessLogicResult> RefreshAccessTokenAsync(RefreshTokenResponseDto refreshTokenResponseDto);
         Task<IBuisnessLogicResult> CheckAndCreateSignUpCredentialsAsync(SignUpRequestDto signUpRequestDto, SignUpResponseDto signUpResponseDto);
+        Task<IBuisnessLogicResult> PreventSignInBruteForceAsync(SignInRequestDto signInRequestDto);
+        Task<IBuisnessLogicResult> CheckUserSessionCountExceededAsync(SignInResponseDto signInResponseDto);
         Task<IBuisnessLogicResult> CheckSignInCredentialsAsync(SignInRequestDto signInRequestDto, SignInResponseDto signInResponseDto);
         Task<IBuisnessLogicResult> SendSignInOTPAsync(SignInRequestDto signInRequestDto, SignInResponseDto signInResponseDto);
         Task<IBuisnessLogicResult> CheckVerifyOTPAsync(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
@@ -121,13 +123,11 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             bool isEventSuccess = false,
             string? failureMessage = null);
 
-        //Task<IBuisnessLogicResult> AddLogoutAllSecurityEventRecordAsync();
-        //Task<IBuisnessLogicResult> AddRefreshTokenSecurityEventRecordAsync();
-        //Task<IBuisnessLogicResult> AddSignInSecurityEventRecordAsync();
-        //Task<IBuisnessLogicResult> AddSignUpSecurityEventRecordAsync();
-        //Task<IBuisnessLogicResult> AddVerifyOTPSecurityEventRecordAsync();
+        Task<IBuisnessLogicResult> CheckPasswordIsCorrect(string accessToken, string password);
 
+        Task<IBuisnessLogicResult> ChangePasswordAsync(string accessToken, string oldPassword, string newPassword);
 
+        Task<IBuisnessLogicResult> BlacklistOtherSessionsAfterPasswordChangeAsync(string accessToken, bool blackListRequestStatus);
     }
 
     public class AuthBuisnessLogicHelper : ServiceManagerBase, IAuthBuisnessLogicHelper
@@ -1075,5 +1075,184 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             };
         }
 
+        public async Task<IBuisnessLogicResult> CheckPasswordIsCorrect(string accessToken, string password)
+        {
+            try
+            {
+                await LogDebugAsync("CheckPasswordIsCorrect Started", new { AccessToken = accessToken, Password = password });
+
+                var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
+                var userTypeId = await _sessionJwtService.GetUserTypeIdFromTokenAsync(accessToken);
+                if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(userTypeId))
+                {
+                    return new BuisnessLogicErrorResult("User UUID or User Type ID could not be resolved from access token", 400);
+                }
+                Guid uuid = Guid.Parse(userUuid);
+                UserTypeId typeId = (UserTypeId)byte.Parse(userTypeId);
+                switch (typeId)
+                {
+                    case UserTypeId.Admin:
+                        var admin = await _adminService.GetByUuidAsync(uuid);
+                        if (admin == null || !_passwordUtility.VerifyPassword(password, admin.PasswordHash, admin.PasswordSalt))
+                        {
+                            return new BuisnessLogicErrorResult("Invalid password for Admin", 401);
+                        }
+                        break;
+                    case UserTypeId.Staff:
+                        var staff = await _staffService.GetByUuidAsync(uuid);
+                        if (staff == null || !_passwordUtility.VerifyPassword(password, staff.PasswordHash, staff.PasswordSalt))
+                        {
+                            return new BuisnessLogicErrorResult("Invalid password for Staff", 401);
+                        }
+                        break;
+                    case UserTypeId.Student:
+                        var student = await _studentService.GetByUuidAsync(uuid);
+                        if (student == null || !_passwordUtility.VerifyPassword(password, student.PasswordHash, student.PasswordSalt))
+                        {
+                            return new BuisnessLogicErrorResult("Invalid password for Student", 401);
+                        }
+                        break;
+                    default:
+                        return new BuisnessLogicErrorResult("Invalid user type", 400);
+                }
+                await LogDebugAsync("CheckPasswordIsCorrect Completed", new { UserUuid = uuid, UserTypeId = typeId });
+                return new BuisnessLogicSuccessResult("Password is correct", 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("CheckPasswordIsCorrect Excepted", ex, new { AccessToken = accessToken, Password = password });
+                return new BuisnessLogicErrorResult("CheckPasswordIsCorrect işlemi sırasında hata oluştu", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> ChangePasswordAsync(string accessToken, string oldPassword, string newPassword)
+        {
+            try
+            {
+                await LogDebugAsync("ChangePasswordAsync Started", new { AccessToken = accessToken, OldPassword = oldPassword, NewPassword = newPassword });
+                var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
+                if (userUuid == null) {
+                    return new BuisnessLogicErrorResult("User UUID could not be resolved from access token", 400);
+                }
+                var userTypeId = await _sessionJwtService.GetUserTypeIdFromTokenAsync(accessToken);
+                if (string.IsNullOrEmpty(userTypeId))
+                {
+                    return new BuisnessLogicErrorResult("User Type ID could not be resolved from access token", 400);
+                }
+
+                Guid uuid = Guid.Parse(userUuid);
+                UserTypeId typeId = (UserTypeId)byte.Parse(userTypeId);
+                switch (typeId)
+                {
+                    case UserTypeId.Admin:
+                        var admin = await _adminService.GetByUuidAsync(uuid);
+                        if (admin == null || !_passwordUtility.VerifyPassword(oldPassword, admin.PasswordHash, admin.PasswordSalt))
+                        {
+                            return new BuisnessLogicErrorResult("Invalid old password for Admin", 401);
+                        }
+                        (admin.PasswordSalt, admin.PasswordHash) = _passwordUtility.HashPassword(newPassword);
+                        await _adminService.UpdateAsync(admin);
+                        break;
+                    case UserTypeId.Staff:
+                        var staff = await _staffService.GetByUuidAsync(uuid);
+                        if (staff == null || !_passwordUtility.VerifyPassword(oldPassword, staff.PasswordHash, staff.PasswordSalt))
+                        {
+                            return new BuisnessLogicErrorResult("Invalid old password for Staff", 401);
+                        }
+                        (staff.PasswordSalt, staff.PasswordHash) = _passwordUtility.HashPassword(newPassword);
+                        await _staffService.UpdateAsync(staff);
+                        break;
+                    case UserTypeId.Student:
+                        var student = await _studentService.GetByUuidAsync(uuid);
+                        if (student == null || !_passwordUtility.VerifyPassword(oldPassword, student.PasswordHash, student.PasswordSalt))
+                        {
+                            return new BuisnessLogicErrorResult("Invalid old password for Student", 401);
+                        }
+                        (student.PasswordSalt, student.PasswordHash) = _passwordUtility.HashPassword(newPassword);
+                        await _studentService.UpdateAsync(student);
+                        break;
+                    default:
+                        return new BuisnessLogicErrorResult("Invalid user type", 400);
+                }
+
+                await LogDebugAsync("ChangePasswordAsync Completed", new { UserUuid = uuid, UserTypeId = typeId });
+                return new BuisnessLogicSuccessResult("Password changed successfully", 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("ChangePasswordAsync Excepted", ex, new { AccessToken = accessToken, OldPassword = oldPassword, NewPassword = newPassword });
+                return new BuisnessLogicErrorResult("ChangePassword işlemi sırasında hata oluştu", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> BlacklistOtherSessionsAfterPasswordChangeAsync(string accessToken, bool blackListRequestStatus)
+        {
+           return blackListRequestStatus 
+                ? await BlacklistSessionsExcludedByOneAsync(accessToken)
+                : new BuisnessLogicSuccessResult("No sessions blacklisted as per request", 200);
+        }
+
+        public async Task<IBuisnessLogicResult> PreventSignInBruteForceAsync(SignInRequestDto signInRequestDto)
+        {
+            try
+            {
+                await LogDebugAsync("PreventSignInBruteForceAsync başladı");
+
+                var key = _sessionJwtService.GenerateBruteForceProtectionKey(signInRequestDto.Email, signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
+
+                if (string.IsNullOrEmpty(key))
+                {
+                    return new BuisnessLogicErrorResult("Geçersiz brute force key", 400);
+                }
+
+                bool exists = await _sessionJwtService.IsBruteForceProtectionKeyExistsAsync(key);
+
+                int attempts = 0;
+
+                if (exists)
+                {
+                    attempts = await _sessionJwtService.GetBruteForceProtectionAttemptsByKeyAsync(key);
+                    if (attempts >= 5)
+                    {
+                        return new BuisnessLogicErrorResult("Çok fazla başarısız giriş denemesi, lütfen daha sonra tekrar deneyin.", 429);
+                    }
+                }
+
+                // Increment or set
+                attempts++;
+                await _sessionJwtService.SetBruteForceProtectionKeyAsync(key, attempts);
+
+                return new BuisnessLogicSuccessResult("Brute force koruması geçti", 200);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "PreventSignInBruteForceAsync hata");
+                return new BuisnessLogicErrorResult("Brute force koruması sırasında hata oluştu", 500);
+            }
+        }
+
+
+        public async Task<IBuisnessLogicResult> CheckUserSessionCountExceededAsync(SignInResponseDto signInResponseDto)
+        {
+            try
+            {
+                await LogDebugAsync("CheckUserSessionCountExceeded Started", signInResponseDto);
+
+                int sessionCount = await _sessionJwtService.GetSessionCountByUserUuid(signInResponseDto.UserUuid.ToString());
+
+                if (sessionCount >= 10) // Assuming 5 is the maximum allowed sessions
+                {
+                    return new BuisnessLogicErrorResult("User session count exceeded", 403);
+                }
+
+                await LogDebugAsync("CheckUserSessionCountExceeded Completed", signInResponseDto);
+                return new BuisnessLogicSuccessResult("CheckUserSessionCountExceeded Completed", 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("CheckUserSessionCountExceeded Excepted", ex, signInResponseDto);
+                return new BuisnessLogicErrorResult("CheckUserSessionCountExceeded işlemi sırasında hata oluştu", 500);
+            }
+        }
     }
 }

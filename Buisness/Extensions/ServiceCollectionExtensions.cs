@@ -53,6 +53,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
+using Buisness.Mappings.AuthMappingProfiles.PsswordMappingProfiles;
+using Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP;
+using Buisness.DTOs.AuthDtos.SignInDtos.Request;
+using Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword;
+using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.PasswordValidators;
 
 namespace Buisness.Extensions
 {
@@ -79,10 +84,12 @@ namespace Buisness.Extensions
             services.AddScoped<IValidator<LogoutAllCommand>, LogoutAllRequestDtoValidator>();
             services.AddScoped<IValidator<LogoutOthersCommand>, LogoutOthersRequestDtoValidator>();
             services.AddScoped<IValidator<RefreshTokenCommand>, RefreshTokenRequestDtoValidator>();
-
             services.AddScoped<IValidator<SignUpCommand>, SignUpRequestDtoValidator>();
             services.AddScoped<IValidator<SignInCommand>, SignInRequestDtoValidator>();
             services.AddScoped<IValidator<VerifyOTPCommand>, VerifyOTPRequestDtoValidator>();
+            services.AddScoped<IValidator<ResendSignInOTPCommand>, SignInRequestDtoValidator>();
+
+            services.AddScoped<IValidator<ChangePasswordCommand>, ChangePasswordRequestDtoValidator>();
 
             services.AddScoped<IValidator<CreateUniversityCommand>, CreateUniversityDtoValidator>();
 
@@ -96,6 +103,7 @@ namespace Buisness.Extensions
                 cfg.AddProfile<SignInMappingProfile>();
                 cfg.AddProfile<ResendSignInOTPProfile>();
                 cfg.AddProfile<VerifyOTPMappingProfile>();
+                cfg.AddProfile<ChangePasswordProfile>();
 
                 cfg.AddProfile<RefreshTokenMappingProfile>();
                 cfg.AddProfile<UniversityMappingProfile>();

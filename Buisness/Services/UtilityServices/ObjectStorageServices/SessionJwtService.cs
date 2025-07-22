@@ -196,7 +196,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 var keys = await connection.GetKeysAsync(pattern);
                 if (keys.Count == 0)
                 {
-                    _logger.LogInformation("No refresh token found with postfix: {RefreshTokenPostfix}", refreshTokenPostfix);
+                    _logger.LogDebug("No refresh token found with postfix: {RefreshTokenPostfix}", refreshTokenPostfix);
                     return null;
                 }
                 else if (keys.Count > 1)
@@ -205,7 +205,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                     return null; // or handle as needed
                 }
 
-                _logger.LogInformation("Found refresh token key for postfix: {RefreshTokenPostfix}", refreshTokenPostfix);
+                _logger.LogDebug("Found refresh token key for postfix: {RefreshTokenPostfix}", refreshTokenPostfix);
                 return keys.FirstOrDefault();
             }
             catch (Exception ex)
@@ -321,7 +321,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 var refreshSerializedData = JsonSerializer.Serialize(refreshTokenData);
                 await connection.SetStringAsync(newRefreshKey, refreshSerializedData, TimeSpan.FromDays(7));
 
-                _logger.LogInformation("Tokens refreshed for user: {UserUuid}, session: {SessionUuid}", storedUserUuid, sessionUuid);
+                _logger.LogDebug("Tokens refreshed for user: {UserUuid}, session: {SessionUuid}", storedUserUuid, sessionUuid);
 
                 return new RefreshTokenResult
                 {
@@ -432,7 +432,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 var accessKey = GetAccessTokenKey(sessionUuid, userUuid, userTypeId);
                 await connection.DeleteAsync(accessKey);
 
-                _logger.LogInformation("Tokens revoked for user: {UserUuid}, session: {SessionUuid}", userUuid, sessionUuid);
+                _logger.LogDebug("Tokens revoked for user: {UserUuid}, session: {SessionUuid}", userUuid, sessionUuid);
                 return true;
             }
             catch (Exception ex)
@@ -446,7 +446,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
         {
             try
             {
-                _logger.LogInformation("Revoking all tokens for user: {UserUuid}", userUuid);
+                _logger.LogDebug("Revoking all tokens for user: {UserUuid}", userUuid);
                 using var connection = await GetSessionConnectionAsync();
 
                 // Remove all refresh tokens for user
@@ -473,7 +473,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 {
                     await connection.DeleteBatchAsync(allKeysToDelete);
                 }
-                _logger.LogInformation("All tokens revoked for user: {UserUuid}, Keys: {Count}", userUuid, allKeysToDelete.Count);
+                _logger.LogDebug("All tokens revoked for user: {UserUuid}, Keys: {Count}", userUuid, allKeysToDelete.Count);
                 return true;
 
             }
@@ -520,7 +520,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 }
 
 
-                _logger.LogInformation("All tokens revoked for user: {UserUuid}, excluding session: {ExcludedSessionUuid}, Keys: {Count}", userUuid, excluededSessionUuid, allKeysToDelete.Count);
+                _logger.LogDebug("All tokens revoked for user: {UserUuid}, excluding session: {ExcludedSessionUuid}, Keys: {Count}", userUuid, excluededSessionUuid, allKeysToDelete.Count);
                 return true;
             }
             catch (Exception ex)
@@ -597,5 +597,180 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
 
             }
         }
+
+        public async Task<int> GetSessionCountByUserUuid(string useUuid)
+        {
+            using var connection = await GetSessionConnectionAsync();
+            var accessPattern = $"access:*:{useUuid}:*";
+            var accessKeys = await connection.GetKeysAsync(accessPattern);
+            if (accessKeys == null || accessKeys.Count == 0)
+            {
+                _logger.LogDebug("No sessions found for user: {UserUuid}", useUuid);
+                return 0;
+            }
+            else
+            {
+                _logger.LogDebug("Found {Count} sessions for user: {UserUuid}", accessKeys.Count, useUuid);
+                return accessKeys.Count;
+            }
+        }
+
+
+        #region Brute Force Protection
+        public string GenerateBruteForceProtectionKey(string? email, string? phoneCode, string? phoneNumber)
+        {
+            if (!string.IsNullOrEmpty(email))
+            {
+                return $"brute-force:Mail:{email}";
+            }
+            else if (!string.IsNullOrEmpty(phoneCode) && !string.IsNullOrEmpty(phoneNumber))
+            {
+                return $"brute-force:Phone:{phoneCode}:{phoneNumber}";
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        public async Task<bool> IsBruteForceProtectionKeyExistsAsync(string key)
+        {
+            using var connection = await GetSessionConnectionAsync();
+            var exists = await connection.ExistsAsync(key);
+            return exists;
+        }
+
+        public async Task<bool> RemoveBruteForceProtectionKeyAsync(string key)
+        {
+            using var connection = await GetSessionConnectionAsync();
+            var result = connection.DeleteAsync(key);
+            if (result.IsCompletedSuccessfully)
+            {
+                _logger.LogDebug("Brute force protection key removed: {Key}", key);
+                return true;
+            }
+            else
+            {
+                _logger.LogWarning("Failed to remove brute force protection key: {Key}", key);
+                return false;
+            }
+        }
+
+        public async Task<bool> SetBruteForceProtectionKeyAsync(string key, int attempts, TimeSpan? expiration = null)
+        {
+            expiration ??= TimeSpan.FromMinutes(30); 
+            using var connection = await GetSessionConnectionAsync();
+            var tokenData = new
+            {
+                Attempts = attempts,
+                CreatedAt = DateTime.UtcNow,
+            };
+            var serializedData = JsonSerializer.Serialize(tokenData);
+            var result = await connection.SetStringAsync(key, serializedData, expiration);
+            if (!result)
+            {
+                _logger.LogWarning("Failed to set brute force protection key: {Key}", key);
+            }
+            return result;
+        }
+
+        public async Task<int> GetBruteForceProtectionAttemptsByKeyAsync(string key)
+        {
+            using var connection = await GetSessionConnectionAsync();
+            var bruteForceData = await connection.GetStringAsync(key);
+            if (string.IsNullOrEmpty(bruteForceData))
+            {
+                _logger.LogDebug("No brute force protection data found for key: {Key}", key);
+                return 0;
+            }
+            
+            try
+            {
+                var jsonDoc = JsonDocument.Parse(bruteForceData);
+                if (jsonDoc.RootElement.TryGetProperty("Attempts", out var attemptsElement) && attemptsElement.ValueKind == JsonValueKind.Number)
+                {
+                    return attemptsElement.GetInt32();
+                }
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Error parsing brute force protection data for key: {Key}", key);
+            }
+            _logger.LogDebug("Brute force protection data is invalid or missing 'Attempts' for key: {Key}", key);
+            return 0;
+        }
+
+        public async Task<bool> IncrementBruteForceProtectionAttemptsAsync(string key)
+        {
+            using var connection = await GetSessionConnectionAsync();
+            var bruteForceData = await connection.GetStringAsync(key);
+            if (string.IsNullOrEmpty(bruteForceData))
+            {
+                _logger.LogDebug("No brute force protection data found for key: {Key}", key);
+                return false;
+            }
+
+            try
+            {
+                var jsonDoc = JsonDocument.Parse(bruteForceData);
+                if (jsonDoc.RootElement.TryGetProperty("Attempts", out var attemptsElement) && attemptsElement.ValueKind == JsonValueKind.Number)
+                {
+                    int attempts = attemptsElement.GetInt32();
+                    attempts++;
+                    
+                    // Update the attempts count
+                    var updatedData = new
+                    {
+                        Attempts = attempts,
+                        CreatedAt = DateTime.UtcNow,
+                    };
+                    var serializedData = JsonSerializer.Serialize(updatedData);
+                    await connection.SetStringAsync(key, serializedData);
+                    _logger.LogDebug("Brute force protection attempts incremented for key: {Key}, New Attempts: {Attempts}", key, attempts);
+                    return true;
+                }
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Error parsing brute force protection data for key: {Key}", key);
+            }
+            return false;
+        }
+
+        public async Task<bool> ResetBruteForceProtectionAttemptsAsync(string key)
+        {
+            using var connection = await GetSessionConnectionAsync();
+            var bruteForceData = await connection.GetStringAsync(key);
+            if (string.IsNullOrEmpty(bruteForceData))
+            {
+                _logger.LogDebug("No brute force protection data found for key: {Key}", key);
+                return false;
+            }
+
+            try
+            {
+                var jsonDoc = JsonDocument.Parse(bruteForceData);
+                if (jsonDoc.RootElement.TryGetProperty("Attempts", out var attemptsElement) && attemptsElement.ValueKind == JsonValueKind.Number)
+                {
+                    // Reset attempts to 0
+                    var resetData = new
+                    {
+                        Attempts = 0,
+                        CreatedAt = DateTime.UtcNow,
+                    };
+                    var serializedData = JsonSerializer.Serialize(resetData);
+                    await connection.SetStringAsync(key, serializedData);
+                    _logger.LogDebug("Brute force protection attempts reset for key: {Key}", key);
+                    return true;
+                }
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Error parsing brute force protection data for key: {Key}", key);
+            }
+            _logger.LogDebug("Brute force protection data is invalid or missing 'Attempts' for key: {Key}", key);
+            return false;
+        }
+        #endregion
     }
 }
