@@ -9,13 +9,14 @@ namespace Core.Utilities.BuisnessLogic
 {
     public sealed class BuisnessLogic
     {
-        public static IBuisnessLogicResult Run(params IBuisnessLogicResult[] logics)
+        public static async Task<IBuisnessLogicResult> Run(params Func<Task<IBuisnessLogicResult>>[] steps)
         {
-            foreach (var logic in logics)
+            foreach (var step in steps)
             {
-                if (!logic.Success)
+                var result = await step();
+                if (!result.Success)
                 {
-                    return logic;
+                    return result;
                 }
             }
             return null;

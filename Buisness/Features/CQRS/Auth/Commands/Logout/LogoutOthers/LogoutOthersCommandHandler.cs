@@ -29,10 +29,10 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
                 var httpContext = _httpContextAccessor.HttpContext;
                 LogoutOthersRequestDto mappedRequestDto = new();
 
-                IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateAsync(request),
-                    await _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestDto),
-                    await _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken)
+                IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.ValidateAsync(request),
+                    () => _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestDto),
+                    () => _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken)
                 );
 
                 if (buisnessResult != null)
@@ -41,8 +41,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
                         statusCode: buisnessResult.StatusCode);
 
 
-                IBuisnessLogicResult blackListResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.BlacklistSessionsExcludedByOneAsync(mappedRequestDto.AccessToken)
+                IBuisnessLogicResult blackListResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.BlacklistSessionsExcludedByOneAsync(mappedRequestDto.AccessToken)
                 );
                 if (blackListResult != null)
                 {

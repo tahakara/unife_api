@@ -85,12 +85,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         /// <param name="additionalData">Additional data related to the security event.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         Task<IBuisnessLogicResult> AddSecurityEventRecordAsync(
-            HttpContext? httpContext, 
-            Guid securityEventTypeGuid, 
-            UserTypeId userTypeId, 
-            Guid userUuid, 
-            Guid? universityUuid, 
-            string description, 
+            HttpContext? httpContext,
+            Guid securityEventTypeGuid,
+            UserTypeId userTypeId,
+            Guid userUuid,
+            Guid? universityUuid,
+            string description,
             Dictionary<string, object>? additionalData);
         Task<IBuisnessLogicResult> AddGenericSecurityEventRecordAsync(
             HttpContext? httpContext,
@@ -682,51 +682,130 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
         }
 
-        public async Task<IBuisnessLogicResult> CheckVerifyOTPAsync(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto)
+        public async Task<IBuisnessLogicResult> CheckVerifyOTPAsync(
+            VerifyOTPRequestDto verifyOTPRequestDto,
+            VerifyOTPResponseDto verifyOTPResponseDto)
         {
             try
             {
                 await LogDebugAsync("CheckVerifyOTPAsync Started", verifyOTPRequestDto);
 
-                bool isExist = await _OTPCodeService.IsCodeExistAsync(verifyOTPRequestDto.SessionUuid.ToString(),
+                // Is OTP code exist?
+                var otpRecord = await _OTPCodeService.GetCodeExistBySessionUuidAndUserUuidAsync(
+                    verifyOTPRequestDto.SessionUuid.ToString(),
                     verifyOTPRequestDto.UserUuid.ToString(),
-                    verifyOTPRequestDto.OtpTypeId.ToString(),
-                    verifyOTPRequestDto.OtpCode);
+                    verifyOTPRequestDto.OtpTypeId.ToString());
 
-                if (!isExist)
+                if (otpRecord == null)
                 {
                     return new BuisnessLogicErrorResult("OTP code is invalid or expired", 400);
                 }
 
-                bool isDeleted = await _OTPCodeService.RemoveCodeAsync(
+                // Is OTP code already used?
+                int attempts = 0;
+                int ttlSeconds = 180; // default
+
+                if (otpRecord is JsonElement json)
+                {
+                    if (json.TryGetProperty("Attemps", out var att))
+                        attempts = att.GetInt32();
+
+                    if (json.TryGetProperty("ExpiresAt", out var exp))
+                        if (DateTime.TryParse(exp.GetString(), out var expiresAt))
+                            ttlSeconds = Math.Max((int)(expiresAt - DateTime.UtcNow).TotalSeconds, 1);
+                }
+                else
+                {
+                    var propAtt = otpRecord.GetType().GetProperty("Attemps");
+                    if (propAtt != null)
+                        attempts = Convert.ToInt32(propAtt.GetValue(otpRecord));
+
+                    var propExp = otpRecord.GetType().GetProperty("ExpiresAt");
+                    if (propExp?.GetValue(otpRecord) is DateTime expiresAt)
+                        ttlSeconds = Math.Max((int)(expiresAt - DateTime.UtcNow).TotalSeconds, 1);
+                }
+
+                // Is OTP code expired?
+                if (attempts >= 5)
+                {
+                    await _OTPCodeService.RemoveCodeAsync(
+                        verifyOTPRequestDto.SessionUuid.ToString(),
+                        verifyOTPRequestDto.UserUuid.ToString(),
+                        verifyOTPRequestDto.OtpTypeId.ToString(),
+                        null);
+
+                    return new BuisnessLogicErrorResult("Too many OTP attempts. OTP deleted.", 400);
+                }
+
+                // Is OTP code provided?
+                if (string.IsNullOrWhiteSpace(verifyOTPRequestDto.OtpCode))
+                    return new BuisnessLogicErrorResult("OTP code must be provided", 400);
+
+                bool isValid = verifyOTPRequestDto.OtpCode == (
+                    otpRecord is JsonElement je && je.TryGetProperty("OtpCode", out var oc)
+                        ? oc.GetString()
+                        : otpRecord.GetType().GetProperty("OtpCode")?.GetValue(otpRecord)?.ToString()
+                );
+
+                if (!isValid)
+                {
+                    string? storedOtpCode = null;
+
+                    if (otpRecord is JsonElement jsonElement && jsonElement.TryGetProperty("OtpCode", out var otpCodeProp))
+                    {
+                        storedOtpCode = otpCodeProp.GetString();
+                    }
+                    else
+                    {
+                        storedOtpCode = otpRecord.GetType().GetProperty("OtpCode")?.GetValue(otpRecord)?.ToString();
+                    }
+
+                    bool updated = await _OTPCodeService.SetCodeAsync(
+                        verifyOTPRequestDto.SessionUuid.ToString(),
+                        verifyOTPRequestDto.UserUuid.ToString(),
+                        verifyOTPRequestDto.OtpTypeId.ToString(),
+                        storedOtpCode,
+                        attempts,
+                        ttlSeconds > 0 ? TimeSpan.FromSeconds(ttlSeconds) : TimeSpan.FromMinutes(3)
+                    );
+
+                    if (!updated)
+                        return new BuisnessLogicErrorResult("Failed to update OTP attempt", 500);
+
+                    return new BuisnessLogicErrorResult("Invalid OTP code", 400);
+                }
+
+                // Is OTP code valid?
+                bool removed = await _OTPCodeService.RemoveCodeAsync(
                     verifyOTPRequestDto.SessionUuid.ToString(),
                     verifyOTPRequestDto.UserUuid.ToString(),
                     verifyOTPRequestDto.OtpTypeId.ToString(),
                     verifyOTPRequestDto.OtpCode);
-                if (!isDeleted)
-                {
-                    return new BuisnessLogicErrorResult("Failed to delete OTP code", 500);
-                }
 
+                if (!removed)
+                    return new BuisnessLogicErrorResult("Failed to delete OTP code", 500);
+
+                // Is OTP code verified?
                 verifyOTPResponseDto.SessionUuid = verifyOTPRequestDto.SessionUuid;
                 verifyOTPResponseDto.OtpTypeId = verifyOTPRequestDto.OtpTypeId;
                 verifyOTPResponseDto.UserUuid = verifyOTPRequestDto.UserUuid;
 
                 await LogDebugAsync("CheckVerifyOTP Completed", new
                 {
-                    UserType = verifyOTPRequestDto.UserTypeId,
-                    SessionUuid = verifyOTPRequestDto.SessionUuid,
-                    OtpTypeId = verifyOTPRequestDto.OtpTypeId,
-                    OtpCode = verifyOTPRequestDto.OtpCode
+                    verifyOTPRequestDto.UserUuid,
+                    verifyOTPRequestDto.SessionUuid,
+                    verifyOTPRequestDto.OtpTypeId
                 });
-                return new BuisnessLogicSuccessResult("OTP code is valid", 200);
+
+                return new BuisnessLogicSuccessResult("OTP verified successfully", 200);
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("CheckVerifyOTPAsync Excepted", ex, verifyOTPRequestDto);
-                return new BuisnessLogicErrorResult("CheckVerifyOTP işlemi sırasında hata oluştu", 500);
+                return new BuisnessLogicErrorResult("CheckVerifyOTP işleminde hata oluştu", 500);
             }
         }
+
 
         public async Task<IBuisnessLogicResult> CreatSession(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto)
         {
@@ -792,12 +871,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         }
 
         public async Task<IBuisnessLogicResult> AddSecurityEventRecordAsync(
-            HttpContext? httpContext, 
-            Guid securityEventTypeGuid, 
-            UserTypeId userTypeId, 
-            Guid userUuid, 
-            Guid? universityUuid, 
-            string description, 
+            HttpContext? httpContext,
+            Guid securityEventTypeGuid,
+            UserTypeId userTypeId,
+            Guid userUuid,
+            Guid? universityUuid,
+            string description,
             Dictionary<string, object>? additionalData)
         {
             try

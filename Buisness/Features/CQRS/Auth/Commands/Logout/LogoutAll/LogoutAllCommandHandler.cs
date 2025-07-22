@@ -31,10 +31,10 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
 
                 LogoutAllRequestDto logoutAllRequestDto = new();
 
-                IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateAsync(request),
-                    await _authBusinessLogicHelper.MapToDtoAsync(request, logoutAllRequestDto),
-                    await _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutAllRequestDto.AccessToken)
+                IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.ValidateAsync(request),
+                    () => _authBusinessLogicHelper.MapToDtoAsync(request, logoutAllRequestDto),
+                    () => _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutAllRequestDto.AccessToken)
                 );
 
                 if (buisnessResult != null)
@@ -43,8 +43,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
                             statusCode: buisnessResult.StatusCode);
 
 
-                IBuisnessLogicResult blackListResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.BlacklistAllSessionTokensByUserAsync(logoutAllRequestDto.AccessToken)
+                IBuisnessLogicResult blackListResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.BlacklistAllSessionTokensByUserAsync(logoutAllRequestDto.AccessToken)
                 );
                 if (blackListResult != null)
                 {

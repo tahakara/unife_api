@@ -32,13 +32,13 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                 RefreshTokenRequestDto refreshTokenRequestDto = new();
                 RefreshTokenResponseDto refreshTokenResponseDto = new();
 
-                IBuisnessLogicResult validationResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateAsync(request),
-                    await _authBusinessLogicHelper.MapToDtoAsync(request, refreshTokenRequestDto),
-                    string.IsNullOrEmpty(refreshTokenRequestDto.AccessToken) || string.IsNullOrWhiteSpace(refreshTokenRequestDto.AccessToken)
-                        ? new BuisnessLogicSuccessResult("AccessToken not required also not given", 200)
-                        : await _authBusinessLogicHelper.IsAccessTokenValidAsync(refreshTokenRequestDto.AccessToken),
-                    await _authBusinessLogicHelper.IsRefreshTokenValidAsync(refreshTokenRequestDto, refreshTokenResponseDto)
+                IBuisnessLogicResult validationResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.ValidateAsync(request),
+                    () => _authBusinessLogicHelper.MapToDtoAsync(request, refreshTokenRequestDto),
+                    //() => string.IsNullOrEmpty(refreshTokenRequestDto.AccessToken) || string.IsNullOrWhiteSpace(refreshTokenRequestDto.AccessToken)
+                    //    ? new BuisnessLogicSuccessResult("AccessToken not required also not given", 200)
+                    //    : await _authBusinessLogicHelper.IsAccessTokenValidAsync(refreshTokenRequestDto.AccessToken),
+                    () => _authBusinessLogicHelper.IsRefreshTokenValidAsync(refreshTokenRequestDto, refreshTokenResponseDto)
                 );
 
                 if (validationResult != null)
@@ -47,8 +47,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                         statusCode: validationResult.StatusCode);
 
 
-                IBuisnessLogicResult refreshAccessTokenResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.RefreshAccessTokenAsync(refreshTokenResponseDto)
+                IBuisnessLogicResult refreshAccessTokenResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.RefreshAccessTokenAsync(refreshTokenResponseDto)
                 );
                 if (refreshAccessTokenResult != null)
                 {

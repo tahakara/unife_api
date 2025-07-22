@@ -38,10 +38,10 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                 VerifyOTPRequestDto verifyOTPRequestDto = new();
                 VerifyOTPResponseDto verifyOTPResponseDto = new();
 
-                IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateAsync(request),
-                    await _authBusinessLogicHelper.MapToDtoAsync(request, verifyOTPRequestDto),
-                    await _authBusinessLogicHelper.CheckVerifyOTPAsync(verifyOTPRequestDto, verifyOTPResponseDto)
+                IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.ValidateAsync(request),
+                    () => _authBusinessLogicHelper.MapToDtoAsync(request, verifyOTPRequestDto),
+                    () => _authBusinessLogicHelper.CheckVerifyOTPAsync(verifyOTPRequestDto, verifyOTPResponseDto)
                 );
                 if (buisnessResult != null)
                     return BaseResponse<VerifyOTPResponseDto>.Failure(
@@ -49,8 +49,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                         statusCode: buisnessResult.StatusCode);
 
 
-                IBuisnessLogicResult createBuisnessLogicResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto));
+                IBuisnessLogicResult createBuisnessLogicResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto));
                 if (createBuisnessLogicResult != null)
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(

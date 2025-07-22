@@ -111,8 +111,8 @@ namespace WebAPI.Controllers.Auth
             });
         }
 
-        [HttpPost("forgot-password")]
         [RejectAuthorizationHeader]
+        [HttpPost("forgot-password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ForgotPassword([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] ForgotPasswordCommand command)

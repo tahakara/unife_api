@@ -34,10 +34,10 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
                 SignInRequestDto signInRequestDto = new();
                 SignInResponseDto signInResponseDto = new();
 
-                IBuisnessLogicResult buisnessResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateAsync(request),
-                    await _authBusinessLogicHelper.MapToDtoAsync(request, signInRequestDto),
-                    await _authBusinessLogicHelper.CheckSignInCredentialsAsync(signInRequestDto, signInResponseDto)
+                IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.ValidateAsync(request),
+                    () => _authBusinessLogicHelper.MapToDtoAsync(request, signInRequestDto),
+                    () => _authBusinessLogicHelper.CheckSignInCredentialsAsync(signInRequestDto, signInResponseDto)
                 );
                 if (buisnessResult != null)
                     return BaseResponse<SignInResponseDto>.Failure(
@@ -45,8 +45,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
                         statusCode: buisnessResult.StatusCode);
 
 
-                IBuisnessLogicResult sendSignInResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto));
+                IBuisnessLogicResult sendSignInResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto));
                 if (sendSignInResult != null)
                 {
                     await _authBusinessLogicHelper.AddResendSignInOTPSecurityEventRecordAsync(

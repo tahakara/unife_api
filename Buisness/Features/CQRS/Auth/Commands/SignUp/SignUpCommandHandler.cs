@@ -32,9 +32,9 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignUp
                 SignUpRequestDto signUpRequestDto = new();
                 SignUpResponseDto signUpResponsetDto = new();
 
-                IBuisnessLogicResult buisnessLogicResult = BuisnessLogic.Run(
-                    await _authBusinessLogicHelper.ValidateAsync(request),
-                    await _authBusinessLogicHelper.MapToDtoAsync(request, signUpRequestDto)                    
+                IBuisnessLogicResult buisnessLogicResult = await BuisnessLogic.Run(
+                    () => _authBusinessLogicHelper.ValidateAsync(request),
+                    () => _authBusinessLogicHelper.MapToDtoAsync(request, signUpRequestDto)                    
                 );
                 if (buisnessLogicResult != null)
                     return BaseResponse<SignUpResponseDto>.Failure(
@@ -42,8 +42,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignUp
                         statusCode: buisnessLogicResult.StatusCode);
 
 
-                IBuisnessLogicResult signUpResult = BuisnessLogic.Run(
-                  await _authBusinessLogicHelper.CheckAndCreateSignUpCredentialsAsync(signUpRequestDto, signUpResponsetDto));
+                IBuisnessLogicResult signUpResult = await BuisnessLogic.Run(
+                  () => _authBusinessLogicHelper.CheckAndCreateSignUpCredentialsAsync(signUpRequestDto, signUpResponsetDto));
                 if (signUpResult != null)
                     return BaseResponse<SignUpResponseDto>.Failure(
                         message: signUpResult.Message ?? "SignUp işlemi sırasında hata oluştu",

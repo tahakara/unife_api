@@ -31,25 +31,7 @@ public class VerificationCodeService : IOTPCodeService
             _logger.LogDebug("Setting OTP code for session {SessionUuid}, user {UserUuid}, type {OtpTypeId}, code {OtpCode}",
                 sessionUuid, userUuid, otpTypeId, otpCode);
 
-
-            using (var connection = await GetVerificationConnectionAsync())
-            {
-                var redisKey = GetKey(sessionUuid, userUuid, otpTypeId, otpCode);
-
-                var tokenData = new
-                {
-                    SessionUuid = sessionUuid,
-                    UserUuid = userUuid,
-                    OtpTypeId = otpTypeId,
-                    OtpCode = otpCode,
-                    CreatedAt = DateTime.UtcNow,
-                };
-
-                var serializedData = JsonSerializer.Serialize(tokenData);
-                bool result = await connection.SetStringAsync(redisKey, serializedData, TimeSpan.FromMinutes(3));
-
-                return result;
-            }
+            return await SetCodeAsync(sessionUuid, userUuid, otpTypeId, otpCode, 0, TimeSpan.FromMinutes(3));
         }
         catch (Exception ex)
         {
@@ -57,6 +39,34 @@ public class VerificationCodeService : IOTPCodeService
             return false;
         }
 
+    }
+
+    public async Task<bool> SetCodeAsync(string sessionUuid, string userUuid, string otpTypeId, string otpCode, int attempts, TimeSpan expiration)
+    {
+        try
+        {
+            _logger.LogDebug("Setting OTP code with expiration for session {SessionUuid}, user {UserUuid}, type {OtpTypeId}, code {OtpCode}",
+                sessionUuid, userUuid, otpTypeId, otpCode);
+            using var connection = await GetVerificationConnectionAsync();
+            var redisKey = GetKey(sessionUuid, userUuid, otpTypeId, otpCode);
+            var tokenData = new
+            {
+                SessionUuid = sessionUuid,
+                UserUuid = userUuid,
+                OtpTypeId = otpTypeId,
+                OtpCode = otpCode,
+                Attempts = attempts,
+                CreatedAt = DateTime.UtcNow,
+            };
+            var serializedData = JsonSerializer.Serialize(tokenData);
+            bool result = await connection.SetStringAsync(redisKey, serializedData, expiration);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while setting the OTP code with expiration.");
+            return false;
+        }
     }
 
     public async Task<bool> IsCodeExistAsync(string sessionUuid, string userUuid, string otpTypeId, string otpCode)
@@ -74,6 +84,35 @@ public class VerificationCodeService : IOTPCodeService
         {
             _logger.LogError(ex, "An error occurred while checking the existence of the OTP code.");
             return false;
+        }
+    }
+
+    public async Task<object?> GetCodeExistBySessionUuidAndUserUuidAsync(string sessionUuid, string userUuid, string otpTypeId)
+    {
+        try
+        {
+            _logger.LogDebug("Checking if any OTP codes exist for session {SessionUuid} and user {UserUuid}",
+                sessionUuid, userUuid);
+
+            using var connection = await GetVerificationConnectionAsync();
+            var keys = await connection.GetKeysAsync($"OTP:{sessionUuid}:{userUuid}:{otpTypeId}:*");
+            var firstKey = keys.FirstOrDefault();
+
+            if (firstKey != null)
+            {
+                var value = await connection.GetStringAsync(firstKey);
+                if (value != null)
+                {
+                    return JsonSerializer.Deserialize<object>(value);
+                }
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while checking the existence of OTP codes by session UUID and user UUID.");
+            return null;
         }
     }
 

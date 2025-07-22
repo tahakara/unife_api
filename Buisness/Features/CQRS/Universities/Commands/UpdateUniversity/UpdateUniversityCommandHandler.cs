@@ -32,14 +32,14 @@ namespace Buisness.Features.CQRS.Universities.Commands.UpdateUniversity
             {
                 _logger.LogInformation("Üniversite güncelleme işlemi başlatıldı. ID: {UniversityId}", request.UniversityUuid);
 
-                var validationResult = BuisnessLogic.Run(
-                       await _universityBusinessLogicHelper.IsUniversityExistsByUuidAsync(request.UniversityUuid),
-                       await _universityBusinessLogicHelper.IsUniversityNameExistsAsync(request.UniversityName, request.UniversityUuid),
+                var validationResult = await BuisnessLogic.Run(
+                       () => _universityBusinessLogicHelper.IsUniversityExistsByUuidAsync(request.UniversityUuid),
+                       () => _universityBusinessLogicHelper.IsUniversityNameExistsAsync(request.UniversityName, request.UniversityUuid),
                        /// await _universityBusinessLogicHelper.IsUniversityCodeAvailableAsync(request.UniversityCode, request.UniversityUuid),
-                       await _universityBusinessLogicHelper.IsRegionIdExistsAsync(request.RegionId),
-                       await _universityBusinessLogicHelper.IsUniversityTypeIdExistsAsync(request.UniversityTypeId),
-                       await _universityBusinessLogicHelper.IsEstablishedYearValidAsync(request.EstablishedYear),
-                       await _universityBusinessLogicHelper.IsWebsiteUrlValidAsync(request.WebsiteUrl, request.UniversityUuid));
+                       () => _universityBusinessLogicHelper.IsRegionIdExistsAsync(request.RegionId),
+                       () => _universityBusinessLogicHelper.IsUniversityTypeIdExistsAsync(request.UniversityTypeId),
+                       () => _universityBusinessLogicHelper.IsEstablishedYearValidAsync(request.EstablishedYear),
+                       () => _universityBusinessLogicHelper.IsWebsiteUrlValidAsync(request.WebsiteUrl, request.UniversityUuid));
 
                 if (validationResult != null)
                 {

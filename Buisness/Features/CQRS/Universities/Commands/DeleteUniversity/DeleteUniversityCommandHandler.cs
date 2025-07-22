@@ -31,9 +31,9 @@ namespace Buisness.Features.CQRS.Universities.Commands.DeleteUniversity
             {
                 _logger.LogInformation("Üniversite silme işlemi başlatıldı. ID: {UniversityId}", request.UniversityUuid);
 
-                IBuisnessLogicResult validationResult = BuisnessLogic.Run(
-                    await _businessLogicHelper.IsUniversityExistsByUuidAsync(request.UniversityUuid),
-                    await _businessLogicHelper.HardDeleteUniversityByUuidAsync(request.UniversityUuid));
+                IBuisnessLogicResult validationResult = await BuisnessLogic.Run(
+                    () => _businessLogicHelper.IsUniversityExistsByUuidAsync(request.UniversityUuid),
+                    () => _businessLogicHelper.HardDeleteUniversityByUuidAsync(request.UniversityUuid));
 
                 if (validationResult != null)
                 {
