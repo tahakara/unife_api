@@ -84,14 +84,14 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         /// </param>
         /// <param name="additionalData">Additional data related to the security event.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        Task<IBuisnessLogicResult> AddSecurityEventRecordAsync<TKey, TValue>(
+        Task<IBuisnessLogicResult> AddSecurityEventRecordAsync(
             HttpContext? httpContext, 
             Guid securityEventTypeGuid, 
             UserTypeId userTypeId, 
             Guid userUuid, 
             Guid? universityUuid, 
             string description, 
-            Dictionary<TKey, TValue>? additionalData);
+            Dictionary<string, object>? additionalData);
         Task<IBuisnessLogicResult> AddGenericSecurityEventRecordAsync(
             HttpContext? httpContext,
             SecurityEventTypeGuid eventTypeGuidKey,
@@ -791,14 +791,14 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
         }
 
-        public async Task<IBuisnessLogicResult> AddSecurityEventRecordAsync<TKey, TValue>(
+        public async Task<IBuisnessLogicResult> AddSecurityEventRecordAsync(
             HttpContext? httpContext, 
             Guid securityEventTypeGuid, 
             UserTypeId userTypeId, 
             Guid userUuid, 
             Guid? universityUuid, 
             string description, 
-            Dictionary<TKey, TValue>? additionalData)
+            Dictionary<string, object>? additionalData)
         {
             try
             {
@@ -822,7 +822,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     IpAddress = httpContext?.Connection?.RemoteIpAddress?.IsIPv4MappedToIPv6 == true
                         ? httpContext.Connection.RemoteIpAddress.MapToIPv4().ToString()
     : httpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown",
-                    UserAgent = httpContext?.Request?.Headers["User-Agent"].ToString(),
+                    UserAgent = httpContext?.Request?.Headers["User-Agent"].FirstOrDefault() ?? "Unknown",
                     AdditionalData = additionalData != null ? JsonSerializer.Serialize(additionalData) : null
                 };
 
@@ -905,26 +905,9 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                 var eventTypeUuid = SecurityEventTypeGuids.EventGuids[eventTypeGuidKey];
 
-                Guid? universityUuid = null;
-                switch (resolvedUserTypeId)
-                {
-                    case UserTypeId.Admin:
-                        var admin = await _adminService.GetByUuidAsync(resolvedUserGuid);
-                        universityUuid = admin?.UniversityUuid;
-                        break;
-                    case UserTypeId.Staff:
-                        var staff = await _staffService.GetByUuidAsync(resolvedUserGuid);
-                        universityUuid = staff?.UniversityUuid;
-                        break;
-                    case UserTypeId.Student:
-                        var student = await _studentService.GetByUuidAsync(resolvedUserGuid);
-                        universityUuid = student?.UniversityUuid;
-                        break;
-                    default:
-                        return new BuisnessLogicErrorResult("Unknown or invalid user type", 400);
-                }
+                var universityUuid = await GetUniversityByUserUuidAsync(resolvedUserTypeId, resolvedUserGuid);
 
-                IBuisnessLogicResult result = await AddSecurityEventRecordAsync<object, object>(
+                IBuisnessLogicResult result = await AddSecurityEventRecordAsync(
                     httpContext,
                     eventTypeUuid,
                     resolvedUserTypeId,
@@ -1000,6 +983,18 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 failureMessage);
         }
 
-       
+
+
+        private async Task<Guid?> GetUniversityByUserUuidAsync(UserTypeId userTypeId, Guid userGuid)
+        {
+            return userTypeId switch
+            {
+                UserTypeId.Admin => (await _adminService.GetByUuidAsync(userGuid))?.UniversityUuid,
+                UserTypeId.Staff => (await _staffService.GetByUuidAsync(userGuid))?.UniversityUuid,
+                UserTypeId.Student => (await _studentService.GetByUuidAsync(userGuid))?.UniversityUuid,
+                _ => null
+            };
+        }
+
     }
 }
