@@ -137,5 +137,30 @@ namespace Core.Security.JWT.Providers
                 return null;
             }
         }
+
+        public string GenerateRecoveryToken(IEnumerable<Claim> claims, TimeSpan? expiration = null)
+        {
+            var tokenExpiration = expiration ?? _configuration.AccessTokenExpiration;
+            var expires = DateTime.UtcNow.Add(tokenExpiration);
+
+            var allClaims = new List<Claim>(claims)
+            {
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                new(JwtRegisteredClaimNames.Exp, DateTimeOffset.UtcNow.Add(tokenExpiration).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+            };
+
+            var credentials = new SigningCredentials(_securityKey, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration.Issuer,
+                audience: _configuration.Audience,
+                claims: allClaims,
+                expires: expires,
+                signingCredentials: credentials
+            );
+
+            return _tokenHandler.WriteToken(token);
+        }
     }
 }

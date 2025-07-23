@@ -1,4 +1,4 @@
-﻿using Buisness.Concrete.Dto;
+﻿using Buisness.DTOs.Base;
 using System;
 using System.Collections.Generic;
 using System.Linq;

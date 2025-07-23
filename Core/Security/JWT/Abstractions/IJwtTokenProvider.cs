@@ -42,5 +42,8 @@ namespace Core.Security.JWT.Abstractions
         /// <param name="token">JWT token</param>
         /// <returns>Claims if token is readable</returns>
         IEnumerable<Claim>? ExtractClaims(string token);
+
+        string GenerateRecoveryToken(IEnumerable<Claim> claims, TimeSpan? expiration = null);
+
     }
 }

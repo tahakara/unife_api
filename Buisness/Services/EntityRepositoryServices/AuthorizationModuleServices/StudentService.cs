@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Buisness.Abstract.ServicesBase.AuthorizationModuleServices;
-using Buisness.Concrete.ServiceManager;
+using Buisness.Services.EntityRepositoryServices.Base;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices;
 using Core.Abstract.Repositories.AuthorizationModuleRepositories;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using Microsoft.Extensions.Logging;
@@ -65,6 +65,11 @@ namespace Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices
         public async Task<bool> IsPhoneNumberExistsAsync(string phoneCountryCode, string phoneNumber, bool isDeleted = false)
         {
             return await _studentRepository.IsPhoneNumberExistsAsync(phoneCountryCode, phoneNumber, isDeleted);
+        }
+
+        public async Task<Student> UpdateStudentAsync(Student student)
+        {
+            return await _studentRepository.UpdateAsync(student);
         }
     }
 }

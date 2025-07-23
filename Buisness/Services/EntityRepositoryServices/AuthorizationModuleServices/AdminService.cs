@@ -1,8 +1,7 @@
 ﻿using AutoMapper;
-using Buisness.Abstract.ServicesBase;
-using Buisness.Abstract.ServicesBase.AuthorizationModuleServices;
-using Buisness.Concrete.ServiceManager;
 using Buisness.DTOs.UniversityDtos;
+using Buisness.Services.EntityRepositoryServices.Base;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices;
 using Core.Abstract.Repositories.AuthorizationModuleRepositories;
 using Core.Abstract.Repositories.UniversityModuleRepositories;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
@@ -27,6 +26,12 @@ namespace Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices
             base(mapper, logger, serviceProvider)
         {
             _adminRepository = adminRepository;
+        }
+
+        public async Task<Admin> UpdateAsync(Admin admin)
+        {
+            await LogOperationAsync("UpdateAsync", admin);
+            return await _adminRepository.UpdateAsync(admin);
         }
 
         public Task<Admin> CreateNewAdminAsync(Admin admin)
@@ -90,6 +95,11 @@ namespace Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices
         public async Task<bool> IsPhoneNumberExistsAsync(string phoneCountryCode, string phoneNumber, bool isDeleted = false)
         {
             return await _adminRepository.IsPhoneNumberExistsAsync(phoneCountryCode, phoneNumber, isDeleted);
+        }
+
+        public async Task<Admin> UpdateAdminAsync(Admin admin)
+        {
+            return await _adminRepository.UpdateAsync(admin);
         }
     }
 }

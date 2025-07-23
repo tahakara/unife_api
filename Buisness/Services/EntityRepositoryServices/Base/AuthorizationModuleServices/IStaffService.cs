@@ -1,10 +1,11 @@
-﻿using Buisness.Abstract.ServicesBase.Base;
+﻿using Buisness.Services.EntityRepositoryServices.Base;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 
-namespace Buisness.Abstract.ServicesBase.AuthorizationModuleServices
+namespace Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices
 {
     public interface IStaffService : IServiceManagerBase
     {
+        Task<Staff> UpdateStaffAsync(Staff staff);
         Task<Staff> CreateNewStaffAsync(Staff staff);
         Task<Staff?> GetByUuidAsync(Guid uuid, bool isDeleted = false);
         Task<Staff?> GetStaffByEmailAsync(string email, bool isDeleted = false);

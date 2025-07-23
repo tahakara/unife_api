@@ -1,44 +1,22 @@
 ﻿using AutoMapper;
-using Buisness.Abstract.DtoBase.Base;
-using Buisness.Abstract.ServicesBase.AuthorizationModuleServices;
-using Buisness.Abstract.ServicesBase.AuthorizationModuleServices.SecurityEventServices;
-using Buisness.Abstract.ServicesBase.Base;
-using Buisness.Concrete.Dto;
-using Buisness.Concrete.ServiceManager;
-using Buisness.DTOs.AuthDtos;
-using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
 using Buisness.DTOs.AuthDtos.RefreshDtos;
 using Buisness.DTOs.AuthDtos.SignInDtos.Request;
 using Buisness.DTOs.AuthDtos.SignInDtos.Response;
 using Buisness.DTOs.AuthDtos.SignUpDtos.Request;
 using Buisness.DTOs.AuthDtos.SignUpDtos.Response;
 using Buisness.DTOs.AuthDtos.VerifyDtos.VerifyOTPDtos;
-using Buisness.DTOs.UniversityDtos;
-using Buisness.Features.CQRS.Auth.Commands.Logout.Logout;
-using Buisness.Features.CQRS.Auth.Commands.RefreshToken;
-using Buisness.Features.CQRS.Auth.Commands.SignIn;
-using Buisness.Features.CQRS.Auth.Commands.SignUp;
-using Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP;
-using Buisness.Features.CQRS.Base;
-using Buisness.Features.CQRS.Base.Auth;
-using Buisness.Services.UtilityServices;
 using Buisness.Services.UtilityServices.Base.EmailServices;
 using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
 using Core.Utilities.BuisnessLogic.Base;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
-using Core.Utilities.BuisnessLogic.BuisnessLogicResults.DataResults;
 using Core.Utilities.OTPUtilities;
 using Core.Utilities.OTPUtilities.Base;
-using Core.Utilities.PasswordUtilities;
 using Core.Utilities.PasswordUtilities.Base;
-using Core.Abstract;
 using Core.Enums;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;
 using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
-using FluentValidation;
-using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
@@ -48,7 +26,10 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Domain.Entities.MainEntities.UniversityModul;
+using Buisness.Services.EntityRepositoryServices.Base;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices.SecurityEventServices;
+using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
 
 namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 {
@@ -65,6 +46,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         Task<IBuisnessLogicResult> CheckUserSessionCountExceededAsync(SignInResponseDto signInResponseDto);
         Task<IBuisnessLogicResult> CheckSignInCredentialsAsync(SignInRequestDto signInRequestDto, SignInResponseDto signInResponseDto);
         Task<IBuisnessLogicResult> SendSignInOTPAsync(SignInRequestDto signInRequestDto, SignInResponseDto signInResponseDto);
+        Task<IBuisnessLogicResult> SiginCompletedAsync(SignInResponseDto signInResponseDto, HttpContext httpContext);
         Task<IBuisnessLogicResult> CheckVerifyOTPAsync(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
         Task<IBuisnessLogicResult> CreatSession(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
         Task<IBuisnessLogicResult> RevokeOldOTPAsync(SignInRequestDto signInRequestDto);
@@ -128,6 +110,10 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         Task<IBuisnessLogicResult> ChangePasswordAsync(string accessToken, string oldPassword, string newPassword);
 
         Task<IBuisnessLogicResult> BlacklistOtherSessionsAfterPasswordChangeAsync(string accessToken, bool blackListRequestStatus);
+
+        Task<IBuisnessLogicResult> CheckForgotPasswordCredentialsAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
+        Task<IBuisnessLogicResult> PreventForgotBruteForceAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
+        Task<IBuisnessLogicResult> SendRecoveryNotificaitonAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
     }
 
     public class AuthBuisnessLogicHelper : ServiceManagerBase, IAuthBuisnessLogicHelper
@@ -540,7 +526,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         signInRequestDto.UserUuid = currentAdmin.AdminUuid;
 
                         signInResponseDto.UserUuid = currentAdmin.AdminUuid;
-                        signInResponseDto.UserTypeId = (int)UserTypeId.Admin;
+                        signInResponseDto.UserTypeId = (byte)UserTypeId.Admin;
                         break;
 
                     case (byte)UserTypeId.Staff:
@@ -570,7 +556,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         signInRequestDto.UserUuid = currentStaff.StaffUuid;
 
                         signInResponseDto.UserUuid = currentStaff.StaffUuid;
-                        signInResponseDto.UserTypeId = (int)UserTypeId.Staff;
+                        signInResponseDto.UserTypeId = (byte)UserTypeId.Staff;
                         break;
 
                     case (byte)UserTypeId.Student:
@@ -600,7 +586,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         signInRequestDto.UserUuid = currentStudent.StudentUuid;
 
                         signInResponseDto.UserUuid = currentStudent.StudentUuid;
-                        signInResponseDto.UserTypeId = (int)UserTypeId.Student;
+                        signInResponseDto.UserTypeId = (byte)UserTypeId.Student;
                         break;
 
                     default:
@@ -629,7 +615,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 signInRequestDto.OtpTypeId = (byte)OTPTypeId.Email; // Default to Email, can be changed based on user preference
 
                 // Response Dto
-                signInResponseDto.SessionUuid = signInRequestDto.SessionUuid;
+                signInResponseDto.SessionUuid = signInRequestDto.SessionUuid ?? Guid.Empty;
                 signInResponseDto.OtpTypeId = signInRequestDto.OtpTypeId;
 
                 switch (signInRequestDto.OtpTypeId)
@@ -1131,7 +1117,8 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             {
                 await LogDebugAsync("ChangePasswordAsync Started", new { AccessToken = accessToken, OldPassword = oldPassword, NewPassword = newPassword });
                 var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
-                if (userUuid == null) {
+                if (userUuid == null)
+                {
                     return new BuisnessLogicErrorResult("User UUID could not be resolved from access token", 400);
                 }
                 var userTypeId = await _sessionJwtService.GetUserTypeIdFromTokenAsync(accessToken);
@@ -1151,7 +1138,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                             return new BuisnessLogicErrorResult("Invalid old password for Admin", 401);
                         }
                         (admin.PasswordSalt, admin.PasswordHash) = _passwordUtility.HashPassword(newPassword);
-                        await _adminService.UpdateAsync(admin);
+                        await _adminService.UpdateAdminAsync(admin);
                         break;
                     case UserTypeId.Staff:
                         var staff = await _staffService.GetByUuidAsync(uuid);
@@ -1160,7 +1147,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                             return new BuisnessLogicErrorResult("Invalid old password for Staff", 401);
                         }
                         (staff.PasswordSalt, staff.PasswordHash) = _passwordUtility.HashPassword(newPassword);
-                        await _staffService.UpdateAsync(staff);
+                        await _staffService.UpdateStaffAsync(staff);
                         break;
                     case UserTypeId.Student:
                         var student = await _studentService.GetByUuidAsync(uuid);
@@ -1169,7 +1156,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                             return new BuisnessLogicErrorResult("Invalid old password for Student", 401);
                         }
                         (student.PasswordSalt, student.PasswordHash) = _passwordUtility.HashPassword(newPassword);
-                        await _studentService.UpdateAsync(student);
+                        await _studentService.UpdateStudentAsync(student);
                         break;
                     default:
                         return new BuisnessLogicErrorResult("Invalid user type", 400);
@@ -1187,9 +1174,9 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
         public async Task<IBuisnessLogicResult> BlacklistOtherSessionsAfterPasswordChangeAsync(string accessToken, bool blackListRequestStatus)
         {
-           return blackListRequestStatus 
-                ? await BlacklistSessionsExcludedByOneAsync(accessToken)
-                : new BuisnessLogicSuccessResult("No sessions blacklisted as per request", 200);
+            return blackListRequestStatus
+                 ? await BlacklistSessionsExcludedByOneAsync(accessToken)
+                 : new BuisnessLogicSuccessResult("No sessions blacklisted as per request", 200);
         }
 
         public async Task<IBuisnessLogicResult> PreventSignInBruteForceAsync(SignInRequestDto signInRequestDto)
@@ -1198,29 +1185,28 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             {
                 await LogDebugAsync("PreventSignInBruteForceAsync başladı");
 
-                var key = _sessionJwtService.GenerateBruteForceProtectionKey(signInRequestDto.Email, signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
+                var key = _sessionJwtService.GenerateSignInOTPBruteForceProtectionKey(signInRequestDto.Email, signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
 
                 if (string.IsNullOrEmpty(key))
                 {
                     return new BuisnessLogicErrorResult("Geçersiz brute force key", 400);
                 }
 
-                bool exists = await _sessionJwtService.IsBruteForceProtectionKeyExistsAsync(key);
-
-                int attempts = 0;
+                bool exists = await _sessionJwtService.IsSignInOTPBruteForceProtectionKeyExistsAsync(key);
 
                 if (exists)
                 {
-                    attempts = await _sessionJwtService.GetBruteForceProtectionAttemptsByKeyAsync(key);
+                    int attempts = 0;
+                    attempts = await _sessionJwtService.GetSignInOTPBruteForceProtectionAttemptsByKeyAsync(key);
                     if (attempts >= 5)
                     {
                         return new BuisnessLogicErrorResult("Çok fazla başarısız giriş denemesi, lütfen daha sonra tekrar deneyin.", 429);
                     }
+                    await _sessionJwtService.IncrementSignInOTPBruteForceProtectionAttemptsAsync(key);
                 }
 
                 // Increment or set
-                attempts++;
-                await _sessionJwtService.SetBruteForceProtectionKeyAsync(key, attempts);
+                await _sessionJwtService.SetSignInOTPBruteForceProtectionKeyAsync(key);
 
                 return new BuisnessLogicSuccessResult("Brute force koruması geçti", 200);
             }
@@ -1252,6 +1238,282 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             {
                 await LogErrorAsync("CheckUserSessionCountExceeded Excepted", ex, signInResponseDto);
                 return new BuisnessLogicErrorResult("CheckUserSessionCountExceeded işlemi sırasında hata oluştu", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> SiginCompletedAsync(SignInResponseDto signInResponseDto, HttpContext httpContext)
+        {
+            try
+            {
+                await LogDebugAsync("SiginCompleted Started", signInResponseDto);
+
+                var ipAddress = httpContext.Connection?.RemoteIpAddress?.ToString() ?? "Unknown";
+                var userAgent = httpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "Unknown";
+                DateTime dateTime = DateTime.UtcNow;
+
+                if (signInResponseDto == null || signInResponseDto.UserUuid == Guid.Empty)
+                {
+                    return new BuisnessLogicErrorResult("SignInResponseDto is null or UserUuid is empty", 400);
+                }
+
+                switch (signInResponseDto.UserTypeId)
+                {
+                    case (byte)UserTypeId.Admin:
+                        Admin admin = await _adminService.GetByUuidAsync(signInResponseDto.UserUuid);
+                        if (admin == null)
+                        {
+                            return new BuisnessLogicErrorResult("Admin not found", 404);
+                        }
+                        await _emailService.SendSiginCompleteMail(ipAddress, userAgent, admin.Email, admin.FirstName, admin.MiddleName, admin.LastName);
+                        break;
+
+                    case (byte)UserTypeId.Staff:
+                        Staff staff = await _staffService.GetByUuidAsync(signInResponseDto.UserUuid);
+                        if (staff == null)
+                        {
+                            return new BuisnessLogicErrorResult("Staff not found", 404);
+                        }
+                        await _emailService.SendSiginCompleteMail(ipAddress, userAgent, staff.Email, staff.FirstName, staff.MiddleName, staff.LastName);
+                        break;
+                    case (byte)UserTypeId.Student:
+                        Student student = await _studentService.GetByUuidAsync(signInResponseDto.UserUuid);
+                        if (student == null)
+                        {
+                            return new BuisnessLogicErrorResult("Student not found", 404);
+                        }
+                        await _emailService.SendSiginCompleteMail(ipAddress, userAgent, student.Email, student.FirstName, student.MiddleName, student.LastName);
+                        break;
+                    default:
+                        return new BuisnessLogicErrorResult("Invalid user type", 400);
+                        break;
+                }
+                return new BuisnessLogicSuccessResult("SiginCompleted işlemi başarılı", 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("SiginCompleted Excepted", ex, signInResponseDto);
+                return new BuisnessLogicErrorResult("SiginCompleted işlemi sırasında hata oluştu", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> CheckForgotPasswordCredentialsAsync(ForgotPasswordRequestDto forgotPasswordRequestDto)
+        {
+            try
+            {
+                await LogDebugAsync("CheckForgotPasswordCredentialsAsync Started", forgotPasswordRequestDto);
+
+                if (string.IsNullOrEmpty(forgotPasswordRequestDto.Email) &&
+                    (string.IsNullOrEmpty(forgotPasswordRequestDto.PhoneCountryCode) || string.IsNullOrEmpty(forgotPasswordRequestDto.PhoneNumber)))
+                {
+                    return new BuisnessLogicErrorResult("Email veya telefon bilgileri sağlanmalıdır.", 400);
+                }
+
+                switch (forgotPasswordRequestDto.UserTypeId)
+                {
+                    case (byte)UserTypeId.Admin:
+                        {
+                            Admin? admin = null;
+
+                            switch (forgotPasswordRequestDto.RecoveryMethodId)
+                            {
+                                case 1:
+                                    admin = await _adminService.GetAdminByEmailAsync(forgotPasswordRequestDto.Email);
+                                    break;
+                                case 2:
+                                    admin = await _adminService.GetAdminByPhoneNumberAsync(
+                                        forgotPasswordRequestDto.PhoneCountryCode,
+                                        forgotPasswordRequestDto.PhoneNumber);
+                                    break;
+                                default:
+                                    return new BuisnessLogicErrorResult("Admin için geçersiz kurtarma yöntemi.", 400);
+                            }
+
+                            if (admin == null)
+                                return new BuisnessLogicErrorResult("Girilen bilgilerle eşleşen admin bulunamadı.", 404);
+
+                            forgotPasswordRequestDto.UserUuid = admin.AdminUuid;
+                        }
+                        break;
+
+                    case (byte)UserTypeId.Staff:
+                        {
+                            Staff? staff = null;
+
+                            switch (forgotPasswordRequestDto.RecoveryMethodId)
+                            {
+                                case 1:
+                                    staff = await _staffService.GetStaffByEmailAsync(forgotPasswordRequestDto.Email);
+                                    break;
+                                case 2:
+                                    staff = await _staffService.GetStaffByPhoneNumberAsync(
+                                        forgotPasswordRequestDto.PhoneCountryCode,
+                                        forgotPasswordRequestDto.PhoneNumber);
+                                    break;
+                                default:
+                                    return new BuisnessLogicErrorResult("Staff için geçersiz kurtarma yöntemi.", 400);
+                            }
+
+                            if (staff == null)
+                                return new BuisnessLogicErrorResult("Girilen bilgilerle eşleşen staff bulunamadı.", 404);
+
+                            forgotPasswordRequestDto.UserUuid = staff.StaffUuid;
+                        }
+                        break;
+
+                    case (byte)UserTypeId.Student:
+                        {
+                            Student? student = null;
+
+                            switch (forgotPasswordRequestDto.RecoveryMethodId)
+                            {
+                                case 1:
+                                    student = await _studentService.GetStudentByEmailAsync(forgotPasswordRequestDto.Email);
+                                    break;
+                                case 2:
+                                    student = await _studentService.GetStudentByPhoneNumberAsync(
+                                        forgotPasswordRequestDto.PhoneCountryCode,
+                                        forgotPasswordRequestDto.PhoneNumber);
+                                    break;
+                                default:
+                                    return new BuisnessLogicErrorResult("Student için geçersiz kurtarma yöntemi.", 400);
+                            }
+
+                            if (student == null)
+                                return new BuisnessLogicErrorResult("Girilen bilgilerle eşleşen student bulunamadı.", 404);
+
+                            forgotPasswordRequestDto.UserUuid = student.StudentUuid;
+                        }
+                        break;
+
+                    default:
+                        return new BuisnessLogicErrorResult("Geçersiz kullanıcı tipi.", 400);
+                }
+
+                await LogDebugAsync("CheckForgotPasswordCredentialsAsync Completed", new
+                {
+                    forgotPasswordRequestDto.UserTypeId,
+                    forgotPasswordRequestDto.Email,
+                    forgotPasswordRequestDto.PhoneCountryCode,
+                    forgotPasswordRequestDto.PhoneNumber
+                });
+
+                return new BuisnessLogicSuccessResult("Şifre sıfırlama kimlik doğrulama kontrolü başarılı.", 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("CheckForgotPasswordCredentialsAsync Exception", ex, forgotPasswordRequestDto);
+                return new BuisnessLogicErrorResult("Şifre sıfırlama kimlik doğrulama sırasında bir hata oluştu.", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> PreventForgotBruteForceAsync(ForgotPasswordRequestDto forgotPasswordRequestDto)
+        {
+            try
+            {
+                await LogDebugAsync("PreventForgotBruteForceAsync Started", forgotPasswordRequestDto);
+
+                string key = string.Empty;
+
+                if (forgotPasswordRequestDto.RecoverySessionUuid == null)
+                {
+                    // takes only key 
+                    key = await _sessionJwtService.GetForgotBruteForceProtectionKeyByUserUuidAsync(
+                        forgotPasswordRequestDto.UserUuid.ToString());
+
+                    if (!string.IsNullOrEmpty(key)) 
+                    {
+                        return new BuisnessLogicErrorResult("Şifre sıfırlama işlemi için zaten bir oturum var.", 400);
+                    }
+
+                    forgotPasswordRequestDto.recoveryToken = await _sessionJwtService.SetForgotBruteForceProtectionKeyAsync(
+                        Guid.NewGuid().ToString(),
+                        forgotPasswordRequestDto.UserTypeId.ToString(),
+                        forgotPasswordRequestDto.UserUuid.ToString(),
+                        forgotPasswordRequestDto.Email,
+                        forgotPasswordRequestDto.PhoneCountryCode,
+                        forgotPasswordRequestDto.PhoneNumber);
+
+                    await LogDebugAsync("PreventForgotBruteForceAsync Completed", forgotPasswordRequestDto);
+                    return new BuisnessLogicSuccessResult("Şifre sıfırlama oturumu oluşturuldu.", 200);
+                }
+
+                // takes key and session uuid
+                key = await _sessionJwtService.GetForgotBruteForceProtectionKeyByRecoverySessionUuidAsync(
+                    forgotPasswordRequestDto.RecoverySessionUuid.ToString());
+                if (!string.IsNullOrEmpty(key))
+                    {
+                    return new BuisnessLogicErrorResult("Şifre sıfırlama işlemi için zaten bir oturum var.", 400);
+                }
+
+                forgotPasswordRequestDto.recoveryToken = await _sessionJwtService.SetForgotBruteForceProtectionKeyAsync(
+                    Guid.NewGuid().ToString(),
+                    forgotPasswordRequestDto.UserTypeId.ToString(),
+                    forgotPasswordRequestDto.UserUuid.ToString(),
+                    forgotPasswordRequestDto.Email,
+                    forgotPasswordRequestDto.PhoneCountryCode,
+                    forgotPasswordRequestDto.PhoneNumber);
+                if (string.IsNullOrEmpty(forgotPasswordRequestDto.recoveryToken))
+                {
+                    return new BuisnessLogicErrorResult("Şifre sıfırlama oturumu oluşturulamadı.", 500);
+                }
+
+                await LogDebugAsync("PreventForgotBruteForceAsync Completed", forgotPasswordRequestDto);
+                return new BuisnessLogicSuccessResult("PreventForgotBruteForce işlemi başarılı", 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("PreventForgotBruteForceAsync Exception", ex, forgotPasswordRequestDto);
+                return new BuisnessLogicErrorResult("PreventForgotBruteForce işlemi sırasında hata oluştu", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> SendRecoveryNotificaitonAsync(ForgotPasswordRequestDto forgotPasswordRequestDto)
+        {
+            try
+            {
+                await LogDebugAsync("SendRecoveryNotificaitonAsync Started", forgotPasswordRequestDto);
+
+                if (string.IsNullOrEmpty(forgotPasswordRequestDto.recoveryToken))
+                {
+                    return new BuisnessLogicErrorResult("Şifre sıfırlama oturumu bulunamadı.", 400);
+                }
+
+                switch (forgotPasswordRequestDto.RecoveryMethodId)
+                {
+                    case 1:
+                        // Email ile bildirim gönder
+                        if (string.IsNullOrEmpty(forgotPasswordRequestDto.Email))
+                        {
+                            return new BuisnessLogicErrorResult("Email bilgisi sağlanmalıdır.", 400);
+                        }
+                        bool result = await _emailService.SendForgotPasswordEmailAsync(
+                            forgotPasswordRequestDto.Email,
+                            forgotPasswordRequestDto.recoveryToken);
+                        if (!result)
+                            return new BuisnessLogicErrorResult("Email gönderilemedi.", 500);
+                        return new BuisnessLogicSuccessResult("Email gönderildi.", 200);
+                        break;
+
+                    //    case 2:
+                    //// Telefon ile bildirim gönder
+
+                    //    await _smsService.SendForgotPasswordSmsAsync(
+                    //        forgotPasswordRequestDto.PhoneCountryCode,
+                    //        forgotPasswordRequestDto.PhoneNumber,
+                    //        forgotPasswordRequestDto.recoveryToken,
+                    //        forgotPasswordRequestDto.UserTypeId);
+                    //    break;
+
+                    default:
+                        return new BuisnessLogicErrorResult("Geçersiz kurtarma yöntemi.", 400);
+                        break;
+                }
+                return new BuisnessLogicErrorResult("SendRecoveryNotificaiton işlemi başarılı", 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("SendRecoveryNotificaitonAsync Exception", ex, forgotPasswordRequestDto);
+                return new BuisnessLogicErrorResult("SendRecoveryNotificaiton işlemi sırasında hata oluştu", 500);
             }
         }
     }

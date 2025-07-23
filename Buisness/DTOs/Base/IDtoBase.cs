@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Buisness.Abstract.DtoBase.Base
+namespace Buisness.DTOs.Base
 {
     public interface IDtoBase
     {

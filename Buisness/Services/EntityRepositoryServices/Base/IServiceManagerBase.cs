@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Buisness.Abstract.ServicesBase.Base
+namespace Buisness.Services.EntityRepositoryServices.Base
 {
     public interface IServiceManagerBase
     {
-        Task<TEntity> UpdateAsync<TEntity>(TEntity entity);
         // Transaction Management
         Task<TResult> ExecuteInTransactionAsync<TResult>(Func<Task<TResult>> operation);
         Task ExecuteInTransactionAsync(Func<Task> operation);

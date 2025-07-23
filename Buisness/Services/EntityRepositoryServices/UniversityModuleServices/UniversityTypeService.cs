@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
-using Buisness.Abstract.ServicesBase;
-using Buisness.Concrete.ServiceManager;
 using Buisness.DTOs.UniversityDtos;
+using Buisness.Services.EntityRepositoryServices.Base;
+using Buisness.Services.EntityRepositoryServices.Base.UniversityModuleServices;
 using Core.Abstract.Repositories.UniversityModuleRepositories;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 
-namespace Buisness.Services.EntityRepositoryServices
+namespace Buisness.Services.EntityRepositoryServices.UniversityModuleServices
 {
     public class UniversityTypeService : ServiceManagerBase, IUniversityTypeService
     {

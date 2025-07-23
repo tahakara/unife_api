@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using Buisness.Abstract.ServicesBase;
-using Buisness.Concrete.Dto;
 using Buisness.DTOs.UniversityDtos;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -11,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.DataResults;
 using Core.Abstract.Repositories.UniversityModuleRepositories;
 using Domain.Entities.MainEntities.UniversityModul;
+using Buisness.Services.EntityRepositoryServices.Base.UniversityModuleServices;
 
 namespace Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper
 {

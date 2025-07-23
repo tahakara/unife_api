@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
-using Buisness.Abstract.ServicesBase.AuthorizationModuleServices;
-using Buisness.Abstract.ServicesBase.AuthorizationModuleServices.SecurityEventServices;
-using Buisness.Concrete.ServiceManager;
+using Buisness.Services.EntityRepositoryServices.Base;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices.SecurityEventServices;
 using Core.Abstract.Repositories.AuthorizationModuleRepositories;
 using Core.Abstract.Repositories.AuthorizationModuleRepositories.SecurityEventRepositories;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;

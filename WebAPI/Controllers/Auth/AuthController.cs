@@ -115,11 +115,21 @@ namespace WebAPI.Controllers.Auth
         [HttpPost("forgot-password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ForgotPassword([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] ForgotPasswordCommand command)
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
         {
-            command.AccessToken = accessToken;
             return await SendCommand(command);
         }
+
+        [RejectAuthorizationHeader]
+        [HttpPost("forgot-password/t/{RecoveryToken}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ForgotPasswordWithToken(
+            [FromRoute] ForgotPasswordRecoveryTokenCommand RecoveryToken)
+        {
+            return await SendCommand(RecoveryToken);
+        }
+
 
         [Authorize]
         [HttpPost("cahnge-password")]

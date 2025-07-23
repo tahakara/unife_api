@@ -1,5 +1,7 @@
-﻿using Buisness.Features.CQRS.Base;
-using Buisness.Features.CQRS.Base.Auth;
+﻿using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
+using Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword;
+using Buisness.Features.CQRS.Base;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
 {
-    public class ForgotPasswordCommand : TokenCommandBase, ICommand<BaseResponse<bool>>
+    public class ForgotPasswordCommand : ForgotPasswordRequestDto, ICommand<BaseResponse<bool>>
     {
     }
 }

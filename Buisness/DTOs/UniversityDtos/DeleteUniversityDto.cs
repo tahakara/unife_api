@@ -1,4 +1,4 @@
-﻿using Buisness.Concrete.Dto;
+﻿using Buisness.DTOs.Base;
 
 namespace Buisness.DTOs.UniversityDtos
 {

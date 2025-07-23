@@ -32,25 +32,19 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                 RefreshTokenRequestDto refreshTokenRequestDto = new();
                 RefreshTokenResponseDto refreshTokenResponseDto = new();
 
-                IBuisnessLogicResult validationResult = await BuisnessLogic.Run(
+                IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
                     () => _authBusinessLogicHelper.ValidateAsync(request),
                     () => _authBusinessLogicHelper.MapToDtoAsync(request, refreshTokenRequestDto),
                     //() => string.IsNullOrEmpty(refreshTokenRequestDto.AccessToken) || string.IsNullOrWhiteSpace(refreshTokenRequestDto.AccessToken)
                     //    ? new BuisnessLogicSuccessResult("AccessToken not required also not given", 200)
                     //    : await _authBusinessLogicHelper.IsAccessTokenValidAsync(refreshTokenRequestDto.AccessToken),
-                    () => _authBusinessLogicHelper.IsRefreshTokenValidAsync(refreshTokenRequestDto, refreshTokenResponseDto)
-                );
+                    () => _authBusinessLogicHelper.IsRefreshTokenValidAsync(refreshTokenRequestDto, refreshTokenResponseDto),
 
-                if (validationResult != null)
-                    return BaseResponse<RefreshTokenResponseDto>.Failure(
-                        message: validationResult.Message ?? "Refresh token işlemi sırasında hata oluştu",
-                        statusCode: validationResult.StatusCode);
-
-
-                IBuisnessLogicResult refreshAccessTokenResult = await BuisnessLogic.Run(
+                    // Executors
                     () => _authBusinessLogicHelper.RefreshAccessTokenAsync(refreshTokenResponseDto)
                 );
-                if (refreshAccessTokenResult != null)
+
+                if (buisnessResult != null)
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
                         httpContext,
@@ -59,11 +53,11 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                         nameof(RefreshTokenCommandHandler),
                         "Refresh Token",
                         false,
-                        refreshAccessTokenResult.Message ?? "Refresh token işlemi sırasında hata oluştu"
+                        buisnessResult.Message ?? "Refresh token işlemi sırasında hata oluştu"
                     );
                     return BaseResponse<RefreshTokenResponseDto>.Failure(
-                            message: refreshAccessTokenResult.Message ?? "Refresh token işlemi sırasında hata oluştu",
-                            statusCode: refreshAccessTokenResult.StatusCode);
+                            message: buisnessResult.Message ?? "Refresh token işlemi sırasında hata oluştu",
+                            statusCode: buisnessResult.StatusCode);
                 }
 
 

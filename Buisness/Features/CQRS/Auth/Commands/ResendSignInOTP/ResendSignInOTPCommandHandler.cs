@@ -42,18 +42,13 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
                     () => _authBusinessLogicHelper.ValidateAsync(request),
                     () => _authBusinessLogicHelper.MapToDtoAsync(request, signInRequestDto),
                     () =>  _authBusinessLogicHelper.CheckSignInCredentialsAsync(signInRequestDto, signInResponseDto),
-                    () => _authBusinessLogicHelper.RevokeOldOTPAsync(signInRequestDto)
+                    () => _authBusinessLogicHelper.RevokeOldOTPAsync(signInRequestDto),
+
+                    // Executors
+                    () => _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto)
                 );
 
                 if (buisnessResult != null)
-                    return BaseResponse<SignInResponseDto>.Failure(
-                        message: buisnessResult.Message ?? "ResendSignInOTP işlemi sırasında hata oluştu",
-                        statusCode: buisnessResult.StatusCode);
-
-
-                IBuisnessLogicResult sendOtpResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto));
-                if (sendOtpResult != null)
                 {
                     await _authBusinessLogicHelper.AddResendSignInOTPSecurityEventRecordAsync(
                         httpContext, 
@@ -61,14 +56,14 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
                         nameof(ResendSignInOTPCommandHandler), 
                         "Resnd SignIn OTP", 
                         signInResponseDto.UserUuid, 
-                        signInResponseDto.UserTypeId ?? 0, 
+                        signInResponseDto.UserTypeId, 
                         null, 
                         false, 
-                        sendOtpResult.Message ?? "ResendSignInOTP işlemi sırasında hata oluştu");
+                        buisnessResult.Message ?? "ResendSignInOTP işlemi sırasında hata oluştu");
 
                     return BaseResponse<SignInResponseDto>.Failure(
-                        message: sendOtpResult.Message ?? "ResendSignInOTP işlemi sırasında hata oluştu",
-                        statusCode: sendOtpResult.StatusCode);
+                        message: buisnessResult.Message ?? "ResendSignInOTP işlemi sırasında hata oluştu",
+                        statusCode: buisnessResult.StatusCode);
                 }
 
                 await _authBusinessLogicHelper.AddResendSignInOTPSecurityEventRecordAsync(
@@ -77,7 +72,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
                     nameof(ResendSignInOTPCommandHandler), 
                     "Resnd SignIn OTP", 
                     signInResponseDto.UserUuid, 
-                    signInResponseDto.UserTypeId ?? 0, 
+                    signInResponseDto.UserTypeId, 
                     null, 
                     true, 
                     "ResendSignInOTP işlemi başarılı");

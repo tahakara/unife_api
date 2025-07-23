@@ -1,5 +1,4 @@
-﻿using Buisness.Abstract.DtoBase.Base;
-using Buisness.Concrete.Dto;
+﻿using Buisness.DTOs.Base;
 
 namespace Buisness.DTOs.AuthDtos.RefreshDtos
 {

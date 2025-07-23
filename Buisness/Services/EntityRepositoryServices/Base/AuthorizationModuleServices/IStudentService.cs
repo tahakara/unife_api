@@ -1,10 +1,11 @@
-﻿using Buisness.Abstract.ServicesBase.Base;
+﻿using Buisness.Services.EntityRepositoryServices.Base;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 
-namespace Buisness.Abstract.ServicesBase.AuthorizationModuleServices
+namespace Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices
 {
     public interface IStudentService : IServiceManagerBase
     {
+        Task<Student> UpdateStudentAsync(Student student);
         Task<Student> CreateNewStudentAsync(Student student);
         Task<Student?> GetByUuidAsync(Guid uuid, bool isDeleted = false);
         Task<Student?> GetStudentByEmailAsync(string email, bool isDeleted = false);

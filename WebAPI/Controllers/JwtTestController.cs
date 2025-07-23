@@ -206,7 +206,7 @@ namespace WebAPI.Controllers
                     : (request.UserTypeId.HasValue ? request.UserTypeId.Value.ToString() : "0");
 
                 var claims = JwtExtensions.CreateUserSessionClaims(userTypeId, userUuid, sessionUuid);
-                var token = _jwtTokenProvider.GenerateAccessToken(claims);
+                var token = _jwtTokenProvider.GenerateAccessToken(claims, TimeSpan.FromMinutes(15));
 
                 var response = new
                 {

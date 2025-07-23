@@ -1,11 +1,11 @@
-using Buisness.Abstract.ServicesBase;
 using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
+using Core.Enums;
 using Core.ObjectStorage.Base;
 using Core.Security.JWT.Abstractions;
 using Core.Security.JWT.Extensions;
-using Core.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -62,7 +62,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
         public async Task<string> GenerateAccessTokenAsync(string userTypeId, string userUuid, string sessionUuid, IEnumerable<Claim>? additionalClaims = null)
         {
             var claims = JwtExtensions.CreateUserSessionClaims(userTypeId, userUuid, sessionUuid, additionalClaims);
-            var accessToken = _jwtTokenProvider.GenerateAccessToken(claims);
+            var accessToken = _jwtTokenProvider.GenerateAccessToken(claims, TimeSpan.FromMinutes(15));
 
             // Store access token with new key structure
             try
@@ -290,7 +290,8 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
 
                 // Generate new access token
                 var claims = JwtExtensions.CreateUserSessionClaims(userTypeId, storedUserUuid, storedSessionUuid);
-                var newAccessToken = _jwtTokenProvider.GenerateAccessToken(claims);
+                var newAccessToken = _jwtTokenProvider.GenerateAccessToken(claims,
+                    TimeSpan.FromMinutes(15));
 
                 // Store new access token using existing connection
                 var accessKey = GetAccessTokenKey(storedSessionUuid, storedUserUuid, userTypeId);
@@ -617,7 +618,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
 
 
         #region Brute Force Protection
-        public string GenerateBruteForceProtectionKey(string? email, string? phoneCode, string? phoneNumber)
+        public string GenerateSignInOTPBruteForceProtectionKey(string? email, string? phoneCode, string? phoneNumber)
         {
             if (!string.IsNullOrEmpty(email))
             {
@@ -633,14 +634,14 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             }
         }
 
-        public async Task<bool> IsBruteForceProtectionKeyExistsAsync(string key)
+        public async Task<bool> IsSignInOTPBruteForceProtectionKeyExistsAsync(string key)
         {
             using var connection = await GetSessionConnectionAsync();
             var exists = await connection.ExistsAsync(key);
             return exists;
         }
 
-        public async Task<bool> RemoveBruteForceProtectionKeyAsync(string key)
+        public async Task<bool> RemoveSignInOTPBruteForceProtectionKeyAsync(string key)
         {
             using var connection = await GetSessionConnectionAsync();
             var result = connection.DeleteAsync(key);
@@ -656,7 +657,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             }
         }
 
-        public async Task<bool> SetBruteForceProtectionKeyAsync(string key, int attempts, TimeSpan? expiration = null)
+        public async Task<bool> SetSignInOTPBruteForceProtectionKeyAsync(string key, int attempts = 0, TimeSpan? expiration = null)
         {
             expiration ??= TimeSpan.FromMinutes(30); 
             using var connection = await GetSessionConnectionAsync();
@@ -674,7 +675,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             return result;
         }
 
-        public async Task<int> GetBruteForceProtectionAttemptsByKeyAsync(string key)
+        public async Task<int> GetSignInOTPBruteForceProtectionAttemptsByKeyAsync(string key)
         {
             using var connection = await GetSessionConnectionAsync();
             var bruteForceData = await connection.GetStringAsync(key);
@@ -700,7 +701,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             return 0;
         }
 
-        public async Task<bool> IncrementBruteForceProtectionAttemptsAsync(string key)
+        public async Task<bool> IncrementSignInOTPBruteForceProtectionAttemptsAsync(string key)
         {
             using var connection = await GetSessionConnectionAsync();
             var bruteForceData = await connection.GetStringAsync(key);
@@ -737,7 +738,7 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             return false;
         }
 
-        public async Task<bool> ResetBruteForceProtectionAttemptsAsync(string key)
+        public async Task<bool> ResetSignInOTPBruteForceProtectionAttemptsAsync(string key)
         {
             using var connection = await GetSessionConnectionAsync();
             var bruteForceData = await connection.GetStringAsync(key);
@@ -769,6 +770,91 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 _logger.LogError(ex, "Error parsing brute force protection data for key: {Key}", key);
             }
             _logger.LogDebug("Brute force protection data is invalid or missing 'Attempts' for key: {Key}", key);
+            return false;
+        }
+        #endregion
+
+
+        #region Forgot Password Brute Force Protection
+
+        private string GetForgotBruteForceProtectionKey(string recoverUuid, string userUuid, string method)
+        {
+            return $"recover_password:{recoverUuid}:{userUuid}:{method}";
+        }
+
+        public async Task<string?> GetForgotBruteForceProtectionKeyByUserUuidAsync(string userUuid)
+        {
+            using var connection = await GetSessionConnectionAsync();
+            var pattern = $"recover_password:*:{userUuid}:*";
+            var keys = await connection.GetKeysAsync(pattern);
+            return keys.FirstOrDefault();
+        }
+
+        public async Task<string?> SetForgotBruteForceProtectionKeyAsync(
+    string recoverUuid,
+    string userTypeId,
+    string userUuid,
+    string? email,
+    string? phoneCountryCode,
+    string? phoneNumber)
+        {
+            using var connection = await GetSessionConnectionAsync();
+
+            var method = !string.IsNullOrEmpty(email)
+                ? $"Email:{email.ToLowerInvariant().Trim()}"
+                : $"Phone:{phoneCountryCode}{phoneNumber}";
+
+            var key = GetForgotBruteForceProtectionKey(recoverUuid, userUuid, method);
+
+            // Bir JWT token üretelim:
+            var claims = new List<Claim>
+                {
+                    new Claim("recoverUuid", recoverUuid),
+                    new Claim("userUuid", userUuid),
+                    new Claim("userTypeId", userTypeId)
+                };
+            var token = _jwtTokenProvider.GenerateRecoveryToken(
+                claims,
+                TimeSpan.FromMinutes(5));
+
+            var data = new
+            {
+                Token = token,
+                UserUuid = userUuid,
+                UserTypeId = userTypeId,
+                RecoverUuid = recoverUuid,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(5)
+            };
+
+            var serialized = JsonSerializer.Serialize(data);
+            await connection.SetStringAsync(key, serialized, TimeSpan.FromMinutes(5));
+
+            _logger.LogDebug("Forgot password brute force key set: {Key}", key);
+            return token;
+        }
+
+        public async Task<string?> GetForgotBruteForceProtectionKeyByRecoverySessionUuidAsync(string recoverUuid)
+        {
+            using var connection = await GetSessionConnectionAsync();
+            var pattern = $"recover_password:{recoverUuid}:*:*";
+            var keys = await connection.GetKeysAsync(pattern);
+            return keys.FirstOrDefault();
+        }
+
+        public async Task<bool> RemoveForgotBruteForceProtectionKeyAsync(string recoverUuid)
+        {
+            using var connection = await GetSessionConnectionAsync();
+            var pattern = $"recover_password:{recoverUuid}:*:*";
+            var keys = await connection.GetKeysAsync(pattern);
+
+            if (keys.Any())
+            {
+                await connection.DeleteBatchAsync(keys);
+                _logger.LogDebug("Forgot brute force keys removed: {Count}", keys.Count);
+                return true;
+            }
+
             return false;
         }
         #endregion

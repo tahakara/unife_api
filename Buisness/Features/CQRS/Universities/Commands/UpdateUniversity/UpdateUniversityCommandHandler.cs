@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Buisness.Abstract.ServicesBase;
 using Buisness.DTOs.UniversityDtos;
 using Buisness.Features.CQRS.Base;
 using Core.Utilities.BuisnessLogic;

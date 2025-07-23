@@ -40,17 +40,14 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
                     () => _authBusinessLogicHelper.PreventSignInBruteForceAsync(signInRequestDto),
                     () => _authBusinessLogicHelper.RevokeOldOTPAsync(signInRequestDto),
                     () => _authBusinessLogicHelper.CheckSignInCredentialsAsync(signInRequestDto, signInResponseDto),
-                    () => _authBusinessLogicHelper.CheckUserSessionCountExceededAsync(signInResponseDto)
+                    () => _authBusinessLogicHelper.CheckUserSessionCountExceededAsync(signInResponseDto),
+
+                    // Executors
+                    () => _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto),
+                    () => _authBusinessLogicHelper.SiginCompletedAsync(signInResponseDto, httpContext)
                 );
+
                 if (buisnessResult != null)
-                    return BaseResponse<SignInResponseDto>.Failure(
-                        message: buisnessResult.Message ?? "SignIn işlemi sırasında hata oluştu",
-                        statusCode: buisnessResult.StatusCode);
-
-
-                IBuisnessLogicResult sendSignInResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto));
-                if (sendSignInResult != null)
                 {
                     await _authBusinessLogicHelper.AddResendSignInOTPSecurityEventRecordAsync(
                         httpContext,
@@ -58,13 +55,13 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
                         nameof(SignInCommandHandler),
                         "SignIn",
                         signInResponseDto.UserUuid,
-                        signInResponseDto.UserTypeId ?? 0,
+                        signInResponseDto.UserTypeId,
                         null,
                         false,
-                        sendSignInResult.Message ?? "SignIn işlemi sırasında hata oluştu");
+                        buisnessResult.Message ?? "SignIn işlemi sırasında hata oluştu");
                     return BaseResponse<SignInResponseDto>.Failure(
-                        message: sendSignInResult.Message ?? "SignIn işlemi sırasında hata oluştu",
-                        statusCode: sendSignInResult.StatusCode);
+                        message: buisnessResult.Message ?? "SignIn işlemi sırasında hata oluştu",
+                        statusCode: buisnessResult.StatusCode);
                 }
 
 
@@ -74,7 +71,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
                         nameof(SignInCommandHandler),
                         "SignIn",
                         signInResponseDto.UserUuid,
-                        signInResponseDto.UserTypeId ?? 0,
+                        signInResponseDto.UserTypeId,
                         null,
                         true);
                 _logger.LogDebug("SignIn işlemi başarılı. UserType: {UserType}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",

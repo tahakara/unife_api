@@ -1,7 +1,4 @@
 ﻿using AutoMapper;
-using Buisness.Abstract.ServicesBase;
-using Buisness.Abstract.ServicesBase.AuthorizationModuleServices;
-using Buisness.Abstract.ServicesBase.AuthorizationModuleServices.SecurityEventServices;
 using Buisness.Behaviors;
 using Buisness.DTOs.AuthDtos;
 using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
@@ -58,6 +55,11 @@ using Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP;
 using Buisness.DTOs.AuthDtos.SignInDtos.Request;
 using Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword;
 using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.PasswordValidators;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices.SecurityEventServices;
+using Buisness.Services.EntityRepositoryServices.UniversityModuleServices;
+using Buisness.Services.EntityRepositoryServices.Base.UniversityModuleServices;
+using Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword;
 
 namespace Buisness.Extensions
 {
@@ -79,17 +81,22 @@ namespace Buisness.Extensions
 
             // FluentValidation
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            
             services.AddScoped<IValidator<AccessTokenDto> , AccessTokenDtoValidator>();
+
             services.AddScoped<IValidator<LogoutCommand>, LogoutRequestDtoValidator>();
             services.AddScoped<IValidator<LogoutAllCommand>, LogoutAllRequestDtoValidator>();
             services.AddScoped<IValidator<LogoutOthersCommand>, LogoutOthersRequestDtoValidator>();
-            services.AddScoped<IValidator<RefreshTokenCommand>, RefreshTokenRequestDtoValidator>();
             services.AddScoped<IValidator<SignUpCommand>, SignUpRequestDtoValidator>();
             services.AddScoped<IValidator<SignInCommand>, SignInRequestDtoValidator>();
-            services.AddScoped<IValidator<VerifyOTPCommand>, VerifyOTPRequestDtoValidator>();
             services.AddScoped<IValidator<ResendSignInOTPCommand>, SignInRequestDtoValidator>();
-
+            services.AddScoped<IValidator<VerifyOTPCommand>, VerifyOTPRequestDtoValidator>();
             services.AddScoped<IValidator<ChangePasswordCommand>, ChangePasswordRequestDtoValidator>();
+            services.AddScoped<IValidator<ForgotPasswordCommand>, ForgotPasswordRequestDtoValidator>();
+            services.AddScoped<IValidator<ForgotPasswordRecoveryTokenCommand>, ForgotPasswordRecoveryTokenRequestDtoValidator>();
+            services.AddScoped<IValidator<RefreshTokenCommand>, RefreshTokenRequestDtoValidator>();
+
+
 
             services.AddScoped<IValidator<CreateUniversityCommand>, CreateUniversityDtoValidator>();
 
@@ -104,8 +111,10 @@ namespace Buisness.Extensions
                 cfg.AddProfile<ResendSignInOTPProfile>();
                 cfg.AddProfile<VerifyOTPMappingProfile>();
                 cfg.AddProfile<ChangePasswordProfile>();
-
+                cfg.AddProfile<ForgotPasswordProfile>();
+                cfg.AddProfile<ForgotPasswordRecoveryTokenProfile>();
                 cfg.AddProfile<RefreshTokenMappingProfile>();
+
                 cfg.AddProfile<UniversityMappingProfile>();
                 cfg.AddProfile<CommonMappingProfile>();
             });

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Buisness.Concrete.Dto;
 using Buisness.Converters.JsonConverters;
+using Buisness.DTOs.Base;
 
 namespace Buisness.DTOs.UniversityDtos
 {

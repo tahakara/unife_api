@@ -1,4 +1,4 @@
-﻿using Buisness.Concrete.Dto;
+﻿using Buisness.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
 
 namespace Buisness.DTOs.UniversityDtos

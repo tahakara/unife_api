@@ -32,22 +32,18 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignUp
                 SignUpRequestDto signUpRequestDto = new();
                 SignUpResponseDto signUpResponsetDto = new();
 
-                IBuisnessLogicResult buisnessLogicResult = await BuisnessLogic.Run(
+                IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
                     () => _authBusinessLogicHelper.ValidateAsync(request),
-                    () => _authBusinessLogicHelper.MapToDtoAsync(request, signUpRequestDto)                    
+                    () => _authBusinessLogicHelper.MapToDtoAsync(request, signUpRequestDto),
+
+                    // Executors
+                    () => _authBusinessLogicHelper.CheckAndCreateSignUpCredentialsAsync(signUpRequestDto, signUpResponsetDto)
                 );
-                if (buisnessLogicResult != null)
+              
+                if (buisnessResult != null)
                     return BaseResponse<SignUpResponseDto>.Failure(
-                        message: buisnessLogicResult.Message ?? "SignUp işlemi sırasında hata oluştu",
-                        statusCode: buisnessLogicResult.StatusCode);
-
-
-                IBuisnessLogicResult signUpResult = await BuisnessLogic.Run(
-                  () => _authBusinessLogicHelper.CheckAndCreateSignUpCredentialsAsync(signUpRequestDto, signUpResponsetDto));
-                if (signUpResult != null)
-                    return BaseResponse<SignUpResponseDto>.Failure(
-                        message: signUpResult.Message ?? "SignUp işlemi sırasında hata oluştu",
-                        statusCode: signUpResult.StatusCode);
+                        message: buisnessResult.Message ?? "SignUp işlemi sırasında hata oluştu",
+                        statusCode: buisnessResult.StatusCode);
 
 
                 _logger.LogDebug("SignUp işlemi başarılı. UserTypeId: {UserTypeId}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",

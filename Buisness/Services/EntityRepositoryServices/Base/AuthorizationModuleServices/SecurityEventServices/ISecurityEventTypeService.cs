@@ -1,7 +1,7 @@
-﻿using Buisness.Abstract.ServicesBase.Base;
+﻿using Buisness.Services.EntityRepositoryServices.Base;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;
 
-namespace Buisness.Abstract.ServicesBase.AuthorizationModuleServices.SecurityEventServices
+namespace Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices.SecurityEventServices
 {
     public interface ISecurityEventTypeService : IServiceManagerBase
     {

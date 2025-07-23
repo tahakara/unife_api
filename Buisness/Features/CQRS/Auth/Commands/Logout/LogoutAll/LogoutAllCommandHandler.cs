@@ -34,19 +34,13 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
                     () => _authBusinessLogicHelper.ValidateAsync(request),
                     () => _authBusinessLogicHelper.MapToDtoAsync(request, logoutAllRequestDto),
-                    () => _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutAllRequestDto.AccessToken)
+                    () => _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutAllRequestDto.AccessToken),
+
+                    // Executors
+                    () => _authBusinessLogicHelper.BlacklistAllSessionTokensByUserAsync(logoutAllRequestDto.AccessToken)
                 );
 
                 if (buisnessResult != null)
-                    return BaseResponse<bool>.Failure(
-                            message: buisnessResult.Message ?? "LogoutAll işlemi sırasında hata oluştu",
-                            statusCode: buisnessResult.StatusCode);
-
-
-                IBuisnessLogicResult blackListResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.BlacklistAllSessionTokensByUserAsync(logoutAllRequestDto.AccessToken)
-                );
-                if (blackListResult != null)
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
                         httpContext,
@@ -55,11 +49,11 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
                         nameof(LogoutCommandHandler),
                         "Logout All",
                         false,
-                        blackListResult.Message ?? "Logout işlemi sırasında hata oluştu"
+                        buisnessResult.Message ?? "Logout işlemi sırasında hata oluştu"
                     );
                     return BaseResponse<bool>.Failure(
-                        message: blackListResult.Message ?? "LogoutAll işlemi sırasında hata oluştu",
-                        statusCode: blackListResult.StatusCode);
+                        message: buisnessResult.Message ?? "LogoutAll işlemi sırasında hata oluştu",
+                        statusCode: buisnessResult.StatusCode);
                 }
 
 

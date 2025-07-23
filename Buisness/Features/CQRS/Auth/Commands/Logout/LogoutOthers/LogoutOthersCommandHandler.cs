@@ -32,19 +32,13 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
                     () => _authBusinessLogicHelper.ValidateAsync(request),
                     () => _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestDto),
-                    () => _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken)
+                    () => _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken),
+                    
+                    // Executors
+                    () => _authBusinessLogicHelper.BlacklistSessionsExcludedByOneAsync(mappedRequestDto.AccessToken)
                 );
 
                 if (buisnessResult != null)
-                    return BaseResponse<bool>.Failure(
-                        message: buisnessResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu",
-                        statusCode: buisnessResult.StatusCode);
-
-
-                IBuisnessLogicResult blackListResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.BlacklistSessionsExcludedByOneAsync(mappedRequestDto.AccessToken)
-                );
-                if (blackListResult != null)
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
                         httpContext,
@@ -53,11 +47,11 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
                         nameof(LogoutOthersCommandHandler),
                         "Logout Others",
                         false,
-                        blackListResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu"
+                        buisnessResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu"
                     );
                     return BaseResponse<bool>.Failure(
-                        message: blackListResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu",
-                        statusCode: blackListResult.StatusCode);
+                        message: buisnessResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu",
+                        statusCode: buisnessResult.StatusCode);
                 }
 
                 await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(

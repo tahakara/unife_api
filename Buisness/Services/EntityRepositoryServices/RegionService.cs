@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Buisness.Abstract.ServicesBase;
-using Buisness.Concrete.ServiceManager;
+using Buisness.Services.EntityRepositoryServices.Base;
+using Buisness.Services.EntityRepositoryServices.Base.UniversityModuleServices;
 using Core.Abstract.Repositories;
 using Microsoft.Extensions.Logging;
 

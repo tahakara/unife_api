@@ -27,7 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Abstract\FeatureBase\" />
+    <Folder Include="Abstract\" />
+    <Folder Include="Concrete\" />
     <Folder Include="DTOs\AuthDtos\VerifyDtos\VerifyPhoneDtos\" />
     <Folder Include="DTOs\AuthDtos\VerifyDtos\VerifyEmailDtos\" />
   </ItemGroup>

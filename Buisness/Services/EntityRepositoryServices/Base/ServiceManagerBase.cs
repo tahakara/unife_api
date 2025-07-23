@@ -1,12 +1,11 @@
 ﻿using AutoMapper;
-using Buisness.Abstract.ServicesBase.Base;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Buisness.Concrete.ServiceManager
+namespace Buisness.Services.EntityRepositoryServices.Base
 {
     public abstract class ServiceManagerBase : IServiceManagerBase
     {
@@ -147,21 +146,6 @@ namespace Buisness.Concrete.ServiceManager
             catch (Exception ex)
             {
                 await LogErrorAsync("Transaction.Rollback", ex);
-                throw;
-            }
-        }
-
-        public virtual async Task<TEntity> UpdateAsync<TEntity>(TEntity entity)
-        {
-            // Basit implementation, gerçek update sonra eklenecek
-            try
-            {
-                await LogOperationAsync("Update", entity);
-                return entity;
-            }
-            catch (Exception ex)
-            {
-                await LogErrorAsync("Update", ex, entity);
                 throw;
             }
         }

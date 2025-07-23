@@ -41,17 +41,13 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
                     () => _authBusinessLogicHelper.ValidateAsync(request),
                     () => _authBusinessLogicHelper.MapToDtoAsync(request, verifyOTPRequestDto),
-                    () => _authBusinessLogicHelper.CheckVerifyOTPAsync(verifyOTPRequestDto, verifyOTPResponseDto)
+                    () => _authBusinessLogicHelper.CheckVerifyOTPAsync(verifyOTPRequestDto, verifyOTPResponseDto),
+
+                    // Executors
+                    () => _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto)
                 );
+
                 if (buisnessResult != null)
-                    return BaseResponse<VerifyOTPResponseDto>.Failure(
-                        message: buisnessResult.Message ?? "VerifyOTP işlemi sırasında hata oluştu",
-                        statusCode: buisnessResult.StatusCode);
-
-
-                IBuisnessLogicResult createBuisnessLogicResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto));
-                if (createBuisnessLogicResult != null)
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
                         _httpContextAccessor.HttpContext,
@@ -60,7 +56,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                         nameof(VerifyOTPCommandHandler),
                         "VerifyOTP",
                         false,
-                        createBuisnessLogicResult.Message ?? "VerifyOTP işlemi sırasında hata oluştu"
+                        buisnessResult.Message ?? "VerifyOTP işlemi sırasında hata oluştu"
                     );
                     return BaseResponse<VerifyOTPResponseDto>.Failure(
                         message: buisnessResult.Message ?? "VerifyOTP işlemi sırasında hata oluştu",

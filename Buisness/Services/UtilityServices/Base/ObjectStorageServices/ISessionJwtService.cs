@@ -32,14 +32,20 @@ namespace Buisness.Services.UtilityServices.Base.ObjectStorageServices
 
         Task<int> GetSessionCountByUserUuid(string useUuid);
 
-        #region Brute Force Protection
-        string GenerateBruteForceProtectionKey(string? email, string? phoneCode, string? phoneNumber);
-        Task<bool> IsBruteForceProtectionKeyExistsAsync(string key);
-        Task<bool> RemoveBruteForceProtectionKeyAsync(string key);
-        Task<bool> SetBruteForceProtectionKeyAsync(string key, int attempts, TimeSpan? expiration = null);
-        Task<int> GetBruteForceProtectionAttemptsByKeyAsync(string key);
-        Task<bool> IncrementBruteForceProtectionAttemptsAsync(string key);
-        Task<bool> ResetBruteForceProtectionAttemptsAsync(string key);
+        #region SignIn Brute Force Protection
+        string GenerateSignInOTPBruteForceProtectionKey(string? email, string? phoneCode, string? phoneNumber);
+        Task<bool> IsSignInOTPBruteForceProtectionKeyExistsAsync(string key);
+        Task<bool> RemoveSignInOTPBruteForceProtectionKeyAsync(string key);
+        Task<bool> SetSignInOTPBruteForceProtectionKeyAsync(string key, int attempts = 0, TimeSpan? expiration = null);
+        Task<int> GetSignInOTPBruteForceProtectionAttemptsByKeyAsync(string key);
+        Task<bool> IncrementSignInOTPBruteForceProtectionAttemptsAsync(string key);
+        Task<bool> ResetSignInOTPBruteForceProtectionAttemptsAsync(string key);
+        #endregion
+
+        #region Forgot Password Brute Force Protection
+        Task<string> GetForgotBruteForceProtectionKeyByUserUuidAsync(string recoverySessionUuid);
+        Task<string> SetForgotBruteForceProtectionKeyAsync(string recoveryUuid, string userTypeId, string userUuid, string? email, string phoneCountryCode, string? phoneNumber);
+        Task<string> GetForgotBruteForceProtectionKeyByRecoverySessionUuidAsync(string recoverySessionUuid);
         #endregion
     }
 }

@@ -1,6 +1,6 @@
-﻿using Buisness.Abstract.ServicesBase.Base;
+﻿using Buisness.Services.EntityRepositoryServices.Base;
 
-namespace Buisness.Abstract.ServicesBase
+namespace Buisness.Services.EntityRepositoryServices.Base.UniversityModuleServices
 {
     public interface  IRegionService : IServiceManagerBase
     {
