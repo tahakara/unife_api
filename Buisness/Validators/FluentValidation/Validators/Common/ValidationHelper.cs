@@ -4,11 +4,17 @@ namespace Buisness.Validators.FluentValidation.Validators.Common
 {
     public static class ValidationHelper
     {
-        public static bool BeAValidJWTToken(string? token)
+        public static bool BeAValidJWTBeararToken(string? token)
         {
             if (token == null) return false;
             return Regex.IsMatch(token, @"^Bearer [A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$");
 
+        }
+
+        public static bool BeAValidJWTToken(string? token)
+        {
+            if (token == null) return false;
+            return Regex.IsMatch(token, @"^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$");
         }
 
         public static bool BeAValidUuid(string? uuid)

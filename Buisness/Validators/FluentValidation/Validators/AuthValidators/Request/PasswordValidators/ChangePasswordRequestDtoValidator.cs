@@ -16,7 +16,7 @@ namespace Buisness.Validators.FluentValidation.Validators.AuthValidators.Request
             RuleFor(x => x.AccessToken)
                 .NotEmpty().NotNull()
                 .WithMessage("Access token is required.")
-                .Must(ValidationHelper.BeAValidJWTToken).WithMessage("Access token must be a valid JWT token.");
+                .Must(ValidationHelper.BeAValidJWTBeararToken).WithMessage("Access token must be a valid JWT token.");
             RuleFor(x => x.OldPassword)
                 .NotNull().NotEmpty().WithMessage("Old password is required.")
                 .MinimumLength(8).MaximumLength(100).WithMessage("Old password must be between 8 and 50 characters long.");

@@ -21,13 +21,4 @@ namespace Buisness.Mappings.AuthMappingProfiles.PsswordMappingProfiles
                 .ForMember(dest => dest.UserUuid, opt => opt.Ignore());
         }
     }
-
-    public class ForgotPasswordRecoveryTokenProfile : Profile
-    {
-        public ForgotPasswordRecoveryTokenProfile()
-        {
-            CreateMap<ForgotPasswordRecoveryTokenCommand, ForgotPasswordRecoveryTokenRequestDto>()
-                .ForMember(dest => dest.RecoveryToken, opt => opt.MapFrom(src => src.RecoveryToken));
-        }
-    }
 }

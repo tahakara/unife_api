@@ -29,7 +29,7 @@ namespace Buisness.Validators.FluentValidation.Validators.AuthValidators.Request
 
             var trimmedToken = token.Trim();
 
-            return ValidationHelper.BeAValidJWTToken(token);
+            return ValidationHelper.BeAValidJWTBeararToken(token);
         }
     }
 }

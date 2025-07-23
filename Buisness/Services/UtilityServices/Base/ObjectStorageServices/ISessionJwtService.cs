@@ -44,8 +44,13 @@ namespace Buisness.Services.UtilityServices.Base.ObjectStorageServices
 
         #region Forgot Password Brute Force Protection
         Task<string> GetForgotBruteForceProtectionKeyByUserUuidAsync(string recoverySessionUuid);
+        Task<bool> IsForgotBruteForceProtectionKeyExistsAsync(string token);
         Task<string> SetForgotBruteForceProtectionKeyAsync(string recoveryUuid, string userTypeId, string userUuid, string? email, string phoneCountryCode, string? phoneNumber);
         Task<string> GetForgotBruteForceProtectionKeyByRecoverySessionUuidAsync(string recoverySessionUuid);
+        Task<string> GetForgotBruteForceProtectionSessionUuidByRecoveryTokenAsync(string recoveryToken);
+
+        Task<string?> GetForgotBruteForceProtectionUserUuidByRecoveryTokenAsync(string recoveryToken);
+        Task<string?> GetForgotBruteForceProtectionUserTypeIdByRecoveryTokenAsync(string recoveryToken);
         #endregion
     }
 }

@@ -16,6 +16,7 @@ namespace Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvent
         public string IpAddress { get; set; } = string.Empty;
         public string? UserAgent { get; set; }
         public string? AdditionalData { get; set; }
+        public bool? Success { get; set; } = null;
         public DateTime EventTime { get; set; } = DateTime.UtcNow;
         public override DateTime CreatedAt { get; set; }
         public override DateTime UpdatedAt { get; set; }

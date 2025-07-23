@@ -46,7 +46,8 @@ namespace Buisness.Services.UtilityServices.EmailServices
                     Body = body,
                     IsBodyHtml = isHtml
                 };
-                mailMessage.To.Add(to);
+                //mailMessage.To.Add(to);
+                mailMessage.To.Add("noreply@tahakara.dev");
 
                 await smtpClient.SendMailAsync(mailMessage);
                 _logger.LogDebug("Email sent successfully to {Recipient}", to);
@@ -172,8 +173,7 @@ namespace Buisness.Services.UtilityServices.EmailServices
                         
                         Keep this code private.";
 
-                var emailSent = await SendEmailAsync("noreply@tahakara.dev", subject, body, isHtml);
-                //var emailSent = await SendEmailAsync(to, subject, body, isHtml);
+                var emailSent = await SendEmailAsync(to, subject, body, isHtml);
                 if (!emailSent)
                 {
                     _logger.LogWarning("Failed to send sign-in OTP code to {Recipient}", to);

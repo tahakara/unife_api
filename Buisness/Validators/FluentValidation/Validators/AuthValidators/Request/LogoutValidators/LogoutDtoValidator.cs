@@ -16,7 +16,7 @@ namespace Buisness.Validators.FluentValidation.Validators.AuthValidators.Request
             RuleFor(x => x.AccessToken)
                 .NotEmpty().NotNull()
                 .WithMessage("Access token is required.")
-                .Must(ValidationHelper.BeAValidJWTToken).WithMessage("Access token must be a valid JWT token.");
+                .Must(ValidationHelper.BeAValidJWTBeararToken).WithMessage("Access token must be a valid JWT token.");
         }
     }
 }

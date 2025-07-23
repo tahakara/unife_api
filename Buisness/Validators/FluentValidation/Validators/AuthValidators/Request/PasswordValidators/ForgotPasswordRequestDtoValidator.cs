@@ -20,20 +20,6 @@ namespace Buisness.Validators.FluentValidation.Validators.AuthValidators.Request
                 .NotNull().NotEmpty().WithMessage("RecoveryMethodId is required.")
                 .Must(ValidationHelper.BeAValidByte).WithMessage("RecoveryMethodId must be a valid byte value.");
 
-            RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("Invalid email format.")
-                .Must(ValidationHelper.BeAValidEmail).WithMessage("Email must be a valid email address.");
-
-            RuleFor(x => x.PhoneCountryCode)
-                .NotEmpty().WithMessage("PhoneCountryCode is required.")
-                .Must(ValidationHelper.BeAValidCountryCode).WithMessage("PhoneCountryCode must be a valid phone country code.");
-
-            RuleFor(x => x.PhoneNumber)
-                .NotEmpty().WithMessage("PhoneNumber is required.")
-                .Must(ValidationHelper.BeAValidPhoneNumber).WithMessage("PhoneNumber must be a valid phone number.")
-                .Length(10, 15).WithMessage("PhoneNumber must be between 10 and 15 characters long.");
-
             // Email kuralları (varsa)
             When(x => !string.IsNullOrWhiteSpace(x.Email), () =>
             {
