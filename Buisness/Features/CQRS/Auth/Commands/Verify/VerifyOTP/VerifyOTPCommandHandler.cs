@@ -1,4 +1,5 @@
 ﻿using Buisness.DTOs.AuthDtos.SignInDtos.Response;
+using Buisness.DTOs.AuthDtos.SignUpDtos.Response;
 using Buisness.DTOs.AuthDtos.VerifyDtos.VerifyOTPDtos;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Features.CQRS.Base;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -35,6 +37,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
             {
                 _logger.LogDebug("VerifyOTP işlemi başlatıldı. UserType: {UserType}");
 
+                var httpContext = _httpContextAccessor.HttpContext;
+
                 VerifyOTPRequestDto verifyOTPRequestDto = new();
                 VerifyOTPResponseDto verifyOTPResponseDto = new();
 
@@ -44,7 +48,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                     () => _authBusinessLogicHelper.CheckVerifyOTPAsync(verifyOTPRequestDto, verifyOTPResponseDto),
 
                     // Executors
-                    () => _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto)
+                    () => _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto),
+                    () => _authBusinessLogicHelper.SiginCompletedAsync(verifyOTPRequestDto, httpContext)
                 );
 
                 if (buisnessResult != null)

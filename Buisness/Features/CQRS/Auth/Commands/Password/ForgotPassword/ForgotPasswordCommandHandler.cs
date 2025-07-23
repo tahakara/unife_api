@@ -4,6 +4,7 @@ using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
+using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -38,11 +39,29 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
 
                 if (buisnessLogicResult != null)
                 {   _logger.LogError("Business logic validation failed: {Message}", buisnessLogicResult.Message);
+                    await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                        httpContext,
+                        string.Empty,
+                        SecurityEventTypeGuid.PasswordResetRequest,
+                        nameof(ForgotPasswordCommandHandler),
+                        "Forgot Password",
+                        false,
+                        buisnessLogicResult.Message ?? "An error occurred while processing your request."
+                    );
+                    _logger.LogDebug("ForgotPassword Failed.");
                     return BaseResponse<bool>.Failure(
                         message: buisnessLogicResult.Message ?? "An error occurred while processing your request.",
                         statusCode: buisnessLogicResult.StatusCode);
                 }
 
+                await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                    httpContext,
+                    string.Empty,
+                    SecurityEventTypeGuid.PasswordResetRequest,
+                    nameof(ForgotPasswordCommandHandler),
+                    "Forgot Password",
+                    true
+                );
                 _logger.LogDebug("ForgotPassword Completed.");
                 return BaseResponse<bool>.Success(
                     data: true,

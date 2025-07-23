@@ -125,9 +125,10 @@ namespace WebAPI.Controllers.Auth
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ForgotPasswordWithToken(
-            [FromRoute] ForgotPasswordRecoveryTokenCommand RecoveryToken)
+            [FromRoute] string RecoveryToken,[FromBody] ForgotPasswordRecoveryTokenCommand command)
         {
-            return await SendCommand(RecoveryToken);
+            command.RecoveryToken = RecoveryToken;
+            return await SendCommand(command);
         }
 
 

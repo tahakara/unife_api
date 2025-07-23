@@ -15,7 +15,7 @@ namespace Buisness.DTOs.AuthDtos.VerifyDtos.VerifyOTPDtos
         [ModelBinder(BinderType = typeof(TrimmedGuidModelBinder))]
         public Guid? SessionUuid { get; set; }
         [ModelBinder(BinderType = typeof(TrimmedGuidModelBinder))]
-        public Guid? UserUuid { get; set; }
+        public Guid UserUuid { get; set; } = Guid.Empty;
         public byte? OtpTypeId { get; set; } = 0;
         public string? OtpCode { get; set; } = string.Empty;
     }

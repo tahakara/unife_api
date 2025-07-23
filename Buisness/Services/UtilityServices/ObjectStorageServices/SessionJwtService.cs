@@ -701,6 +701,31 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             return 0;
         }
 
+        public async Task<int> GetSignInOTPBruteForceProtectionAttemptsByUserUuid(string userUuid)
+        {
+            using var connection = await GetSessionConnectionAsync();
+
+            var pattern = $"brute-force:*:{userUuid}:*";
+            var keys = await connection.GetKeysAsync(pattern);
+            if (keys.Count == 0)
+            {
+                _logger.LogDebug("No brute force protection keys found for user: {UserUuid}", userUuid);
+                return 0;
+            }
+            else if (keys.Count > 0)
+            {
+                var result = keys.FirstOrDefault();
+                if (result != null) {
+                    var attempts = await GetSignInOTPBruteForceProtectionAttemptsByKeyAsync(result);
+                    _logger.LogDebug("Found {Count} brute force protection keys for user: {UserUuid}, Attempts: {Attempts}", keys.Count, userUuid, attempts);
+                    return attempts;
+                }
+                return 0;
+            }
+
+            return 0;
+        }
+
         public async Task<bool> IncrementSignInOTPBruteForceProtectionAttemptsAsync(string key)
         {
             using var connection = await GetSessionConnectionAsync();
@@ -856,6 +881,95 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
             }
 
             return false;
+        }
+
+        public async Task<bool> IsForgotBruteForceProtectionKeyExistsAsync(string token)
+        {
+            IEnumerable<Claim>? forgotUuid = _jwtTokenProvider.ExtractClaims(token);
+
+            if (forgotUuid == null || !forgotUuid.Any())
+            {
+                _logger.LogWarning("Invalid token structure for forgot password brute force check.");
+                return false;
+            }
+            var recoverUuid = forgotUuid.FirstOrDefault(c => c.Type == "recoverUuid")?.Value;
+            if (string.IsNullOrEmpty(recoverUuid))
+            {
+                _logger.LogWarning("Recover UUID not found in token claims.");
+                return false;
+            }
+            string pattern = $"recover_password:{recoverUuid}:*:*";
+
+            using var connection = await GetSessionConnectionAsync();
+            var keys = await connection.GetKeysAsync(pattern);
+
+            if (keys.Any())
+            {
+                _logger.LogDebug("Forgot brute force protection key exists: {Key}", keys.First());
+                return true;
+            }
+            _logger.LogDebug("No forgot brute force protection key found for recover UUID: {RecoverUuid}", recoverUuid);
+            return false;
+
+        }
+
+        public async Task<string?> GetRecoverUuidFromTokenAsync(string token)
+        {
+            if (_jwtTokenProvider.ValidateToken(token, out var principal))
+            {
+                return principal?.FindFirst("recoverUuid")?.Value;
+            }
+            return null;
+        }
+
+        public async Task<string?> GetForgotBruteForceProtectionSessionUuidByRecoveryTokenAsync(string recoveryToken)
+        {
+            if (_jwtTokenProvider.ValidateToken(recoveryToken, out var principal))
+            {
+                var sessionUuid = principal?.GetRecoverUuid();
+                if (string.IsNullOrEmpty(sessionUuid))
+                {
+                    _logger.LogWarning("Session UUID not found in recovery token claims.");
+                    return null;
+                }
+                return sessionUuid;
+            }
+            _logger.LogWarning("Invalid recovery token provided.");
+            return null;
+        }
+
+        public async Task<string?> GetForgotBruteForceProtectionUserUuidByRecoveryTokenAsync(string recoveryToken)
+        {
+            if (_jwtTokenProvider.ValidateToken(recoveryToken, out var principal))
+            {
+                var userUuid = principal?.GetUserUuid();
+                if (string.IsNullOrEmpty(userUuid))
+                {
+                    _logger.LogWarning("User UUID not found in recovery token claims.");
+                    return null;
+                }
+                return userUuid;
+            }
+            _logger.LogWarning("Invalid recovery token provided.");
+            return null;
+
+        }
+
+        public async Task<string?> GetForgotBruteForceProtectionUserTypeIdByRecoveryTokenAsync(string recoveryToken)
+        {
+            if (_jwtTokenProvider.ValidateToken(recoveryToken, out var principal))
+            {
+                var userTypeId = principal?.GetUserTypeId();
+                if (string.IsNullOrEmpty(userTypeId))
+                {
+                    _logger.LogWarning("User Type ID not found in recovery token claims.");
+                    return null;
+                }
+                return userTypeId;
+            }
+
+            _logger.LogWarning("Invalid recovery token provided.");
+            return null;
         }
         #endregion
     }

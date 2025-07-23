@@ -43,10 +43,10 @@ namespace WebAPI.Mİddlewares.Auth
                 }
 
                 // UserUuid claimini context'e ekle
-                var userUuid = jwtToken.Claims.FirstOrDefault(c => c.Type == "user_uuid")?.Value;
+                var userUuid = jwtToken.Claims.FirstOrDefault(c => c.Type == "userUuid")?.Value;
                 if (string.IsNullOrEmpty(userUuid))
                 {
-                    await WriteFailureResponse(context, "user_uuid claim missing in token.", StatusCodes.Status401Unauthorized);
+                    await WriteFailureResponse(context, "userUuid claim missing in token.", StatusCodes.Status401Unauthorized);
                     return;
                 }
 

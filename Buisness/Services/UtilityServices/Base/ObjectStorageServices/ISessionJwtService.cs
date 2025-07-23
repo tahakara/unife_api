@@ -38,14 +38,20 @@ namespace Buisness.Services.UtilityServices.Base.ObjectStorageServices
         Task<bool> RemoveSignInOTPBruteForceProtectionKeyAsync(string key);
         Task<bool> SetSignInOTPBruteForceProtectionKeyAsync(string key, int attempts = 0, TimeSpan? expiration = null);
         Task<int> GetSignInOTPBruteForceProtectionAttemptsByKeyAsync(string key);
+        Task<int> GetSignInOTPBruteForceProtectionAttemptsByUserUuid(string userUuid);
         Task<bool> IncrementSignInOTPBruteForceProtectionAttemptsAsync(string key);
         Task<bool> ResetSignInOTPBruteForceProtectionAttemptsAsync(string key);
         #endregion
 
         #region Forgot Password Brute Force Protection
         Task<string> GetForgotBruteForceProtectionKeyByUserUuidAsync(string recoverySessionUuid);
+        Task<bool> IsForgotBruteForceProtectionKeyExistsAsync(string token);
         Task<string> SetForgotBruteForceProtectionKeyAsync(string recoveryUuid, string userTypeId, string userUuid, string? email, string phoneCountryCode, string? phoneNumber);
         Task<string> GetForgotBruteForceProtectionKeyByRecoverySessionUuidAsync(string recoverySessionUuid);
+        Task<string> GetForgotBruteForceProtectionSessionUuidByRecoveryTokenAsync(string recoveryToken);
+
+        Task<string?> GetForgotBruteForceProtectionUserUuidByRecoveryTokenAsync(string recoveryToken);
+        Task<string?> GetForgotBruteForceProtectionUserTypeIdByRecoveryTokenAsync(string recoveryToken);
         #endregion
     }
 }

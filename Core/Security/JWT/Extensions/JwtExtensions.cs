@@ -93,5 +93,10 @@ namespace Core.Security.JWT.Extensions
         {
             return principal.FindFirst("userTypeId")?.Value;
         }
+
+        public static string? GetRecoverUuid(this ClaimsPrincipal principal)
+        {
+            return principal.FindFirst("recoverUuid")?.Value;
+        }
     }
 }

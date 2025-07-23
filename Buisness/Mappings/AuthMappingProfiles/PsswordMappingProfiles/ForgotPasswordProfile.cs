@@ -15,19 +15,16 @@ namespace Buisness.Mappings.AuthMappingProfiles.PsswordMappingProfiles
         {
             CreateMap<ForgotPasswordCommand, ForgotPasswordRequestDto>()
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
-                .ForMember(dest => dest.PhoneCountryCode, opt => opt.MapFrom(src => src.PhoneCountryCode))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
+                .ForMember(dest => dest.PhoneCountryCode, opt => opt.MapFrom(src =>
+                    src.PhoneCountryCode == null
+                        ? null
+                        : new string(src.PhoneCountryCode.Where(char.IsDigit).ToArray())))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src =>
+                    src.PhoneNumber == null
+                        ? null
+                        : new string(src.PhoneNumber.Where(char.IsDigit).ToArray())))
                 .ForMember(dest => dest.UserTypeId, opt => opt.MapFrom(src => src.UserTypeId))
                 .ForMember(dest => dest.UserUuid, opt => opt.Ignore());
-        }
-    }
-
-    public class ForgotPasswordRecoveryTokenProfile : Profile
-    {
-        public ForgotPasswordRecoveryTokenProfile()
-        {
-            CreateMap<ForgotPasswordRecoveryTokenCommand, ForgotPasswordRecoveryTokenRequestDto>()
-                .ForMember(dest => dest.RecoveryToken, opt => opt.MapFrom(src => src.RecoveryToken));
         }
     }
 }

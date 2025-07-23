@@ -43,8 +43,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
                     () => _authBusinessLogicHelper.CheckUserSessionCountExceededAsync(signInResponseDto),
 
                     // Executors
-                    () => _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto),
-                    () => _authBusinessLogicHelper.SiginCompletedAsync(signInResponseDto, httpContext)
+                    () => _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto)
                 );
 
                 if (buisnessResult != null)

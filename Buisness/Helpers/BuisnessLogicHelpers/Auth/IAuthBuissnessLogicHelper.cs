@@ -30,6 +30,7 @@ using Buisness.Services.EntityRepositoryServices.Base;
 using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices;
 using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices.SecurityEventServices;
 using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
+using System.ComponentModel.DataAnnotations;
 
 namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 {
@@ -46,7 +47,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         Task<IBuisnessLogicResult> CheckUserSessionCountExceededAsync(SignInResponseDto signInResponseDto);
         Task<IBuisnessLogicResult> CheckSignInCredentialsAsync(SignInRequestDto signInRequestDto, SignInResponseDto signInResponseDto);
         Task<IBuisnessLogicResult> SendSignInOTPAsync(SignInRequestDto signInRequestDto, SignInResponseDto signInResponseDto);
-        Task<IBuisnessLogicResult> SiginCompletedAsync(SignInResponseDto signInResponseDto, HttpContext httpContext);
+        Task<IBuisnessLogicResult> SiginCompletedAsync(VerifyOTPRequestDto verifyOTPRequestDto, HttpContext httpContext);
         Task<IBuisnessLogicResult> CheckVerifyOTPAsync(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
         Task<IBuisnessLogicResult> CreatSession(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
         Task<IBuisnessLogicResult> RevokeOldOTPAsync(SignInRequestDto signInRequestDto);
@@ -74,6 +75,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             UserTypeId userTypeId,
             Guid userUuid,
             Guid? universityUuid,
+            bool? isEventSuccess,
             string description,
             Dictionary<string, object>? additionalData);
         Task<IBuisnessLogicResult> AddGenericSecurityEventRecordAsync(
@@ -84,7 +86,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             Guid? userGuid = null,
             UserTypeId userTypeId = UserTypeId._,
             string? accessToken = null,
-            bool isEventSuccess = false,
+            bool? isEventSuccess = null,
             string? failureMessage = null);
         Task<IBuisnessLogicResult> AddSecurityEventRecordByTypeAsync(
             HttpContext? httpContext,
@@ -92,7 +94,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             SecurityEventTypeGuid eventTypeGuidKey,
             string methodName,
             string description,
-            bool isEventSuccess = false,
+            bool? isEventSuccess = null,
             string? failureMessage = null);
 
         Task<IBuisnessLogicResult> AddResendSignInOTPSecurityEventRecordAsync(HttpContext? httpContext,
@@ -102,7 +104,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             Guid? userGuid = null,
             byte userTypeId = 0,
             string? accessToken = null,
-            bool isEventSuccess = false,
+            bool? isEventSuccess = null,
             string? failureMessage = null);
 
         Task<IBuisnessLogicResult> CheckPasswordIsCorrect(string accessToken, string password);
@@ -114,6 +116,8 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         Task<IBuisnessLogicResult> CheckForgotPasswordCredentialsAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
         Task<IBuisnessLogicResult> PreventForgotBruteForceAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
         Task<IBuisnessLogicResult> SendRecoveryNotificaitonAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
+        Task<IBuisnessLogicResult> CheckRecoveryToken(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto);
+        Task<IBuisnessLogicResult> ResetUserPassword(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto);
     }
 
     public class AuthBuisnessLogicHelper : ServiceManagerBase, IAuthBuisnessLogicHelper
@@ -862,6 +866,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             UserTypeId userTypeId,
             Guid userUuid,
             Guid? universityUuid,
+            bool? isEventSuccess,
             string description,
             Dictionary<string, object>? additionalData)
         {
@@ -887,6 +892,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     IpAddress = httpContext?.Connection?.RemoteIpAddress?.IsIPv4MappedToIPv6 == true
                         ? httpContext.Connection.RemoteIpAddress.MapToIPv4().ToString()
     : httpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown",
+                    Success = isEventSuccess,
                     UserAgent = httpContext?.Request?.Headers["User-Agent"].FirstOrDefault() ?? "Unknown",
                     AdditionalData = additionalData != null ? JsonSerializer.Serialize(additionalData) : null
                 };
@@ -915,7 +921,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             Guid? userGuid = null,
             UserTypeId userTypeId = UserTypeId._,
             string? accessToken = null,
-            bool isEventSuccess = false,
+            bool? isEventSuccess = null,
             string? failureMessage = null)
         {
             try
@@ -978,6 +984,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     resolvedUserTypeId,
                     resolvedUserGuid,
                     universityUuid,
+                    isEventSuccess,
                     description,
                     null);
 
@@ -1010,7 +1017,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             SecurityEventTypeGuid eventTypeGuidKey,
             string methodName,
             string description,
-            bool isEventSuccess = false,
+            bool? isEventSuccess = null,
             string? failureMessage = null)
         {
             return await AddGenericSecurityEventRecordAsync(
@@ -1033,7 +1040,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             Guid? userGuid = null,
             byte userTypeId = 0,
             string? accessToken = null,
-            bool isEventSuccess = false,
+            bool? isEventSuccess = null,
             string? failureMessage = null)
         {
             return await AddGenericSecurityEventRecordAsync(
@@ -1241,25 +1248,25 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
         }
 
-        public async Task<IBuisnessLogicResult> SiginCompletedAsync(SignInResponseDto signInResponseDto, HttpContext httpContext)
+        public async Task<IBuisnessLogicResult> SiginCompletedAsync(VerifyOTPRequestDto verifyOTPRequestDto, HttpContext httpContext)
         {
             try
             {
-                await LogDebugAsync("SiginCompleted Started", signInResponseDto);
+                await LogDebugAsync("SiginCompleted Started", verifyOTPRequestDto);
 
                 var ipAddress = httpContext.Connection?.RemoteIpAddress?.ToString() ?? "Unknown";
                 var userAgent = httpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "Unknown";
                 DateTime dateTime = DateTime.UtcNow;
 
-                if (signInResponseDto == null || signInResponseDto.UserUuid == Guid.Empty)
+                if (verifyOTPRequestDto == null || verifyOTPRequestDto.UserUuid == Guid.Empty)
                 {
                     return new BuisnessLogicErrorResult("SignInResponseDto is null or UserUuid is empty", 400);
                 }
 
-                switch (signInResponseDto.UserTypeId)
+                switch (verifyOTPRequestDto.UserTypeId)
                 {
                     case (byte)UserTypeId.Admin:
-                        Admin admin = await _adminService.GetByUuidAsync(signInResponseDto.UserUuid);
+                        Admin admin = await _adminService.GetByUuidAsync(verifyOTPRequestDto.UserUuid);
                         if (admin == null)
                         {
                             return new BuisnessLogicErrorResult("Admin not found", 404);
@@ -1268,7 +1275,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         break;
 
                     case (byte)UserTypeId.Staff:
-                        Staff staff = await _staffService.GetByUuidAsync(signInResponseDto.UserUuid);
+                        Staff staff = await _staffService.GetByUuidAsync(verifyOTPRequestDto.UserUuid);
                         if (staff == null)
                         {
                             return new BuisnessLogicErrorResult("Staff not found", 404);
@@ -1276,7 +1283,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         await _emailService.SendSiginCompleteMail(ipAddress, userAgent, staff.Email, staff.FirstName, staff.MiddleName, staff.LastName);
                         break;
                     case (byte)UserTypeId.Student:
-                        Student student = await _studentService.GetByUuidAsync(signInResponseDto.UserUuid);
+                        Student student = await _studentService.GetByUuidAsync(verifyOTPRequestDto.UserUuid);
                         if (student == null)
                         {
                             return new BuisnessLogicErrorResult("Student not found", 404);
@@ -1291,7 +1298,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
             catch (Exception ex)
             {
-                await LogErrorAsync("SiginCompleted Excepted", ex, signInResponseDto);
+                await LogErrorAsync("SiginCompleted Excepted", ex, verifyOTPRequestDto);
                 return new BuisnessLogicErrorResult("SiginCompleted işlemi sırasında hata oluştu", 500);
             }
         }
@@ -1302,11 +1309,17 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             {
                 await LogDebugAsync("CheckForgotPasswordCredentialsAsync Started", forgotPasswordRequestDto);
 
-                if (string.IsNullOrEmpty(forgotPasswordRequestDto.Email) &&
-                    (string.IsNullOrEmpty(forgotPasswordRequestDto.PhoneCountryCode) || string.IsNullOrEmpty(forgotPasswordRequestDto.PhoneNumber)))
+
+                bool isEmailProvided = !string.IsNullOrEmpty(forgotPasswordRequestDto.Email);
+                bool isPhoneProvided =
+                    !string.IsNullOrEmpty(forgotPasswordRequestDto.PhoneCountryCode) &&
+                    !string.IsNullOrEmpty(forgotPasswordRequestDto.PhoneNumber);
+
+                if (!isEmailProvided && !isPhoneProvided)
                 {
                     return new BuisnessLogicErrorResult("Email veya telefon bilgileri sağlanmalıdır.", 400);
                 }
+
 
                 switch (forgotPasswordRequestDto.UserTypeId)
                 {
@@ -1420,7 +1433,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     key = await _sessionJwtService.GetForgotBruteForceProtectionKeyByUserUuidAsync(
                         forgotPasswordRequestDto.UserUuid.ToString());
 
-                    if (!string.IsNullOrEmpty(key)) 
+                    if (!string.IsNullOrEmpty(key))
                     {
                         return new BuisnessLogicErrorResult("Şifre sıfırlama işlemi için zaten bir oturum var.", 400);
                     }
@@ -1441,7 +1454,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 key = await _sessionJwtService.GetForgotBruteForceProtectionKeyByRecoverySessionUuidAsync(
                     forgotPasswordRequestDto.RecoverySessionUuid.ToString());
                 if (!string.IsNullOrEmpty(key))
-                    {
+                {
                     return new BuisnessLogicErrorResult("Şifre sıfırlama işlemi için zaten bir oturum var.", 400);
                 }
 
@@ -1514,6 +1527,99 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             {
                 await LogErrorAsync("SendRecoveryNotificaitonAsync Exception", ex, forgotPasswordRequestDto);
                 return new BuisnessLogicErrorResult("SendRecoveryNotificaiton işlemi sırasında hata oluştu", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> CheckRecoveryToken(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto)
+        {
+            try
+            {
+                await LogDebugAsync("CheckRecoveryToken Started", forgotPasswordRecoveryTokenRequestDto);
+                if (string.IsNullOrEmpty(forgotPasswordRecoveryTokenRequestDto.RecoveryToken))
+                {
+                    return new BuisnessLogicErrorResult("Recovery token is required", 400);
+                }
+                var isValid = await _sessionJwtService.IsForgotBruteForceProtectionKeyExistsAsync(forgotPasswordRecoveryTokenRequestDto.RecoveryToken);
+                if (!isValid)
+                {
+                    return new BuisnessLogicErrorResult("Invalid or expired recovery token", 400);
+                }
+                string sessionUuid = await _sessionJwtService.GetForgotBruteForceProtectionSessionUuidByRecoveryTokenAsync(forgotPasswordRecoveryTokenRequestDto.RecoveryToken);
+                string userUuid = await _sessionJwtService.GetForgotBruteForceProtectionUserUuidByRecoveryTokenAsync(forgotPasswordRecoveryTokenRequestDto.RecoveryToken);
+                string userTypeId = await _sessionJwtService.GetForgotBruteForceProtectionUserTypeIdByRecoveryTokenAsync(forgotPasswordRecoveryTokenRequestDto.RecoveryToken);
+
+
+                forgotPasswordRecoveryTokenRequestDto.RecoverySessionUuid = Guid.Parse(sessionUuid);
+                forgotPasswordRecoveryTokenRequestDto.UserUuid = Guid.Parse(userUuid);
+                forgotPasswordRecoveryTokenRequestDto.UserTypeId = byte.Parse(userTypeId);
+
+                await LogDebugAsync("CheckRecoveryToken Completed", forgotPasswordRecoveryTokenRequestDto);
+                return new BuisnessLogicSuccessResult("Recovery token is valid", 200);
+
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("CheckRecoveryToken Exception", ex, forgotPasswordRecoveryTokenRequestDto);
+                return new BuisnessLogicErrorResult("CheckRecoveryToken işlemi sırasında hata oluştu", 500);
+            }
+        }
+
+        public async Task<IBuisnessLogicResult> ResetUserPassword(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto)
+        {
+            try
+            {
+                await LogDebugAsync("ResetUserPassword Started", forgotPasswordRecoveryTokenRequestDto);
+
+                (byte[] newHash, byte[] newSalt) = _passwordUtility.HashPassword(forgotPasswordRecoveryTokenRequestDto.NewPassword);
+
+                switch (forgotPasswordRecoveryTokenRequestDto.UserTypeId)
+                {
+                    case (byte)UserTypeId.Admin:
+                        var admin = await _adminService.GetByUuidAsync(forgotPasswordRecoveryTokenRequestDto.UserUuid);
+                        if (admin == null)
+                        {
+                            return new BuisnessLogicErrorResult("Admin not found", 404);
+                        }
+                        admin.PasswordHash = newHash;
+                        admin.PasswordSalt = newSalt;
+                        await _adminService.UpdateAdminAsync(admin);
+                        break;
+
+                    case (byte)UserTypeId.Staff:
+                        var staff = await _staffService.GetByUuidAsync(forgotPasswordRecoveryTokenRequestDto.UserUuid);
+                        if (staff == null)
+                        {
+                            return new BuisnessLogicErrorResult("Staff not found", 404);
+                        }
+                        staff.PasswordHash = newHash;
+                        staff.PasswordSalt = newSalt;
+                        await _staffService.UpdateStaffAsync(staff);
+                        break;
+
+                    case (byte)UserTypeId.Student:
+                        var student = await _studentService.GetByUuidAsync(forgotPasswordRecoveryTokenRequestDto.UserUuid);
+                        if (student == null)
+                        {
+                            return new BuisnessLogicErrorResult("Student not found", 404);
+                        }
+                        student.PasswordHash = newHash;
+                        student.PasswordSalt = newSalt;
+                        await _studentService.UpdateStudentAsync(student);
+                        break;
+                    default:
+                        await LogErrorAsync("ResetUserPassword Invalid User Type", null, forgotPasswordRecoveryTokenRequestDto);
+                        return new BuisnessLogicErrorResult("Invalid user type", 400);
+                        break;
+                }
+
+                await LogDebugAsync("ResetUserPassword Completed", forgotPasswordRecoveryTokenRequestDto);
+                return new BuisnessLogicSuccessResult("Password reset successfully", 200);
+
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("ResetUserPassword Exception", ex, forgotPasswordRecoveryTokenRequestDto);
+                return new BuisnessLogicErrorResult("ResetUserPassword işlemi sırasında hata oluştu", 500);
             }
         }
     }

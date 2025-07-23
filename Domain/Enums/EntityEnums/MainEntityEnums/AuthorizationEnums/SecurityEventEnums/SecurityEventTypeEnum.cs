@@ -26,7 +26,9 @@ namespace Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEv
         LogoutAll,
         LogoutOthers,
         PasswordChange,
-        PasswordReset,
+        PasswordResetRequest,
+        PasswordResetSuccess,
+        PasswordResetFailed,
         VerificationEmail,
         VerificationPhone,
     }
@@ -50,7 +52,9 @@ namespace Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEv
             { SecurityEventTypeGuid.LogoutAll, Guid.Parse("f2e8ff03-e342-4289-862d-76a8cd98ba63") },
             { SecurityEventTypeGuid.LogoutOthers, Guid.Parse("9f50ecbd-0291-4dc5-a14a-d8be2971db07") },
             { SecurityEventTypeGuid.PasswordChange, Guid.Parse("ec46be4f-01dc-4842-81b2-a5be04fe4015") },
-            { SecurityEventTypeGuid.PasswordReset, Guid.Parse("d072d951-a14f-4d6b-9b52-559dac455109") },
+            { SecurityEventTypeGuid.PasswordResetRequest, Guid.Parse("d072d951-a14f-4d6b-9b52-559dac455109") },
+            { SecurityEventTypeGuid.PasswordResetSuccess, Guid.Parse("b0c1f8d2-3a4e-4c5b-9f6d-7e1f3c8b2c5a") },
+            { SecurityEventTypeGuid.PasswordResetFailed, Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890") },
             { SecurityEventTypeGuid.VerificationEmail, Guid.Parse("4eb65105-dbbb-474b-a025-9ec6b0c85d3e") },
             { SecurityEventTypeGuid.VerificationPhone, Guid.Parse("555ee376-d85d-4553-a80f-4d17ae54f34a") },
         };
