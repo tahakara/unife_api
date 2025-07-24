@@ -12,6 +12,6 @@ namespace Buisness.Services.Common
     /// </summary>
     public class ServiceMessages : IMessageUtility
     {
-
+        // TODO : dd more service messages as needed
     }
 }
