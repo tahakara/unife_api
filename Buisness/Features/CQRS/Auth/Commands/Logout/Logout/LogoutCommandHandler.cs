@@ -34,13 +34,15 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.Logout
                 LogoutRequestDto logoutRequestDto = new();
 
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.ValidateAsync(request),
-                    () => _authBusinessLogicHelper.MapToDtoAsync(request, logoutRequestDto),
-                    () => _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutRequestDto.AccessToken),
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _authBusinessLogicHelper.ValidateAsync(request),
+                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, logoutRequestDto),
+                        ctx => _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutRequestDto.AccessToken),
 
-                    // Executors
-                    () => _authBusinessLogicHelper.BlackListSessionTokensForASingleSessionAsync(logoutRequestDto.AccessToken)
-                );
+                        // Executors
+                        ctx => _authBusinessLogicHelper.BlackListSessionTokensForASingleSessionAsync(logoutRequestDto.AccessToken)
+                    });
 
                 if (buisnessResult != null)
                 {

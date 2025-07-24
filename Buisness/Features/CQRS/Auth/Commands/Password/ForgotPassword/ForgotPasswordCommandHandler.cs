@@ -3,6 +3,7 @@ using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
 using Microsoft.AspNetCore.Http;
@@ -31,11 +32,14 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                 ForgotPasswordRequestDto forgotPasswordRequestDto = new();
 
                 IBuisnessLogicResult buisnessLogicResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.ValidateAsync(request),
-                    () => _authBusinessLogicHelper.MapToDtoAsync(request, forgotPasswordRequestDto),
-                    () => _authBusinessLogicHelper.CheckForgotPasswordCredentialsAsync(forgotPasswordRequestDto),
-                    () => _authBusinessLogicHelper.PreventForgotBruteForceAsync(forgotPasswordRequestDto),
-                    () => _authBusinessLogicHelper.SendRecoveryNotificaitonAsync(forgotPasswordRequestDto));
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _authBusinessLogicHelper.ValidateAsync(request),
+                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, forgotPasswordRequestDto),
+                        ctx => _authBusinessLogicHelper.CheckForgotPasswordCredentialsAsync(forgotPasswordRequestDto),
+                        ctx => _authBusinessLogicHelper.PreventForgotBruteForceAsync(forgotPasswordRequestDto),
+                        ctx => _authBusinessLogicHelper.SendRecoveryNotificaitonAsync(forgotPasswordRequestDto)
+                    });
 
                 if (buisnessLogicResult != null)
                 {   _logger.LogError("Business logic validation failed: {Message}", buisnessLogicResult.Message);

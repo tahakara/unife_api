@@ -3,6 +3,7 @@ using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
 using Microsoft.AspNetCore.Http;
@@ -32,14 +33,17 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword
                 
 
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.ValidateAsync(request),
-                    () => _authBusinessLogicHelper.MapToDtoAsync(request, changePasswordRequestDto),
-                    () => _authBusinessLogicHelper.IsAccessTokenValidAsync(changePasswordRequestDto.AccessToken),
-                    () => _authBusinessLogicHelper.CheckPasswordIsCorrect(changePasswordRequestDto.AccessToken, changePasswordRequestDto.OldPassword),
-                    
-                    // Executors
-                    () => _authBusinessLogicHelper.ChangePasswordAsync(changePasswordRequestDto.AccessToken, changePasswordRequestDto.OldPassword, changePasswordRequestDto.NewPassword),
-                    () => _authBusinessLogicHelper.BlacklistOtherSessionsAfterPasswordChangeAsync(changePasswordRequestDto.AccessToken, changePasswordRequestDto.LogoutOtherSessions));
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _authBusinessLogicHelper.ValidateAsync(request),
+                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, changePasswordRequestDto),
+                        ctx => _authBusinessLogicHelper.IsAccessTokenValidAsync(changePasswordRequestDto.AccessToken),
+                        ctx => _authBusinessLogicHelper.CheckPasswordIsCorrect(changePasswordRequestDto.AccessToken, changePasswordRequestDto.OldPassword),
+                        
+                        // Executors
+                        ctx => _authBusinessLogicHelper.ChangePasswordAsync(changePasswordRequestDto.AccessToken, changePasswordRequestDto.OldPassword,     changePasswordRequestDto.NewPassword),
+                        ctx => _authBusinessLogicHelper.BlacklistOtherSessionsAfterPasswordChangeAsync(changePasswordRequestDto.AccessToken, changePasswordRequestDto.LogoutOtherSessions) 
+                    });
 
 
                 if (buisnessResult != null)

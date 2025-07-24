@@ -743,15 +743,9 @@ namespace Buisness.Services.UtilityServices.ObjectStorageServices
                 {
                     int attempts = attemptsElement.GetInt32();
                     attempts++;
+
+                    await SetSignInOTPBruteForceProtectionKeyAsync(key, attempts);
                     
-                    // Update the attempts count
-                    var updatedData = new
-                    {
-                        Attempts = attempts,
-                        CreatedAt = DateTime.UtcNow,
-                    };
-                    var serializedData = JsonSerializer.Serialize(updatedData);
-                    await connection.SetStringAsync(key, serializedData);
                     _logger.LogDebug("Brute force protection attempts incremented for key: {Key}, New Attempts: {Attempts}", key, attempts);
                     return true;
                 }

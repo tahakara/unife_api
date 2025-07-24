@@ -3,6 +3,7 @@ using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
 using Microsoft.AspNetCore.Http;
@@ -34,10 +35,13 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                 ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto = new();
 
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.ValidateAsync(request),
-                    () => _authBusinessLogicHelper.MapToDtoAsync(request, forgotPasswordRecoveryTokenRequestDto),
-                    () => _authBusinessLogicHelper.CheckRecoveryToken(forgotPasswordRecoveryTokenRequestDto),
-                    () => _authBusinessLogicHelper.ResetUserPassword(forgotPasswordRecoveryTokenRequestDto));
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _authBusinessLogicHelper.ValidateAsync(request),
+                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, forgotPasswordRecoveryTokenRequestDto),
+                        ctx => _authBusinessLogicHelper.CheckRecoveryToken(forgotPasswordRecoveryTokenRequestDto),
+                        ctx => _authBusinessLogicHelper.ResetUserPassword(forgotPasswordRecoveryTokenRequestDto) 
+                    });
 
                 if (buisnessResult != null)
                 {

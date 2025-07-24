@@ -33,16 +33,18 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                 RefreshTokenResponseDto refreshTokenResponseDto = new();
 
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.ValidateAsync(request),
-                    () => _authBusinessLogicHelper.MapToDtoAsync(request, refreshTokenRequestDto),
-                    //() => string.IsNullOrEmpty(refreshTokenRequestDto.AccessToken) || string.IsNullOrWhiteSpace(refreshTokenRequestDto.AccessToken)
-                    //    ? new BuisnessLogicSuccessResult("AccessToken not required also not given", 200)
-                    //    : await _authBusinessLogicHelper.IsAccessTokenValidAsync(refreshTokenRequestDto.AccessToken),
-                    () => _authBusinessLogicHelper.IsRefreshTokenValidAsync(refreshTokenRequestDto, refreshTokenResponseDto),
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _authBusinessLogicHelper.ValidateAsync(request),
+                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, refreshTokenRequestDto),
+                        //ctx => string.IsNullOrEmpty(refreshTokenRequestDto.AccessToken) || string.IsNullOrWhiteSpace(refreshTokenRequestDto.AccessToken)
+                        //    ? new BuisnessLogicSuccessResult("AccessToken not required also not given", 200)
+                        //    : await _authBusinessLogicHelper.IsAccessTokenValidAsync(refreshTokenRequestDto.AccessToken),
+                        ctx => _authBusinessLogicHelper.IsRefreshTokenValidAsync(refreshTokenRequestDto, refreshTokenResponseDto),
 
-                    // Executors
-                    () => _authBusinessLogicHelper.RefreshAccessTokenAsync(refreshTokenResponseDto)
-                );
+                        // Executors
+                        ctx => _authBusinessLogicHelper.RefreshAccessTokenAsync(refreshTokenResponseDto)
+                    });
 
                 if (buisnessResult != null)
                 {

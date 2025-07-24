@@ -43,14 +43,16 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                 VerifyOTPResponseDto verifyOTPResponseDto = new();
 
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.ValidateAsync(request),
-                    () => _authBusinessLogicHelper.MapToDtoAsync(request, verifyOTPRequestDto),
-                    () => _authBusinessLogicHelper.CheckVerifyOTPAsync(verifyOTPRequestDto, verifyOTPResponseDto),
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _authBusinessLogicHelper.ValidateAsync(request),
+                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, verifyOTPRequestDto),
+                        ctx => _authBusinessLogicHelper.CheckVerifyOTPAsync(verifyOTPRequestDto, verifyOTPResponseDto),
 
-                    // Executors
-                    () => _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto),
-                    () => _authBusinessLogicHelper.SiginCompletedAsync(verifyOTPRequestDto, httpContext)
-                );
+                        // Executors
+                        ctx => _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto),
+                        ctx => _authBusinessLogicHelper.SiginCompletedAsync(verifyOTPRequestDto, httpContext)
+                    });
 
                 if (buisnessResult != null)
                 {

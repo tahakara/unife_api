@@ -32,13 +32,16 @@ namespace Buisness.Features.CQRS.Universities.Commands.UpdateUniversity
                 _logger.LogInformation("Üniversite güncelleme işlemi başlatıldı. ID: {UniversityId}", request.UniversityUuid);
 
                 var validationResult = await BuisnessLogic.Run(
-                       () => _universityBusinessLogicHelper.IsUniversityExistsByUuidAsync(request.UniversityUuid),
-                       () => _universityBusinessLogicHelper.IsUniversityNameExistsAsync(request.UniversityName, request.UniversityUuid),
-                       /// await _universityBusinessLogicHelper.IsUniversityCodeAvailableAsync(request.UniversityCode, request.UniversityUuid),
-                       () => _universityBusinessLogicHelper.IsRegionIdExistsAsync(request.RegionId),
-                       () => _universityBusinessLogicHelper.IsUniversityTypeIdExistsAsync(request.UniversityTypeId),
-                       () => _universityBusinessLogicHelper.IsEstablishedYearValidAsync(request.EstablishedYear),
-                       () => _universityBusinessLogicHelper.IsWebsiteUrlValidAsync(request.WebsiteUrl, request.UniversityUuid));
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _universityBusinessLogicHelper.IsUniversityExistsByUuidAsync(request.UniversityUuid),
+                        ctx => _universityBusinessLogicHelper.IsUniversityNameExistsAsync(request.UniversityName, request.UniversityUuid),
+                        /// await _universityBusinessLogicHelper.IsUniversityCodeAvailableAsync(request.UniversityCode, request.UniversityUuid),
+                        ctx => _universityBusinessLogicHelper.IsRegionIdExistsAsync(request.RegionId),
+                        ctx => _universityBusinessLogicHelper.IsUniversityTypeIdExistsAsync(request.UniversityTypeId),
+                        ctx => _universityBusinessLogicHelper.IsEstablishedYearValidAsync(request.EstablishedYear),
+                        ctx => _universityBusinessLogicHelper.IsWebsiteUrlValidAsync(request.WebsiteUrl, request.UniversityUuid) 
+                    });
 
                 if (validationResult != null)
                 {

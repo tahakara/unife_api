@@ -4,6 +4,7 @@ using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
 using Microsoft.AspNetCore.Http;
@@ -32,13 +33,15 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
                 LogoutAllRequestDto logoutAllRequestDto = new();
 
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.ValidateAsync(request),
-                    () => _authBusinessLogicHelper.MapToDtoAsync(request, logoutAllRequestDto),
-                    () => _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutAllRequestDto.AccessToken),
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _authBusinessLogicHelper.ValidateAsync(request),
+                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, logoutAllRequestDto),
+                        ctx => _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutAllRequestDto.AccessToken),
 
-                    // Executors
-                    () => _authBusinessLogicHelper.BlacklistAllSessionTokensByUserAsync(logoutAllRequestDto.AccessToken)
-                );
+                        // Executors
+                        ctx => _authBusinessLogicHelper.BlacklistAllSessionTokensByUserAsync(logoutAllRequestDto.AccessToken) 
+                    });
 
                 if (buisnessResult != null)
                 {

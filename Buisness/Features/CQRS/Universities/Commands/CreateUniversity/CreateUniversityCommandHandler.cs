@@ -33,13 +33,15 @@ namespace Buisness.Features.CQRS.Universities.Commands.CreateUniversity
                 _logger.LogInformation("Üniversite oluşturma işlemi başlatıldı. Ad: {UniversityName}", request.UniversityName);
 
                 var validationResult = await BuisnessLogic.Run(
-                    () => _universityBusinessLogicHelper.IsUniversityNameExistsAsync(request.UniversityName),
-                    // await _universityBusinessLogicHelper.IsUniversityCodeAvailableAsync(request.UniversityCode),
-                    () => _universityBusinessLogicHelper.IsRegionIdExistsAsync(request.RegionId),
-                    () => _universityBusinessLogicHelper.IsUniversityTypeIdExistsAsync(request.UniversityTypeId),
-                    () => _universityBusinessLogicHelper.IsEstablishedYearValidAsync(request.EstablishedYear),
-                    () => _universityBusinessLogicHelper.IsWebsiteUrlValidAsync(request.WebsiteUrl)
-                );
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _universityBusinessLogicHelper.IsUniversityNameExistsAsync(request.UniversityName),
+                        // await _universityBusinessLogicHelper.IsUniversityCodeAvailableAsync(request.UniversityCode),
+                        ctx => _universityBusinessLogicHelper.IsRegionIdExistsAsync(request.RegionId),
+                        ctx => _universityBusinessLogicHelper.IsUniversityTypeIdExistsAsync(request.UniversityTypeId),
+                        ctx => _universityBusinessLogicHelper.IsEstablishedYearValidAsync(request.EstablishedYear),
+                        ctx => _universityBusinessLogicHelper.IsWebsiteUrlValidAsync(request.WebsiteUrl)
+                    });
 
                 if (validationResult != null)
                 {

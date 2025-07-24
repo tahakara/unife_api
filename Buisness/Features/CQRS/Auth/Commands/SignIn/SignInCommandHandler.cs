@@ -4,6 +4,7 @@ using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
 using Microsoft.AspNetCore.Http;
@@ -35,16 +36,18 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
                 SignInResponseDto signInResponseDto = new();
 
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.ValidateAsync(request),
-                    () => _authBusinessLogicHelper.MapToDtoAsync(request, signInRequestDto),
-                    () => _authBusinessLogicHelper.PreventSignInBruteForceAsync(signInRequestDto),
-                    () => _authBusinessLogicHelper.RevokeOldOTPAsync(signInRequestDto),
-                    () => _authBusinessLogicHelper.CheckSignInCredentialsAsync(signInRequestDto, signInResponseDto),
-                    () => _authBusinessLogicHelper.CheckUserSessionCountExceededAsync(signInResponseDto),
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _authBusinessLogicHelper.ValidateAsync(request),
+                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, signInRequestDto),
+                        ctx => _authBusinessLogicHelper.PreventSignInBruteForceAsync(signInRequestDto),
+                        ctx => _authBusinessLogicHelper.RevokeOldOTPAsync(signInRequestDto),
+                        ctx => _authBusinessLogicHelper.CheckSignInCredentialsAsync(signInRequestDto, signInResponseDto),
+                        ctx => _authBusinessLogicHelper.CheckUserSessionCountExceededAsync(signInResponseDto),
 
-                    // Executors
-                    () => _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto)
-                );
+                        // Executors
+                        ctx => _authBusinessLogicHelper.SendSignInOTPAsync(signInRequestDto, signInResponseDto)
+                    });
 
                 if (buisnessResult != null)
                 {

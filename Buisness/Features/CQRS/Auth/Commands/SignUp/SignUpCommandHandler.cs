@@ -4,6 +4,7 @@ using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Features.CQRS.Base;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
+using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using Microsoft.Extensions.Logging;
 
@@ -33,12 +34,14 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignUp
                 SignUpResponseDto signUpResponsetDto = new();
 
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
-                    () => _authBusinessLogicHelper.ValidateAsync(request),
-                    () => _authBusinessLogicHelper.MapToDtoAsync(request, signUpRequestDto),
+                    new Func<StepContext, Task<IBuisnessLogicResult>>[]
+                    {
+                        ctx => _authBusinessLogicHelper.ValidateAsync(request),
+                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, signUpRequestDto),
 
-                    // Executors
-                    () => _authBusinessLogicHelper.CheckAndCreateSignUpCredentialsAsync(signUpRequestDto, signUpResponsetDto)
-                );
+                        // Executors
+                        ctx => _authBusinessLogicHelper.CheckAndCreateSignUpCredentialsAsync(signUpRequestDto, signUpResponsetDto)
+                    });
               
                 if (buisnessResult != null)
                     return BaseResponse<SignUpResponseDto>.Failure(

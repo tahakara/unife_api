@@ -1210,6 +1210,8 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         return new BuisnessLogicErrorResult("Çok fazla başarısız giriş denemesi, lütfen daha sonra tekrar deneyin.", 429);
                     }
                     await _sessionJwtService.IncrementSignInOTPBruteForceProtectionAttemptsAsync(key);
+
+                    return new BuisnessLogicSuccessResult("Brute force koruması geçti", 200);
                 }
 
                 // Increment or set
