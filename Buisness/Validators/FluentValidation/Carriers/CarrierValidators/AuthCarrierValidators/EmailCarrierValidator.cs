@@ -1,6 +1,5 @@
-﻿using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
-using Buisness.Validators.FluentValidation.Common;
-using Buisness.Validators.FluentValidation.ValidationMessages;
+﻿using Buisness.Validators.Common;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators
@@ -12,13 +11,13 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCa
         {
             RuleFor(x => x.Email)
                 .NotNull().NotEmpty()
-                    .WithMessage(ValidationMessage.RequiredFormat(nameof(IEmailCarrier.Email)))
+                    .WithMessage(ValidationMessages.RequiredFormat(nameof(IEmailCarrier.Email)))
                 .MaximumLength(100)
-                    .WithMessage(ValidationMessage.MaxLengthFormat(nameof(IEmailCarrier.Email), 100))
+                    .WithMessage(ValidationMessages.MaxLengthFormat(nameof(IEmailCarrier.Email), 100))
                 .EmailAddress()
-                    .WithMessage(ValidationMessage.EmailFormat(nameof(IEmailCarrier.Email)))
+                    .WithMessage(ValidationMessages.EmailFormat(nameof(IEmailCarrier.Email)))
                 .Must(ValidationHelper.BeAValidEmail)
-                    .WithMessage(ValidationMessage.NotAccepedEmailFormat(nameof(IEmailCarrier.Email)));
+                    .WithMessage(ValidationMessages.NotAccepedEmailFormat(nameof(IEmailCarrier.Email)));
         }
     }
 }

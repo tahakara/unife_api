@@ -1,6 +1,5 @@
-﻿using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
-using Buisness.Validators.FluentValidation.Common;
-using Buisness.Validators.FluentValidation.ValidationMessages;
+﻿using Buisness.Validators.Common;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
 using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators
@@ -12,7 +11,7 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.Compos
         {
             RuleFor(x => x.AccessToken)
                 .Must(IsNullOrValidAccessToken)
-                    .WithMessage(ValidationMessage.InvalidJWTBeararTokenFormat(nameof(INullOrValidAccessTokenCarrier.AccessToken)));
+                    .WithMessage(ValidationMessages.InvalidJWTBeararTokenFormat(nameof(INullOrValidAccessTokenCarrier.AccessToken)));
         }
         private bool IsNullOrValidAccessToken(string? token)
         {

@@ -1,6 +1,7 @@
 ﻿using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
 using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
@@ -17,7 +18,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<ForgotPasswordCommand> logger)
-            : base(authBusinessLogicHelper, httpContextAccessor, logger)
+            : base(authBusinessLogicHelper, httpContextAccessor, logger, "ForgotPassword")
         {
         }
 
@@ -25,13 +26,13 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
         {
             try
             {
-                _logger.LogDebug("ForgotPassword Strted.");
+                _logger.LogDebug(CQRSLogMessages.ProccessStarted(_commandFullName));
 
                 var httpContext = _httpContextAccessor.HttpContext;
 
                 ForgotPasswordRequestDto forgotPasswordRequestDto = new();
 
-                IBuisnessLogicResult buisnessLogicResult = await BuisnessLogic.Run(
+                IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
                     new Func<StepContext, Task<IBuisnessLogicResult>>[]
                     {
                         ctx => _authBusinessLogicHelper.ValidateAsync(request),
@@ -41,42 +42,42 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                         ctx => _authBusinessLogicHelper.SendRecoveryNotificaitonAsync(forgotPasswordRequestDto)
                     });
 
-                if (buisnessLogicResult != null)
-                {   _logger.LogError("Business logic validation failed: {Message}", buisnessLogicResult.Message);
+                if (buisnessResult != null)
+                { 
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                        httpContext,
-                        string.Empty,
-                        SecurityEventTypeGuid.PasswordResetRequest,
-                        nameof(ForgotPasswordCommandHandler),
-                        "Forgot Password",
-                        false,
-                        buisnessLogicResult.Message ?? "An error occurred while processing your request."
+                        httpContext: httpContext,
+                        accessToken: string.Empty,
+                        eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetRequest,
+                        methodName: nameof(ForgotPasswordCommandHandler),
+                        description: _commandFullName,
+                        isEventSuccess:  false,
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
                     );
-                    _logger.LogDebug("ForgotPassword Failed.");
+                    _logger.LogDebug(CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<bool>.Failure(
-                        message: buisnessLogicResult.Message ?? "An error occurred while processing your request.",
-                        statusCode: buisnessLogicResult.StatusCode);
+                        message: CQRSResponseMessages.Fail(_commandFullName, buisnessResult.Message),
+                        statusCode: buisnessResult.StatusCode);
                 }
 
                 await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                    httpContext,
-                    string.Empty,
-                    SecurityEventTypeGuid.PasswordResetRequest,
-                    nameof(ForgotPasswordCommandHandler),
-                    "Forgot Password",
-                    true
+                    httpContext: httpContext,
+                    accessToken: string.Empty,
+                    eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetRequest,
+                    methodName: nameof(ForgotPasswordCommandHandler),
+                    description: _commandFullName,
+                    isEventSuccess: true
                 );
-                _logger.LogDebug("ForgotPassword Completed.");
+                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<bool>.Success(
                     data: true,
-                    message: "Forgot password request processed successfully.",
-                    statusCode: 200);
+                    message: CQRSResponseMessages.Success(_commandFullName));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while processing ForgotPasswordCommand");
+                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message));
                 return BaseResponse<bool>.Failure(
-                    message: "An error occurred while processing your request.",
+                    message: CQRSResponseMessages.Error(_commandFullName),
+                    errors: new List<string> { ex.Message },
                     statusCode: 500);
             }
         }

@@ -1,5 +1,5 @@
-﻿using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
-using Buisness.Validators.FluentValidation.ValidationMessages;
+﻿using Buisness.Validators.Common;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators
@@ -11,9 +11,9 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCa
         {
             RuleFor(x => x.FirstName)
                 .NotNull().NotEmpty()
-                    .WithMessage(ValidationMessage.RequiredFormat(nameof(IFirstNameCarrier.FirstName)))
+                    .WithMessage(ValidationMessages.RequiredFormat(nameof(IFirstNameCarrier.FirstName)))
                 .MaximumLength(50)
-                    .WithMessage(ValidationMessage.MaxLengthFormat(nameof(IFirstNameCarrier.FirstName), 50));
+                    .WithMessage(ValidationMessages.MaxLengthFormat(nameof(IFirstNameCarrier.FirstName), 50));
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
 using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
@@ -17,7 +18,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<LogoutOthersCommand> logger) 
-            : base(authBusinessLogicHelper, httpContextAccessor, logger)
+            : base(authBusinessLogicHelper, httpContextAccessor, logger, "LogoutOthers")
         {
         }
 
@@ -25,7 +26,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
         {
             try
             {
-                _logger.LogDebug("LogoutOthers işlemi başlatıldı. AccessToken: {AccessToken}", request.AccessToken);
+                _logger.LogDebug(CQRSLogMessages.ProccessStarted(_commandFullName, request.AccessToken));
 
                 var httpContext = _httpContextAccessor.HttpContext;
                 LogoutOthersRequestDto mappedRequestDto = new();
@@ -44,39 +45,41 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
                 if (buisnessResult != null)
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                        httpContext,
-                        mappedRequestDto.AccessToken,
-                        SecurityEventTypeGuid.LogoutOthers,
-                        nameof(LogoutOthersCommandHandler),
-                        "Logout Others",
-                        false,
-                        buisnessResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu"
+                        httpContext: httpContext,
+                        accessToken: mappedRequestDto.AccessToken,
+                        eventTypeGuidKey: SecurityEventTypeGuid.LogoutOthers,
+                        methodName: nameof(LogoutOthersCommandHandler),
+                        description: _commandFullName,
+                        isEventSuccess:  false,
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
                     );
                     return BaseResponse<bool>.Failure(
-                        message: buisnessResult.Message ?? "LogoutOthers işlemi sırasında hata oluştu",
+                        message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
                 await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                    httpContext,
-                    mappedRequestDto.AccessToken,
-                    SecurityEventTypeGuid.LogoutOthers,
-                    nameof(LogoutOthersCommandHandler),
-                    "Logout Others",
-                    true
+                    httpContext: httpContext,
+                    accessToken: mappedRequestDto.AccessToken,
+                    eventTypeGuidKey: SecurityEventTypeGuid.LogoutOthers,
+                    methodName: nameof(LogoutOthersCommandHandler),
+                    description: _commandFullName,
+                    isEventSuccess: true
                 );
-                _logger.LogDebug("LogoutOthers işlemi başarılı. Access Token: {AccessToken}", request.AccessToken);
+                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName, request.AccessToken));
                 return BaseResponse<bool>.Success(
                     data: true,
-                    message: "LogoutOthers işlemi başarılı",
+                    message: CQRSResponseMessages.Success(_commandName, request.AccessToken),
                     statusCode: 200);
 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "LogoutOthers işlemi sırasında hata oluştu");
-                return BaseResponse<bool>.Failure("LogoutOthers işlemi sırasında hata oluştu",
-                    new List<string> { ex.Message }, 500);
+                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message));
+                return BaseResponse<bool>.Failure(
+                    message: CQRSResponseMessages.Error(_commandName),
+                    errors: new List<string> { ex.Message }, 
+                    statusCode: 500);
             }
         }
     }

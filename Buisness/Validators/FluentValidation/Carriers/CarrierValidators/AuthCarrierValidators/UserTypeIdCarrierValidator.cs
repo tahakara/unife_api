@@ -1,6 +1,5 @@
-﻿using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
-using Buisness.Validators.FluentValidation.Common;
-using Buisness.Validators.FluentValidation.ValidationMessages;
+﻿using Buisness.Validators.Common;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators
@@ -12,13 +11,13 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCa
         {
             RuleFor(x => x.UserTypeId)
                 .NotNull().NotEmpty()
-                    .WithMessage(ValidationMessage.RequiredFormat(nameof(IUserTypeIdCarrier.UserTypeId)))
+                    .WithMessage(ValidationMessages.RequiredFormat(nameof(IUserTypeIdCarrier.UserTypeId)))
                 
                 .GreaterThan((byte)0)
-                    .WithMessage(ValidationMessage.GreaterThanZeroFormat(nameof(IUserTypeIdCarrier.UserTypeId)))
+                    .WithMessage(ValidationMessages.GreaterThanZeroFormat(nameof(IUserTypeIdCarrier.UserTypeId)))
 
                 .Must(ValidationHelper.BeAValidByte)
-                    .WithMessage(ValidationMessage.InvalidByte(nameof(IUserTypeIdCarrier.UserTypeId)));
+                    .WithMessage(ValidationMessages.InvalidByte(nameof(IUserTypeIdCarrier.UserTypeId)));
         }
     }
 }

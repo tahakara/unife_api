@@ -32,7 +32,8 @@ namespace WebAPI.Controllers.Auth
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> SignUp([FromBody] SignUpCommand command) 
+        public async Task<IActionResult> SignUp(
+            [FromBody] SignUpCommand command) 
         {
             return await SendCommand(command);
         }
@@ -42,7 +43,8 @@ namespace WebAPI.Controllers.Auth
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> SignIn([FromBody] SignInCommand command)
+        public async Task<IActionResult> SignIn(
+            [FromBody] SignInCommand command)
         {
             return await SendCommand(command);
         }
@@ -51,7 +53,8 @@ namespace WebAPI.Controllers.Auth
         [RejectAuthorizationHeader]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> VerifyOTP([FromBody] VerifyOTPCommand command)
+        public async Task<IActionResult> VerifyOTP(
+            [FromBody] VerifyOTPCommand command)
         {
             return await SendCommand(command);
         }
@@ -60,7 +63,8 @@ namespace WebAPI.Controllers.Auth
         [RejectAuthorizationHeader]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ResendSignInOTP([FromBody] ResendSignInOTPCommand command)
+        public async Task<IActionResult> ResendSignInOTP(
+            [FromBody] ResendSignInOTPCommand command)
         {
             return await SendCommand(command);
         }
@@ -69,7 +73,9 @@ namespace WebAPI.Controllers.Auth
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> RefreshToken([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] RefreshTokenCommand command) 
+        public async Task<IActionResult> RefreshToken(
+            [FromHeader(Name = "Authorization")] string? accessToken, 
+            [FromBody] RefreshTokenCommand command) 
         {
             command.AccessToken = accessToken;
             return await SendCommand(command);
@@ -79,7 +85,8 @@ namespace WebAPI.Controllers.Auth
         [HttpGet("logout")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Logout([FromHeader(Name = "Authorization")] string accessToken)
+        public async Task<IActionResult> Logout(
+            [FromHeader(Name = "Authorization")] string accessToken)
         {
             return await SendCommand(new LogoutCommand
             {
@@ -91,7 +98,8 @@ namespace WebAPI.Controllers.Auth
         [HttpGet("logout-others")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> LogoutOthers([FromHeader(Name = "Authorization")] string accessToken)
+        public async Task<IActionResult> LogoutOthers(
+            [FromHeader(Name = "Authorization")] string accessToken)
         {
             return await SendCommand(new LogoutOthersCommand
             {
@@ -103,7 +111,8 @@ namespace WebAPI.Controllers.Auth
         [HttpGet("logout-all")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> LogoutAll([FromHeader(Name = "Authorization")] string accessToken)
+        public async Task<IActionResult> LogoutAll(
+            [FromHeader(Name = "Authorization")] string accessToken)
         {
             return await SendCommand(new LogoutAllCommand
             {
@@ -115,7 +124,8 @@ namespace WebAPI.Controllers.Auth
         [HttpPost("forgot-password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
+        public async Task<IActionResult> ForgotPassword(
+            [FromBody] ForgotPasswordCommand command)
         {
             return await SendCommand(command);
         }
@@ -125,7 +135,8 @@ namespace WebAPI.Controllers.Auth
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ForgotPasswordWithToken(
-            [FromRoute] string RecoveryToken,[FromBody] ForgotPasswordRecoveryTokenCommand command)
+            [FromRoute] string RecoveryToken,
+            [FromBody] ForgotPasswordRecoveryTokenCommand command)
         {
             command.RecoveryToken = RecoveryToken;
             return await SendCommand(command);
@@ -136,7 +147,9 @@ namespace WebAPI.Controllers.Auth
         [HttpPost("cahnge-password")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ChangePassword([FromHeader(Name = "Authorization")] string accessToken, [FromBody] ChangePasswordCommand command)
+        public async Task<IActionResult> ChangePassword(
+            [FromHeader(Name = "Authorization")] string accessToken, 
+            [FromBody] ChangePasswordCommand command)
         {
             command.AccessToken = accessToken;
             return await SendCommand(command);
@@ -146,7 +159,9 @@ namespace WebAPI.Controllers.Auth
         [HttpPost("verify-email")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> VerifyEmail([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] VerifyEmailCommand command)
+        public async Task<IActionResult> VerifyEmail(
+            [FromHeader(Name = "Authorization")] string? accessToken, 
+            [FromBody] VerifyEmailCommand command)
         {
             command.AccessToken = accessToken;
             return await SendCommand(command);
@@ -155,7 +170,9 @@ namespace WebAPI.Controllers.Auth
         [HttpPost("verify-phone")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> VerifyPhone([FromHeader(Name = "Authorization")] string? accessToken, [FromBody] VerifyPhoneCommand command)
+        public async Task<IActionResult> VerifyPhone(
+            [FromHeader(Name = "Authorization")] string? accessToken, 
+            [FromBody] VerifyPhoneCommand command)
         {
             command.AccessToken = accessToken;
             return await SendCommand(command);

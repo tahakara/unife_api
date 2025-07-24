@@ -1,7 +1,6 @@
 ﻿using Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword;
+using Buisness.Validators.Common;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
-using Buisness.Validators.FluentValidation.Common;
-using Buisness.Validators.FluentValidation.ValidationMessages;
 using FluentValidation;
 using System;
 using System.Collections.Generic;
@@ -18,11 +17,11 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCa
         {
             RuleFor(x => x.UserUuid)
                 .NotNull()
-                    .WithMessage(ValidationMessage.RequiredFormat(nameof(IUserUuidCarrier.UserUuid)))
+                    .WithMessage(ValidationMessages.RequiredFormat(nameof(IUserUuidCarrier.UserUuid)))
                 .NotEmpty()
-                    .WithMessage(ValidationMessage.NotEmptyFormat(nameof(IUserUuidCarrier.UserUuid)))
+                    .WithMessage(ValidationMessages.NotEmptyFormat(nameof(IUserUuidCarrier.UserUuid)))
                 .Must(ValidationHelper.BeAValidUuid)
-                    .WithMessage(ValidationMessage.InvalidFormat(nameof(IUserUuidCarrier.UserUuid)));
+                    .WithMessage(ValidationMessages.InvalidFormat(nameof(IUserUuidCarrier.UserUuid)));
         }
     }
 }

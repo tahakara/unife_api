@@ -1,6 +1,5 @@
-﻿using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
-using Buisness.Validators.FluentValidation.Common;
-using Buisness.Validators.FluentValidation.ValidationMessages;
+﻿using Buisness.Validators.Common;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
 using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators
@@ -15,11 +14,11 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.Compos
             {
                 RuleFor(x => x.Email)
                     .MaximumLength(100)
-                        .WithMessage(ValidationMessage.MaxLengthFormat(nameof(IEmailOrPhoneCarrier.Email), 100))
+                        .WithMessage(ValidationMessages.MaxLengthFormat(nameof(IEmailOrPhoneCarrier.Email), 100))
                     .EmailAddress()
-                        .WithMessage(ValidationMessage.EmailFormat(nameof(IEmailOrPhoneCarrier.Email)))
+                        .WithMessage(ValidationMessages.EmailFormat(nameof(IEmailOrPhoneCarrier.Email)))
                     .Must(ValidationHelper.BeAValidEmail)
-                        .WithMessage(ValidationMessage.NotAccepedEmailFormat(nameof(IEmailOrPhoneCarrier.Email)));
+                        .WithMessage(ValidationMessages.NotAccepedEmailFormat(nameof(IEmailOrPhoneCarrier.Email)));
             });
 
             // Telefon kuralları (varsa)
@@ -27,15 +26,15 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.Compos
             {
                 RuleFor(x => x.PhoneCountryCode)
                     .NotEmpty()
-                        .WithMessage(ValidationMessage.NotEmptyFormat(nameof(IEmailOrPhoneCarrier.PhoneCountryCode)))
+                        .WithMessage(ValidationMessages.NotEmptyFormat(nameof(IEmailOrPhoneCarrier.PhoneCountryCode)))
                     .Must(ValidationHelper.BeAValidCountryCode)
-                        .WithMessage(ValidationMessage.PhoneCountryCodeFormat(nameof(IEmailOrPhoneCarrier.PhoneCountryCode)));
+                        .WithMessage(ValidationMessages.PhoneCountryCodeFormat(nameof(IEmailOrPhoneCarrier.PhoneCountryCode)));
 
                 RuleFor(x => x.PhoneNumber)
                     .NotEmpty()
-                        .WithMessage(ValidationMessage.NotEmptyFormat(nameof(IEmailOrPhoneCarrier.PhoneNumber)))
+                        .WithMessage(ValidationMessages.NotEmptyFormat(nameof(IEmailOrPhoneCarrier.PhoneNumber)))
                     .Must(ValidationHelper.BeAValidPhoneNumber)
-                        .WithMessage(ValidationMessage.PhoneNumberFormat(nameof(IEmailOrPhoneCarrier.PhoneNumber)));
+                        .WithMessage(ValidationMessages.PhoneNumberFormat(nameof(IEmailOrPhoneCarrier.PhoneNumber)));
             });
 
             // Email veya Telefon zorunlu
@@ -47,7 +46,7 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.Compos
 
                     if (!emailValid && !phoneValid)
                     {
-                        context.AddFailure(ValidationMessage.EitherEmailOrPhoneCredential(nameof(IEmailOrPhoneCarrier.Email),                          nameof(IEmailOrPhoneCarrier.PhoneCountryCode), nameof(IEmailOrPhoneCarrier.PhoneNumber)));
+                        context.AddFailure(ValidationMessages.EitherEmailOrPhoneCredential(nameof(IEmailOrPhoneCarrier.Email),                          nameof(IEmailOrPhoneCarrier.PhoneCountryCode), nameof(IEmailOrPhoneCarrier.PhoneNumber)));
                     }
                 });
         }

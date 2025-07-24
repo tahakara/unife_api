@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Buisness.Validators.FluentValidation.Common
+namespace Buisness.Validators.Common
 {
     public static class ValidationHelper
     {

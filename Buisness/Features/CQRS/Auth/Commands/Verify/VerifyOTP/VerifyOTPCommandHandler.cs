@@ -4,6 +4,7 @@ using Buisness.DTOs.AuthDtos.VerifyDtos.VerifyOTPDtos;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Enums;
 using Core.Utilities.BuisnessLogic;
@@ -27,7 +28,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<VerifyOTPCommand> logger) 
-            : base (authBusinessLogicHelper, httpContextAccessor, logger)
+            : base (authBusinessLogicHelper, httpContextAccessor, logger, "VerifyOTP")
         {
         }
 
@@ -35,7 +36,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
         {
             try
             {
-                _logger.LogDebug("VerifyOTP işlemi başlatıldı. UserType: {UserType}");
+                _logger.LogDebug(message: CQRSLogMessages.ProccessStarted(_commandFullName, new { request.UserTypeId, request.UserUuid }));
 
                 var httpContext = _httpContextAccessor.HttpContext;
 
@@ -57,40 +58,40 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                 if (buisnessResult != null)
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                        _httpContextAccessor.HttpContext,
-                        verifyOTPResponseDto.AccessToken,
-                        SecurityEventTypeGuid.VerificationOTPFailed,
-                        nameof(VerifyOTPCommandHandler),
-                        "VerifyOTP",
-                        false,
-                        buisnessResult.Message ?? "VerifyOTP işlemi sırasında hata oluştu"
+                        httpContext: httpContext,
+                        accessToken: verifyOTPResponseDto.AccessToken,
+                        eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPFailed,
+                        methodName: nameof(VerifyOTPCommandHandler),
+                        description: _commandFullName,
+                        isEventSuccess: false,
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
                     );
                     return BaseResponse<VerifyOTPResponseDto>.Failure(
-                        message: buisnessResult.Message ?? "VerifyOTP işlemi sırasında hata oluştu",
+                        message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
                 await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                    _httpContextAccessor.HttpContext,
-                    verifyOTPResponseDto.AccessToken,
-                    SecurityEventTypeGuid.VerificationOTPSuccess,
-                    nameof(VerifyOTPCommandHandler),
-                    "VerifyOTP",
-                    true,
-                    "VerifyOTP işlemi başarılı"
+                    httpContext: httpContext,
+                    accessToken: verifyOTPResponseDto.AccessToken,
+                    eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPSuccess,
+                    methodName: nameof(VerifyOTPCommandHandler),
+                    description: _commandFullName,
+                    isEventSuccess: true
                 );
-                _logger.LogDebug("VerifyOTP işlemi başarılı. UserType: {UserType}", request.UserTypeId);
+
+                _logger.LogDebug(message: CQRSLogMessages.ProccessCompleted(_commandFullName, new { request.UserTypeId, request.UserUuid }));
                 return BaseResponse<VerifyOTPResponseDto>.Success(
                     data: verifyOTPResponseDto,
-                    message: "VerifyOTP işlemi başarılı",
+                    message: CQRSResponseMessages.Success(_commandName),
                     statusCode: 200);
 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "VerifyOTP işlemi sırasında hata oluştu");
+                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, new { request.UserTypeId, request.UserUuid }));
                 return BaseResponse<VerifyOTPResponseDto>.Failure(
-                    message: "VerifyOTP işlemi sırasında hata oluştu",
+                    message: CQRSResponseMessages.Fail(_commandName, ex.Message),
                     statusCode: 500);
             }
         }

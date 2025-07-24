@@ -2,6 +2,7 @@
 using Buisness.Features.CQRS.Auth.Commands.Logout.Logout;
 using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
@@ -18,7 +19,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
             IAuthBuisnessLogicHelper authbusinessLogicHelper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<LogoutAllCommand> logger) 
-            : base(authbusinessLogicHelper, httpContextAccessor, logger)
+            : base(authbusinessLogicHelper, httpContextAccessor, logger, "LogoutAll")
         {
         }
 
@@ -26,7 +27,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
         {
             try
             {
-                _logger.LogDebug("Logout işlemi başarılı. AccessToken: {AccessToken}", request.AccessToken);
+                _logger.LogDebug(message: CQRSLogMessages.ProccessStarted(_commandFullName, request.AccessToken));
 
                 HttpContext? httpContext = _httpContextAccessor.HttpContext;
 
@@ -46,38 +47,41 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
                 if (buisnessResult != null)
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                        httpContext,
-                        logoutAllRequestDto.AccessToken,
-                        SecurityEventTypeGuid.Logout,
-                        nameof(LogoutCommandHandler),
-                        "Logout All",
-                        false,
-                        buisnessResult.Message ?? "Logout işlemi sırasında hata oluştu"
+                        httpContext: httpContext,
+                        accessToken: logoutAllRequestDto.AccessToken,
+                        eventTypeGuidKey: SecurityEventTypeGuid.Logout,
+                        methodName: nameof(LogoutCommandHandler),
+                        description: _commandFullName,
+                        isEventSuccess: false,
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
                     );
                     return BaseResponse<bool>.Failure(
-                        message: buisnessResult.Message ?? "LogoutAll işlemi sırasında hata oluştu",
+                        message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
 
                 await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                    httpContext,
-                    logoutAllRequestDto.AccessToken,
-                    SecurityEventTypeGuid.Logout,
-                    nameof(LogoutAllCommandHandler),
-                    "Logout All",
-                    true
+                    httpContext: httpContext,
+                    accessToken: logoutAllRequestDto.AccessToken,
+                    eventTypeGuidKey: SecurityEventTypeGuid.Logout,
+                    methodName: nameof(LogoutAllCommandHandler),
+                    description: "Logout All",
+                    isEventSuccess: true
                 );
-                _logger.LogDebug("LogoutAll işlemi başarılı. AccessToken: {AccessToken}", request.AccessToken);
+
+                _logger.LogDebug(message: CQRSLogMessages.ProccessCompleted(_commandFullName, request.AccessToken));
                 return BaseResponse<bool>.Success(
                     data: true,
-                    message: "LogoutAll işlemi başarılı");
+                    message: CQRSResponseMessages.Success(_commandName));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "LogoutAll işlemi sırasında hata oluştu");
-                return BaseResponse<bool>.Failure("LogoutAll işlemi sırasında hata oluştu",
-                    new List<string> { ex.Message }, 500);
+                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request.AccessToken));
+                return BaseResponse<bool>.Failure(
+                    message: CQRSResponseMessages.Error(_commandName),
+                    errors: new List<string> { ex.Message },
+                    statusCode: 500);
             }
         }
     }

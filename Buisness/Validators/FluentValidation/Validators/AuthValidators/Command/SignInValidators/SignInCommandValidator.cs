@@ -3,7 +3,6 @@ using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators;
-using Buisness.Validators.FluentValidation.Common;
 using FluentValidation;
 using System;
 using System.Collections.Generic;
@@ -11,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.SignInValidators
+namespace Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.SignInValidators
 {
     public class SignInCommandValidator : AbstractValidator<SignInCommand>
     {
