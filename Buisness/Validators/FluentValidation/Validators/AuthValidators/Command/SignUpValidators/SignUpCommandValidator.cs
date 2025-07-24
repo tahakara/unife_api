@@ -3,7 +3,6 @@ using Buisness.Features.CQRS.Auth.Commands.SignUp;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators;
-using Buisness.Validators.FluentValidation.Common;
 using FluentValidation;
 using System.Text.RegularExpressions;
 

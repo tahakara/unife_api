@@ -14,15 +14,21 @@ namespace Buisness.Features.CQRS.Base.Auth
         protected readonly IAuthBuisnessLogicHelper _authBusinessLogicHelper;
         protected readonly IHttpContextAccessor _httpContextAccessor;
         protected readonly ILogger<TCommand> _logger;
-
+        protected readonly string _baseCommandHandlerName;
+        protected readonly string _commandName;
+        protected readonly string _commandFullName;
         protected AuthCommandHandlerBase(
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
             IHttpContextAccessor httpContextAccessor,
-            ILogger<TCommand> logger)
+            ILogger<TCommand> logger,
+            string commandName)
         {
             _authBusinessLogicHelper = authBusinessLogicHelper;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
+            _baseCommandHandlerName = "Auth";
+            _commandName = commandName;
+            _commandFullName = $"{_baseCommandHandlerName}:{_commandName}";
         }
     }
 }

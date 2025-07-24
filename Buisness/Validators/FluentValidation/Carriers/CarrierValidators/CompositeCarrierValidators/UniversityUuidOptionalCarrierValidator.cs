@@ -1,6 +1,5 @@
-﻿using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
-using Buisness.Validators.FluentValidation.Common;
-using Buisness.Validators.FluentValidation.ValidationMessages;
+﻿using Buisness.Validators.Common;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
 using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators
@@ -12,10 +11,10 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.Compos
         {
             RuleFor(x => x.UniversityUuid)
                 .Must(uuid => uuid == null || ValidationHelper.BeAValidUuid(uuid))
-                    .WithMessage(ValidationMessage.InvalidFormat(nameof(IUniversityOptionalCarrier.UniversityUuid)))
+                    .WithMessage(ValidationMessages.InvalidFormat(nameof(IUniversityOptionalCarrier.UniversityUuid)))
                 .NotEmpty()
                     .When(x => x.UniversityUuid != null)
-                    .WithMessage(ValidationMessage.NotEmptyFormat(nameof(IUniversityOptionalCarrier.UniversityUuid)));
+                    .WithMessage(ValidationMessages.NotEmptyFormat(nameof(IUniversityOptionalCarrier.UniversityUuid)));
                 
         }
     }

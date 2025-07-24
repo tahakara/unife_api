@@ -1,5 +1,5 @@
 ﻿using Buisness.DTOs.UniversityDtos;
-using Buisness.Validators.FluentValidation.Common;
+using Buisness.Validators.Common;
 using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Validators.University.Request

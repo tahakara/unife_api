@@ -40,11 +40,11 @@ using Buisness.Services.UtilityServices.ObjectStorageServices;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators;
 using Buisness.Validators.FluentValidation.Validators.AuthValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.LogoutValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.PasswordValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.RefreshTokenValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.SignInValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.VerifyOTPValidators;
+using Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.LogoutValidators;
+using Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.PasswordValidators;
+using Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.RefreshTokenValidators;
+using Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.SignInValidators;
+using Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.VerifyOTPValidators;
 using Buisness.Validators.FluentValidation.Validators.University.Request;
 using Core.Database;
 using Core.ObjectStorage.Base;
@@ -87,7 +87,6 @@ namespace Buisness.Extensions
             // AccessToken Carrier Validator
             var validatorTypes = new Type[]
             {
-
                 typeof(UserUuidCarrierValidator<>),
                 typeof(SessionUuidCarrierValidator<>),
                 typeof(AccessTokenCarrierValidator<>),
@@ -109,19 +108,19 @@ namespace Buisness.Extensions
 
 
             // FluentValidation Validators
-            services.AddScoped<IValidator<AccessTokenDto> , AccessTokenDtoValidator>();
+            //services.AddScoped<IValidator<AccessTokenDto> , AccessTokenDtoValidator>();
 
-            services.AddScoped<IValidator<LogoutCommand>, LogoutCommandValidator>();
-            services.AddScoped<IValidator<LogoutAllCommand>, LogoutAllCommandValidator>();
-            services.AddScoped<IValidator<LogoutOthersCommand>, LogoutOthersCommandValidator>();
-            services.AddScoped<IValidator<SignUpCommand>, SignUpCommandValidator>();
-            services.AddScoped<IValidator<SignInCommand>, SignInCommandValidator>();
-            services.AddScoped<IValidator<ResendSignInOTPCommand>, SignInCommandValidator>();
-            services.AddScoped<IValidator<VerifyOTPCommand>, VerifyOTPRequestDtoValidator>();
-            services.AddScoped<IValidator<ChangePasswordCommand>, ChangePasswordCommandValidator>();
-            services.AddScoped<IValidator<ForgotPasswordCommand>, ForgotPasswordCommandValidator>();
-            services.AddScoped<IValidator<ForgotPasswordRecoveryTokenCommand>, ForgotPasswordRecoveryTokenCommandValidator>();
-            services.AddScoped<IValidator<RefreshTokenCommand>, RefreshTokenCommandValidator>();
+            //services.AddScoped<IValidator<LogoutCommand>, LogoutCommandValidator>();
+            //services.AddScoped<IValidator<LogoutAllCommand>, LogoutAllCommandValidator>();
+            //services.AddScoped<IValidator<LogoutOthersCommand>, LogoutOthersCommandValidator>();
+            //services.AddScoped<IValidator<SignUpCommand>, SignUpCommandValidator>();
+            //services.AddScoped<IValidator<SignInCommand>, SignInCommandValidator>();
+            //services.AddScoped<IValidator<ResendSignInOTPCommand>, SignInCommandValidator>();
+            //services.AddScoped<IValidator<VerifyOTPCommand>, VerifyOTPCommandValidator>();
+            //services.AddScoped<IValidator<ChangePasswordCommand>, ChangePasswordCommandValidator>();
+            //services.AddScoped<IValidator<ForgotPasswordCommand>, ForgotPasswordCommandValidator>();
+            //services.AddScoped<IValidator<ForgotPasswordRecoveryTokenCommand>, ForgotPasswordRecoveryTokenCommandValidator>();
+            //services.AddScoped<IValidator<RefreshTokenCommand>, RefreshTokenCommandValidator>();
 
 
 

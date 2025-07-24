@@ -1,6 +1,5 @@
-﻿using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
-using Buisness.Validators.FluentValidation.Common;
-using Buisness.Validators.FluentValidation.ValidationMessages;
+﻿using Buisness.Validators.Common;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators
@@ -12,11 +11,11 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCa
         {
             RuleFor(x => x.SessionUuid)
                 .NotNull()
-                    .WithMessage(ValidationMessage.RequiredFormat(nameof(ISessionUuidCarrier.SessionUuid)))
+                    .WithMessage(ValidationMessages.RequiredFormat(nameof(ISessionUuidCarrier.SessionUuid)))
                 .NotEmpty()
-                    .WithMessage(ValidationMessage.NotEmptyFormat(nameof(ISessionUuidCarrier.SessionUuid)))
+                    .WithMessage(ValidationMessages.NotEmptyFormat(nameof(ISessionUuidCarrier.SessionUuid)))
                 .Must(ValidationHelper.BeAValidUuid)
-                    .WithMessage(ValidationMessage.InvalidFormat(nameof(ISessionUuidCarrier.SessionUuid)));
+                    .WithMessage(ValidationMessages.InvalidFormat(nameof(ISessionUuidCarrier.SessionUuid)));
         }
     }
 }

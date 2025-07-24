@@ -1,6 +1,7 @@
 ﻿using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
 using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
@@ -16,7 +17,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<ForgotPasswordRecoveryTokenCommand> logger)
-            : base(authBusinessLogicHelper, httpContextAccessor, logger)
+            : base(authBusinessLogicHelper, httpContextAccessor, logger, "ForgotPasswordRecoveryTokenCommand")
         {
         }
 
@@ -24,7 +25,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
         {
             try
             {
-                _logger.LogDebug("Processing ForgotPasswordRecoveryTokenCommand with RecoveryToken: {RecoveryToken}", request.RecoveryToken);
+                _logger.LogDebug(CQRSLogMessages.ProccessStarted(_commandFullName, request.RecoveryToken));
 
                 var httpContext = _httpContextAccessor.HttpContext;
 
@@ -49,9 +50,9 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                     //    "Forgot Password Recovery Token",
                     //    false,
                     //    buisnessResult.Message ?? "An error occurred while processing your request.");
-                    _logger.LogDebug("Business logic validation failed: {Message}", buisnessResult.Message);
+                    _logger.LogDebug(CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<bool>.Failure(
-                        message: buisnessResult.Message ?? "An error occurred while processing your request.",
+                        message : CQRSResponseMessages.Fail(_commandFullName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
@@ -63,17 +64,17 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                 //    "Forgot Password Recovery Token",
                 //    true,
                 //    buisnessResult.Message ?? "Recovery token processed successfully.");
-                _logger.LogDebug("ForgotPasswordRecoveryTokenCommand completed successfully.");
+                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName, request.RecoveryToken));
                 return BaseResponse<bool>.Success(
                     data: true,
-                    message: "Recovery token processed successfully.",
+                    message: CQRSResponseMessages.Success(_commandFullName, request.RecoveryToken),
                     statusCode: 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the ForgotPasswordRecoveryTokenCommand.");
+                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message));
                 return BaseResponse<bool>.Failure(
-                    message: "An error occurred while processing your request.",
+                    message: CQRSResponseMessages.Error(_commandFullName),
                     statusCode: 500);
             }
         }

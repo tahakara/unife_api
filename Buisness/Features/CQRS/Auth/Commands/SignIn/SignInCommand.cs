@@ -13,16 +13,12 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
     public class SignInCommand : ICommand<BaseResponse<SignInResponseDto>>,
         IUserTypeIdCarrier,
         IEmailOrPhoneCarrier,
-        IUserUuidCarrier,
-        ISessionUuidCarrier,
         IPasswordCarrier
     {
         public byte? UserTypeId { get; set; } = null;
         public string? Email { get; set; } = null;
         public string? PhoneCountryCode { get; set; } = null;
         public string? PhoneNumber { get; set; } = null;
-        public string? UserUuid { get; set; } = null;
-        public string? SessionUuid { get; set; } = null;
         public string? Password { get; set; } = null;
     }
 }

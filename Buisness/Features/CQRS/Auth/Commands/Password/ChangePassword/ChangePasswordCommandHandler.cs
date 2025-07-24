@@ -1,6 +1,7 @@
 ﻿using Buisness.DTOs.AuthDtos.PasswordDtos.ChangePasswordDtos;
 using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
@@ -17,7 +18,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<ChangePasswordCommand> logger)
-            : base(authBusinessLogicHelper, httpContextAccessor, logger)
+            : base(authBusinessLogicHelper, httpContextAccessor, logger, "LogoutOthers")
         {
         }
 
@@ -25,7 +26,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword
         {
             try
             {
-                _logger.LogDebug("ChangePassword işlemi başlatıldı.");
+                _logger.LogDebug(CQRSLogMessages.ProccessStarted(_commandFullName));
 
                 var httpContext = _httpContextAccessor.HttpContext;
 
@@ -49,39 +50,39 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword
                 if (buisnessResult != null)
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                        httpContext,
-                        changePasswordRequestDto.AccessToken,
-                        SecurityEventTypeGuid.PasswordChange,
-                        nameof(ChangePasswordCommandHandler),
-                        "Change Password",
-                        false,
-                        buisnessResult.Message ?? "ChangePassword işlemi sırasında hata oluştu"
+                        httpContext: httpContext,
+                        accessToken: changePasswordRequestDto.AccessToken,
+                        eventTypeGuidKey: SecurityEventTypeGuid.PasswordChange,
+                        methodName: nameof(ChangePasswordCommandHandler),
+                        description: _commandFullName,
+                        isEventSuccess:  false,
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
                     );
                     return BaseResponse<bool>.Failure(
-                        message: buisnessResult.Message ?? "ChangePassword işlemi sırasında hata oluştu",
+                        message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
-                _logger.LogInformation("ChangePassword işlemi başarılı");
+                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName));
 
                 await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                    httpContext,
-                    changePasswordRequestDto.AccessToken,
-                    SecurityEventTypeGuid.PasswordChange,
-                    nameof(ChangePasswordCommandHandler),
-                    "Change Password",
-                    true
+                    httpContext: httpContext,
+                    accessToken: changePasswordRequestDto.AccessToken,
+                    eventTypeGuidKey: SecurityEventTypeGuid.PasswordChange,
+                    methodName: nameof(ChangePasswordCommandHandler),
+                    description: _commandFullName,
+                    isEventSuccess: true
                 );
                 return BaseResponse<bool>.Success(
                     data: true,
-                    message: "ChangePassword işlemi başarılı");
+                    message: CQRSResponseMessages.Success(_commandFullName));
 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "ChangePassword işlemi sırasında hata oluştu");
+                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message));
                 return BaseResponse<bool>.Failure(
-                    message: "ChangePassword işlemi sırasında hata oluştu",
+                    message: CQRSResponseMessages.Error(_commandName),
                     errors : new List<string> { ex.Message },
                     statusCode: 500);
             }

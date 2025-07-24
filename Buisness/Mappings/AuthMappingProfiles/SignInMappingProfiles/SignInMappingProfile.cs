@@ -17,8 +17,10 @@ namespace Buisness.Mappings.AuthMappingProfiles.SignInMappingProfiles
         {
             CreateMap<SignInCommand, SignInRequestDto>()
                 .ForMember(x => x.UserTypeId, opt => opt.MapFrom(src => src.UserTypeId))
-                .ForMember(x => x.UserUuid, opt => opt.MapFrom(src => src.UserUuid))
-                .ForMember(x => x.SessionUuid, opt => opt.MapFrom(src => src.SessionUuid))
+                //.ForMember(x => x.UserUuid, opt => opt.MapFrom(src => src.UserUuid))
+                //.ForMember(x => x.SessionUuid, opt => opt.MapFrom(src => src.SessionUuid))
+                .ForMember(x => x.UserUuid, opt => opt.Ignore())
+                .ForMember(x => x.SessionUuid, opt => opt.Ignore())
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email == null ? null : src.Email.Trim()))
                 .ForMember(dest => dest.PhoneCountryCode, opt => opt.MapFrom(src =>
                     src.PhoneCountryCode == null

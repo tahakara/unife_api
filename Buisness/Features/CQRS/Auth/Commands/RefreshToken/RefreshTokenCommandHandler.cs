@@ -1,6 +1,7 @@
 ﻿using Buisness.DTOs.AuthDtos.RefreshDtos;
 using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
@@ -17,7 +18,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<RefreshTokenCommand> logger) 
-            : base(authBusinessLogicHelper, httpContextAccessor, logger)
+            : base(authBusinessLogicHelper, httpContextAccessor, logger, "RefreshToken")
         {
         }
 
@@ -25,7 +26,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
         {
             try
             {
-                _logger.LogInformation("Refresh token işlemi başlatıldı. Access Token: {AccessToken}", request.AccessToken);
+                _logger.LogDebug(CQRSLogMessages.ProccessStarted(_commandFullName, request.AccessToken));
 
                 var httpContext = _httpContextAccessor.HttpContext;
 
@@ -49,40 +50,42 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                 if (buisnessResult != null)
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                        httpContext,
-                        refreshTokenResponseDto.AccessToken,
-                        SecurityEventTypeGuid.SessionRefreshed,
-                        nameof(RefreshTokenCommandHandler),
-                        "Refresh Token",
-                        false,
-                        buisnessResult.Message ?? "Refresh token işlemi sırasında hata oluştu"
+                        httpContext: httpContext,
+                        accessToken: refreshTokenResponseDto.AccessToken,
+                        eventTypeGuidKey: SecurityEventTypeGuid.SessionRefreshed,
+                        methodName: nameof(RefreshTokenCommandHandler),
+                        description: _commandFullName,
+                        isEventSuccess: false,
+                        failureMessage: buisnessResult.Message ?? CQRSResponseMessages.Fail(_commandName, buisnessResult.Message)
                     );
                     return BaseResponse<RefreshTokenResponseDto>.Failure(
-                            message: buisnessResult.Message ?? "Refresh token işlemi sırasında hata oluştu",
+                            message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                             statusCode: buisnessResult.StatusCode);
                 }
 
 
                 await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                    httpContext,
-                    refreshTokenResponseDto.AccessToken,
-                    SecurityEventTypeGuid.SessionRefreshed,
-                    nameof(RefreshTokenCommandHandler),
-                    "Refresh Token",
-                    true
+                    httpContext: httpContext,
+                    accessToken: refreshTokenResponseDto.AccessToken,
+                    eventTypeGuidKey: SecurityEventTypeGuid.SessionRefreshed,
+                    methodName: nameof(RefreshTokenCommandHandler),
+                    description: _commandFullName,
+                    isEventSuccess: true
                 );
-                _logger.LogInformation("Refresh token işlemi başarılı. Yeni Access Token: {AccessToken}, Yeni Refresh Token: {RefreshToken}",
-                    refreshTokenResponseDto.AccessToken, refreshTokenResponseDto.RefreshToken);
+
+                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName, refreshTokenResponseDto.RefreshToken));
                 return BaseResponse<RefreshTokenResponseDto>.Success(
                     data: refreshTokenResponseDto,
-                    message: "Refresh token işlemi başarılı",
+                    message: CQRSResponseMessages.Success(_commandName, refreshTokenResponseDto.AccessToken),
                     statusCode: 200);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Refresh token işlemi sırasında hata oluştu");
-                return BaseResponse<RefreshTokenResponseDto>.Failure("Refresh token işlemi sırasında hata oluştu",
-                    new List<string> { ex.Message }, 500);
+                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request.AccessToken));
+                return BaseResponse<RefreshTokenResponseDto>.Failure(
+                    message: CQRSResponseMessages.Error(_commandName),
+                    errors: new List<string> { ex.Message }, 
+                    statusCode: 500);
             }
         }
     }

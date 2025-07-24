@@ -1,6 +1,5 @@
-﻿using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
-using Buisness.Validators.FluentValidation.Common;
-using Buisness.Validators.FluentValidation.ValidationMessages;
+﻿using Buisness.Validators.Common;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators
@@ -12,11 +11,11 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCa
         {
             RuleFor(x => x.AccessToken)
                 .NotNull()
-                    .WithMessage(ValidationMessage.RequiredFormat(nameof(IAccessTokenCarrier.AccessToken)))
+                    .WithMessage(ValidationMessages.RequiredFormat(nameof(IAccessTokenCarrier.AccessToken)))
                 .NotEmpty()
-                    .WithMessage(ValidationMessage.NotEmptyFormat(nameof(IAccessTokenCarrier.AccessToken)))
+                    .WithMessage(ValidationMessages.NotEmptyFormat(nameof(IAccessTokenCarrier.AccessToken)))
                 .Must(ValidationHelper.BeAValidJWTBeararToken)
-                    .WithMessage(ValidationMessage.InvalidJWTBeararTokenFormat(nameof(IAccessTokenCarrier.AccessToken)));
+                    .WithMessage(ValidationMessages.InvalidJWTBeararTokenFormat(nameof(IAccessTokenCarrier.AccessToken)));
         }
     }
 }

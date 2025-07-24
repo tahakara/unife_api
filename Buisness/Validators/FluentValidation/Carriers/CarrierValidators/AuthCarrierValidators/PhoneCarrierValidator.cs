@@ -1,6 +1,5 @@
-﻿using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
-using Buisness.Validators.FluentValidation.Common;
-using Buisness.Validators.FluentValidation.ValidationMessages;
+﻿using Buisness.Validators.Common;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators
@@ -12,15 +11,15 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCa
         {
             RuleFor(x => x.PhoneCountryCode)
                 .NotNull().NotEmpty()
-                    .WithMessage(ValidationMessage.RequiredFormat(nameof(IPhoneCarrier.PhoneCountryCode)))
+                    .WithMessage(ValidationMessages.RequiredFormat(nameof(IPhoneCarrier.PhoneCountryCode)))
                 .Must(ValidationHelper.BeAValidCountryCode)
-                    .WithMessage(ValidationMessage.PhoneCountryCodeFormat(nameof(IPhoneCarrier.PhoneCountryCode)));
+                    .WithMessage(ValidationMessages.PhoneCountryCodeFormat(nameof(IPhoneCarrier.PhoneCountryCode)));
             
             RuleFor(x => x.PhoneNumber)
                 .NotNull().NotEmpty()
-                    .WithMessage(ValidationMessage.RequiredFormat(nameof(IPhoneCarrier.PhoneNumber)))
+                    .WithMessage(ValidationMessages.RequiredFormat(nameof(IPhoneCarrier.PhoneNumber)))
                 .Must(ValidationHelper.BeAValidPhoneNumber)
-                    .WithMessage(ValidationMessage.PhoneNumberFormat(nameof(IPhoneCarrier.PhoneNumber)));
+                    .WithMessage(ValidationMessages.PhoneNumberFormat(nameof(IPhoneCarrier.PhoneNumber)));
         }
     }
 }

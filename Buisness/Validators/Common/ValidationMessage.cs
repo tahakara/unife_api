@@ -1,12 +1,16 @@
-﻿using System;
+﻿using Core.Utilities.MessageUtility;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Buisness.Validators.FluentValidation.ValidationMessages
+namespace Buisness.Validators.Common
 {
-    public sealed class ValidationMessage 
+    /// <summary>
+    /// ValidationMessages provides a set of standardized validation message templates.
+    /// </summary>
+    public sealed class ValidationMessages : IMessageUtility
     {
         // General
         public static string NotEmptyFormat(string propertyName) => "{propertyName} cannot be empty.";
