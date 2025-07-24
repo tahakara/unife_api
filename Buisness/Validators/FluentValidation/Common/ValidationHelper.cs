@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Buisness.Validators.FluentValidation.Validators.Common
+namespace Buisness.Validators.FluentValidation.Common
 {
     public static class ValidationHelper
     {
@@ -117,9 +117,14 @@ namespace Buisness.Validators.FluentValidation.Validators.Common
         /// <param name="str">The string to check.</param>
         /// <returns>Returns true if the string contains at least one special character, otherwise false.</returns>
 
-        public static bool ContainSpecialCharacter(string? str)
+        public static bool ContainAsciiSpecialCharacter(string? str)
         {
-            return !string.IsNullOrEmpty(str) && str.Any(ch => !char.IsLetterOrDigit(ch) && !char.IsWhiteSpace(ch));
+            if (string.IsNullOrEmpty(str))
+                return false;
+
+            const string allowedSpecials = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+
+            return str.Any(ch => allowedSpecials.Contains(ch));
         }
 
         /// <summary>

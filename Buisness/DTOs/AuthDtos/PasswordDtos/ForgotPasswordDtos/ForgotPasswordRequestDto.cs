@@ -16,7 +16,7 @@ namespace Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos
         public string PhoneCountryCode { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         // For Internal
-        public string? recoveryToken { get; set; } = null;
+        public string? RecoveryToken { get; set; } = null;
         public Guid? UserUuid { get; set; } = null;
         public Guid? RecoverySessionUuid { get; set; } = null;
 

@@ -1,6 +1,6 @@
 ﻿using Buisness.DTOs.AuthDtos.VerifyDtos.VerifyOTPDtos;
 using Buisness.DTOs.ModelBinderHelper;
-using Buisness.Validators.FluentValidation.Validators.Common;
+using Buisness.Validators.FluentValidation.Common;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System;

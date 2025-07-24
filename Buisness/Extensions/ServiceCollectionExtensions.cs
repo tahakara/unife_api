@@ -3,10 +3,14 @@ using Buisness.Behaviors;
 using Buisness.DTOs.AuthDtos;
 using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
 using Buisness.DTOs.AuthDtos.RefreshDtos;
+using Buisness.DTOs.AuthDtos.SignInDtos.Request;
 using Buisness.Features.CQRS.Auth.Commands.Logout.Logout;
 using Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll;
 using Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers;
+using Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword;
+using Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword;
 using Buisness.Features.CQRS.Auth.Commands.RefreshToken;
+using Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Features.CQRS.Auth.Commands.SignUp;
 using Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP;
@@ -15,6 +19,7 @@ using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper;
 using Buisness.Mappings;
 using Buisness.Mappings.AuthMappingProfiles.LogoutMappingProfiles;
+using Buisness.Mappings.AuthMappingProfiles.PsswordMappingProfiles;
 using Buisness.Mappings.AuthMappingProfiles.RefreshTokenMappingProfiles;
 using Buisness.Mappings.AuthMappingProfiles.ResendSignInOTPProfiles;
 using Buisness.Mappings.AuthMappingProfiles.SignInMappingProfiles;
@@ -24,42 +29,39 @@ using Buisness.Mappings.Common;
 using Buisness.Services.EntityRepositoryServices;
 using Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices;
 using Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices.SecurityEventServices;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices.SecurityEventServices;
+using Buisness.Services.EntityRepositoryServices.Base.UniversityModuleServices;
+using Buisness.Services.EntityRepositoryServices.UniversityModuleServices;
 using Buisness.Services.UtilityServices.Base.EmailServices;
 using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
 using Buisness.Services.UtilityServices.EmailServices;
 using Buisness.Services.UtilityServices.ObjectStorageServices;
+using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators;
+using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators;
 using Buisness.Validators.FluentValidation.Validators.AuthValidators;
 using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.LogoutValidators;
+using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.PasswordValidators;
 using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.RefreshTokenValidators;
 using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.SignInValidators;
 using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.VerifyOTPValidators;
 using Buisness.Validators.FluentValidation.Validators.University.Request;
+using Core.Database;
 using Core.ObjectStorage.Base;
 using Core.ObjectStorage.Base.Redis;
+using Core.ObjectStorage.Redis;
 using Core.Security.JWT.Extensions;
 using Core.Utilities.BuisnessLogic.Base;
 using Core.Utilities.OTPUtilities;
 using Core.Utilities.OTPUtilities.Base;
 using Core.Utilities.PasswordUtilities;
 using Core.Utilities.PasswordUtilities.Base;
-using Core.Database;
-using Core.ObjectStorage.Redis;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
-using Buisness.Mappings.AuthMappingProfiles.PsswordMappingProfiles;
-using Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP;
-using Buisness.DTOs.AuthDtos.SignInDtos.Request;
-using Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Request.PasswordValidators;
-using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices;
-using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices.SecurityEventServices;
-using Buisness.Services.EntityRepositoryServices.UniversityModuleServices;
-using Buisness.Services.EntityRepositoryServices.Base.UniversityModuleServices;
-using Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword;
 
 namespace Buisness.Extensions
 {
@@ -81,20 +83,45 @@ namespace Buisness.Extensions
 
             // FluentValidation
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-            
+
+            // AccessToken Carrier Validator
+            var validatorTypes = new Type[]
+            {
+
+                typeof(UserUuidCarrierValidator<>),
+                typeof(SessionUuidCarrierValidator<>),
+                typeof(AccessTokenCarrierValidator<>),
+                typeof(NullOrValidAccessTokenCarrierValidator<>),
+                typeof(EmailOrPhoneCarrierValidator<>),
+                typeof(NewPasswordCarrierValidator<>),
+                typeof(UserTypeIdCarrierValidator<>),
+                typeof(PasswordCarrierValidator<>),
+                typeof(EmailCarrierValidator<>),
+                typeof(PhoneCarrierValidator<>),
+                typeof(FirstNameCarrierValidator<>),
+                typeof(MiddleNameCarrierValidator<>),
+                typeof(LastNameCarrierValidator<>),
+                typeof(UniversityUuidOptionalCarrierValidator<>)
+            };
+
+            services.AddValidatorServices(validatorTypes);
+
+
+
+            // FluentValidation Validators
             services.AddScoped<IValidator<AccessTokenDto> , AccessTokenDtoValidator>();
 
-            services.AddScoped<IValidator<LogoutCommand>, LogoutRequestDtoValidator>();
-            services.AddScoped<IValidator<LogoutAllCommand>, LogoutAllRequestDtoValidator>();
-            services.AddScoped<IValidator<LogoutOthersCommand>, LogoutOthersRequestDtoValidator>();
-            services.AddScoped<IValidator<SignUpCommand>, SignUpRequestDtoValidator>();
-            services.AddScoped<IValidator<SignInCommand>, SignInRequestDtoValidator>();
-            services.AddScoped<IValidator<ResendSignInOTPCommand>, SignInRequestDtoValidator>();
+            services.AddScoped<IValidator<LogoutCommand>, LogoutCommandValidator>();
+            services.AddScoped<IValidator<LogoutAllCommand>, LogoutAllCommandValidator>();
+            services.AddScoped<IValidator<LogoutOthersCommand>, LogoutOthersCommandValidator>();
+            services.AddScoped<IValidator<SignUpCommand>, SignUpCommandValidator>();
+            services.AddScoped<IValidator<SignInCommand>, SignInCommandValidator>();
+            services.AddScoped<IValidator<ResendSignInOTPCommand>, SignInCommandValidator>();
             services.AddScoped<IValidator<VerifyOTPCommand>, VerifyOTPRequestDtoValidator>();
-            services.AddScoped<IValidator<ChangePasswordCommand>, ChangePasswordRequestDtoValidator>();
-            services.AddScoped<IValidator<ForgotPasswordCommand>, ForgotPasswordRequestDtoValidator>();
-            services.AddScoped<IValidator<ForgotPasswordRecoveryTokenCommand>, ForgotPasswordRecoveryTokenRequestDtoValidator>();
-            services.AddScoped<IValidator<RefreshTokenCommand>, RefreshTokenRequestDtoValidator>();
+            services.AddScoped<IValidator<ChangePasswordCommand>, ChangePasswordCommandValidator>();
+            services.AddScoped<IValidator<ForgotPasswordCommand>, ForgotPasswordCommandValidator>();
+            services.AddScoped<IValidator<ForgotPasswordRecoveryTokenCommand>, ForgotPasswordRecoveryTokenCommandValidator>();
+            services.AddScoped<IValidator<RefreshTokenCommand>, RefreshTokenCommandValidator>();
 
 
 
@@ -159,6 +186,16 @@ namespace Buisness.Extensions
         sp.GetRequiredService<IConfiguration>(),
         sp.GetRequiredService<ILogger<GenericRedisConnectionFactory>>(),
         RedisStorageType.VerificationCode));
+
+            return services;
+        }
+    
+        private static IServiceCollection AddValidatorServices(this IServiceCollection services, Type[] validatorTypes)
+        {
+            foreach (var validatorType in validatorTypes)
+            {
+                services.AddSingleton(typeof(IValidator<>), validatorType);
+            }
 
             return services;
         }

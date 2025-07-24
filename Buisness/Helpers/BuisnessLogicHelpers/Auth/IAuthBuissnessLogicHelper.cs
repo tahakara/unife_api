@@ -1440,7 +1440,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         return new BuisnessLogicErrorResult("Şifre sıfırlama işlemi için zaten bir oturum var.", 400);
                     }
 
-                    forgotPasswordRequestDto.recoveryToken = await _sessionJwtService.SetForgotBruteForceProtectionKeyAsync(
+                    forgotPasswordRequestDto.RecoveryToken = await _sessionJwtService.SetForgotBruteForceProtectionKeyAsync(
                         Guid.NewGuid().ToString(),
                         forgotPasswordRequestDto.UserTypeId.ToString(),
                         forgotPasswordRequestDto.UserUuid.ToString(),
@@ -1460,14 +1460,14 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     return new BuisnessLogicErrorResult("Şifre sıfırlama işlemi için zaten bir oturum var.", 400);
                 }
 
-                forgotPasswordRequestDto.recoveryToken = await _sessionJwtService.SetForgotBruteForceProtectionKeyAsync(
+                forgotPasswordRequestDto.RecoveryToken = await _sessionJwtService.SetForgotBruteForceProtectionKeyAsync(
                     Guid.NewGuid().ToString(),
                     forgotPasswordRequestDto.UserTypeId.ToString(),
                     forgotPasswordRequestDto.UserUuid.ToString(),
                     forgotPasswordRequestDto.Email,
                     forgotPasswordRequestDto.PhoneCountryCode,
                     forgotPasswordRequestDto.PhoneNumber);
-                if (string.IsNullOrEmpty(forgotPasswordRequestDto.recoveryToken))
+                if (string.IsNullOrEmpty(forgotPasswordRequestDto.RecoveryToken))
                 {
                     return new BuisnessLogicErrorResult("Şifre sıfırlama oturumu oluşturulamadı.", 500);
                 }
@@ -1488,7 +1488,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             {
                 await LogDebugAsync("SendRecoveryNotificaitonAsync Started", forgotPasswordRequestDto);
 
-                if (string.IsNullOrEmpty(forgotPasswordRequestDto.recoveryToken))
+                if (string.IsNullOrEmpty(forgotPasswordRequestDto.RecoveryToken))
                 {
                     return new BuisnessLogicErrorResult("Şifre sıfırlama oturumu bulunamadı.", 400);
                 }
@@ -1503,7 +1503,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         }
                         bool result = await _emailService.SendForgotPasswordEmailAsync(
                             forgotPasswordRequestDto.Email,
-                            forgotPasswordRequestDto.recoveryToken);
+                            forgotPasswordRequestDto.RecoveryToken);
                         if (!result)
                             return new BuisnessLogicErrorResult("Email gönderilemedi.", 500);
                         return new BuisnessLogicSuccessResult("Email gönderildi.", 200);

@@ -42,7 +42,16 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.Logout
 
                         // Executors
                         ctx => _authBusinessLogicHelper.BlackListSessionTokensForASingleSessionAsync(logoutRequestDto.AccessToken)
-                    });
+                    }/*,
+                    onError: async (ctx, failedResult) =>
+                    {
+                        // Hangi adımda hata aldıysan contextten gör.
+                        if (ctx.StepIndex == 2)
+                        {
+                            // Mesela 3. adımda hata olursa cleanup yap
+                            await _authBusinessLogicHelper.LogRecoveryTokenIssueAsync();
+                        }
+                    }*/);
 
                 if (buisnessResult != null)
                 {

@@ -24,7 +24,10 @@ namespace Buisness.Mappings.AuthMappingProfiles.PsswordMappingProfiles
                         ? null
                         : new string(src.PhoneNumber.Where(char.IsDigit).ToArray())))
                 .ForMember(dest => dest.UserTypeId, opt => opt.MapFrom(src => src.UserTypeId))
-                .ForMember(dest => dest.UserUuid, opt => opt.Ignore());
+                .ForMember(dest => dest.UserUuid, opt => opt.Ignore())
+                
+                .ForMember(dest => dest.RecoveryToken, opt => opt.Ignore())
+                .ForMember(dest => dest.RecoverySessionUuid, opt => opt.Ignore());
         }
     }
 }
