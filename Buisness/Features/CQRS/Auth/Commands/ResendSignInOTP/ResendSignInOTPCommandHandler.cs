@@ -93,7 +93,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
             {
                 _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, new { request.UserTypeId, request.Email, request.PhoneCountryCode, request.PhoneNumber }));
                 return BaseResponse<SignInResponseDto>.Failure(
-                    message: CQRSResponseMessages.Fail(_commandName, ex.Message),
+                    message: CQRSResponseMessages.Error(_commandName),
                     errors: new List<string> { ex.Message },
                     statusCode: 500);
             }

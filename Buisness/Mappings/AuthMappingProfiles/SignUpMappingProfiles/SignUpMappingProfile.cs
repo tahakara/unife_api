@@ -2,6 +2,7 @@
 using Buisness.DTOs.AuthDtos.SignUpDtos.Request;
 using Buisness.DTOs.AuthDtos.SignUpDtos.Response;
 using Buisness.Features.CQRS.Auth.Commands.SignUp;
+using Buisness.Mappings.MappingHelpers;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using System;
 using System.Collections.Generic;
@@ -17,21 +18,31 @@ namespace Buisness.Mappings.AuthMappingProfiles.SignUpMappingProfiles
         {
             // SignUpCommand -> SignUpRequestDto Mapping
             CreateMap<SignUpCommand, SignUpRequestDto>()
-            .ForMember(dest => dest.UserTypeId, opt => opt.MapFrom(src => src.UserTypeId))
-            .ForMember(dest => dest.UniversityUuid, opt => opt.Ignore())
-            .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName == null ? null : src.FirstName.Trim()))
-            .ForMember(dest => dest.MiddleName, opt => opt.MapFrom(src => src.MiddleName == null ? null : src.MiddleName.Trim()))
-            .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName == null ? null : src.LastName.Trim()))
-            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email == null ? null : src.Email.Trim()))
+            .ForMember(dest => dest.UserTypeId, opt => opt.MapFrom(src =>
+                MappingHelper.CleanUserTypeId(src.UserTypeId)))
+
+            .ForMember(dest => dest.UniversityUuid, opt => opt.Ignore()) // TODO: Temporarily ignore, will be set later
+
+            .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => 
+                MappingHelper.CleanName(src.FirstName)))
+
+            .ForMember(dest => dest.MiddleName, opt => opt.MapFrom(src =>
+                MappingHelper.CleanName(src.MiddleName)))
+            
+            .ForMember(dest => dest.LastName, opt => opt.MapFrom(src =>
+                MappingHelper.CleanName(src.LastName)))
+            
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src =>
+                MappingHelper.CleanEmail(src.Email)))
+            
             .ForMember(dest => dest.PhoneCountryCode, opt => opt.MapFrom(src =>
-                src.PhoneCountryCode == null
-                    ? null
-                    : new string(src.PhoneCountryCode.Where(char.IsDigit).ToArray())))
+                MappingHelper.CleanPhoneCountryCode(src.PhoneCountryCode)))
+            
             .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src =>
-                src.PhoneNumber == null
-                    ? null
-                    : new string(src.PhoneNumber.Where(char.IsDigit).ToArray())))
-            .ForMember(dest => dest.Password, opt => opt.MapFrom(src => src.Password));
+                MappingHelper.CleanPhoneNumber(src.PhoneNumber)))
+            
+            .ForMember(dest => dest.Password, opt => opt.MapFrom(src => src.Password ?? string.Empty));
+
 
 
             // SignUpRequestDto -> Admin, Staff, Student Mapping

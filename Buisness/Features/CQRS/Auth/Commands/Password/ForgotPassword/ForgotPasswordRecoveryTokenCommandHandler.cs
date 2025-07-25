@@ -52,7 +52,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                     //    buisnessResult.Message ?? "An error occurred while processing your request.");
                     _logger.LogDebug(CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<bool>.Failure(
-                        message : CQRSResponseMessages.Fail(_commandFullName, buisnessResult.Message),
+                        message : CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
@@ -67,14 +67,14 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                 _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName, request.RecoveryToken));
                 return BaseResponse<bool>.Success(
                     data: true,
-                    message: CQRSResponseMessages.Success(_commandFullName, request.RecoveryToken),
+                    message: CQRSResponseMessages.Success(_commandName),
                     statusCode: 200);
             }
             catch (Exception ex)
             {
                 _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message));
                 return BaseResponse<bool>.Failure(
-                    message: CQRSResponseMessages.Error(_commandFullName),
+                    message: CQRSResponseMessages.Error(_commandName),
                     statusCode: 500);
             }
         }

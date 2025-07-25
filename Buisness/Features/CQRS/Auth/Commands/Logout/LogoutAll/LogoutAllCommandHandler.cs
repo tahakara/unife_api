@@ -70,7 +70,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
                     isEventSuccess: true
                 );
 
-                _logger.LogDebug(message: CQRSLogMessages.ProccessCompleted(_commandFullName, request.AccessToken));
+                _logger.LogDebug(message: CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<bool>.Success(
                     data: true,
                     message: CQRSResponseMessages.Success(_commandName));

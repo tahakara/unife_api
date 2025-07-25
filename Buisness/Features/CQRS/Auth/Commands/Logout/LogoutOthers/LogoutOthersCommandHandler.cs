@@ -69,7 +69,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
                 _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName, request.AccessToken));
                 return BaseResponse<bool>.Success(
                     data: true,
-                    message: CQRSResponseMessages.Success(_commandName, request.AccessToken),
+                    message: CQRSResponseMessages.Success(_commandName),
                     statusCode: 200);
 
             }

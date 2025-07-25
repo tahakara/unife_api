@@ -18,8 +18,6 @@ namespace Buisness.Validators.FluentValidation.Validators.AuthValidators.Command
         {
             Include(new UserTypeIdCarrierValidator<SignInCommand>());
             Include(new EmailOrPhoneCarrierValidator<SignInCommand>());
-            //Include(new UserUuidCarrierValidator<SignInCommand>());
-            //Include(new SessionUuidCarrierValidator<SignInCommand>());
             Include(new PasswordCarrierValidator<SignInCommand>());
         }
 

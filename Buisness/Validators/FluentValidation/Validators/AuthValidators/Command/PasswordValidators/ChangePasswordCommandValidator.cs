@@ -26,6 +26,10 @@ namespace Buisness.Validators.FluentValidation.Validators.AuthValidators.Command
             
                 .MinimumLength(8).MaximumLength(100).
                     WithMessage(ValidationMessages.LengthBetweenFormat(nameof(ChangePasswordCommand.OldPassword), 8, 100));
+
+            RuleFor(x => x.LogoutOtherSessions)
+                .Must(x => ValidationHelper.BeAValidBoolean(x))
+                    .WithMessage(ValidationMessages.InvalidBoolean(nameof(ChangePasswordCommand.LogoutOtherSessions)));
         }
     }
 }

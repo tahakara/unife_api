@@ -70,13 +70,13 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                 _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<bool>.Success(
                     data: true,
-                    message: CQRSResponseMessages.Success(_commandFullName));
+                    message: CQRSResponseMessages.Success(_commandName));
             }
             catch (Exception ex)
             {
                 _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message));
                 return BaseResponse<bool>.Failure(
-                    message: CQRSResponseMessages.Error(_commandFullName),
+                    message: CQRSResponseMessages.Error(_commandName),
                     errors: new List<string> { ex.Message },
                     statusCode: 500);
             }

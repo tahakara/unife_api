@@ -18,7 +18,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<ChangePasswordCommand> logger)
-            : base(authBusinessLogicHelper, httpContextAccessor, logger, "LogoutOthers")
+            : base(authBusinessLogicHelper, httpContextAccessor, logger, "CahngePassword")
         {
         }
 
@@ -75,7 +75,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword
                 );
                 return BaseResponse<bool>.Success(
                     data: true,
-                    message: CQRSResponseMessages.Success(_commandFullName));
+                    message: CQRSResponseMessages.Success(_commandName));
 
             }
             catch (Exception ex)

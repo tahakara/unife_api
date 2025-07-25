@@ -52,7 +52,10 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
 
                         // Executors
                         ctx => _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto),
-                        ctx => _authBusinessLogicHelper.SiginCompletedAsync(verifyOTPRequestDto, httpContext)
+                        ctx => _authBusinessLogicHelper.SiginCompletedAsync(verifyOTPRequestDto, httpContext)//,
+                        
+                        // FullSuccess
+                        //ctx => _authBusinessLogicHelper.RevokeSignInBruteForceTokenAsync(verifyOTPRequestDto)
                     });
 
                 if (buisnessResult != null)
@@ -91,7 +94,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
             {
                 _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, new { request.UserTypeId, request.UserUuid }));
                 return BaseResponse<VerifyOTPResponseDto>.Failure(
-                    message: CQRSResponseMessages.Fail(_commandName, ex.Message),
+                    message: CQRSResponseMessages.Error(_commandName),
                     statusCode: 500);
             }
         }

@@ -69,7 +69,7 @@ namespace Buisness.Services.EntityRepositoryServices.Base
                 }
 
                 _mapper.Map(source, target); // AutoMapper: source -> destination
-
+                _logger.LogInformation(target.ToString() ?? "Mapping result is null",target);
                 _logger.LogDebug("Mapping {SourceType} to {TargetType} completed successfully",
                     typeof(TSource).Name, typeof(TDestination).Name);
                 return new BuisnessLogicSuccessResult("Mapping successful", 200);

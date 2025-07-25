@@ -9,6 +9,7 @@ namespace Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos
         public string? NewPassword { get; set; } = string.Empty;
         public string? ConfirmPassword { get; set; } = string.Empty;
 
+
         // For Internal
         public Guid UserUuid { get; set; } = Guid.Empty;
         public Guid RecoverySessionUuid { get; set; } = Guid.Empty;

@@ -11,11 +11,16 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCa
         {
             RuleFor(x => x.SessionUuid)
                 .NotNull()
-                    .WithMessage(ValidationMessages.RequiredFormat(nameof(ISessionUuidCarrier.SessionUuid)))
+                    //.WithMessage(ValidationMessages.RequiredFormat(nameof(ISessionUuidCarrier.SessionUuid)))
+                    .WithMessage("{PropertyName}")
                 .NotEmpty()
                     .WithMessage(ValidationMessages.NotEmptyFormat(nameof(ISessionUuidCarrier.SessionUuid)))
+                    .WithMessage("{PropertyName}")
+
                 .Must(ValidationHelper.BeAValidUuid)
-                    .WithMessage(ValidationMessages.InvalidFormat(nameof(ISessionUuidCarrier.SessionUuid)));
+                    .WithMessage("{PropertyName}");
+
+                //.WithMessage(ValidationMessages.InvalidFormat(nameof(ISessionUuidCarrier.SessionUuid)));
         }
     }
 }

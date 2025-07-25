@@ -1,19 +1,5 @@
 ﻿using AutoMapper;
 using Buisness.Behaviors;
-using Buisness.DTOs.AuthDtos;
-using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
-using Buisness.DTOs.AuthDtos.RefreshDtos;
-using Buisness.DTOs.AuthDtos.SignInDtos.Request;
-using Buisness.Features.CQRS.Auth.Commands.Logout.Logout;
-using Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll;
-using Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers;
-using Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword;
-using Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword;
-using Buisness.Features.CQRS.Auth.Commands.RefreshToken;
-using Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP;
-using Buisness.Features.CQRS.Auth.Commands.SignIn;
-using Buisness.Features.CQRS.Auth.Commands.SignUp;
-using Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP;
 using Buisness.Features.CQRS.Universities.Commands.CreateUniversity;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper;
@@ -37,21 +23,12 @@ using Buisness.Services.UtilityServices.Base.EmailServices;
 using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
 using Buisness.Services.UtilityServices.EmailServices;
 using Buisness.Services.UtilityServices.ObjectStorageServices;
-using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators;
-using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.LogoutValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.PasswordValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.RefreshTokenValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.SignInValidators;
-using Buisness.Validators.FluentValidation.Validators.AuthValidators.Command.VerifyOTPValidators;
 using Buisness.Validators.FluentValidation.Validators.University.Request;
 using Core.Database;
 using Core.ObjectStorage.Base;
 using Core.ObjectStorage.Base.Redis;
 using Core.ObjectStorage.Redis;
 using Core.Security.JWT.Extensions;
-using Core.Utilities.BuisnessLogic.Base;
 using Core.Utilities.OTPUtilities;
 using Core.Utilities.OTPUtilities.Base;
 using Core.Utilities.PasswordUtilities;
@@ -81,29 +58,29 @@ namespace Buisness.Extensions
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
 
-            // FluentValidation
+            // FluentValidation Aoutomatic Registration based on Assembly IValidator<T>
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
             // AccessToken Carrier Validator
-            var validatorTypes = new Type[]
-            {
-                typeof(UserUuidCarrierValidator<>),
-                typeof(SessionUuidCarrierValidator<>),
-                typeof(AccessTokenCarrierValidator<>),
-                typeof(NullOrValidAccessTokenCarrierValidator<>),
-                typeof(EmailOrPhoneCarrierValidator<>),
-                typeof(NewPasswordCarrierValidator<>),
-                typeof(UserTypeIdCarrierValidator<>),
-                typeof(PasswordCarrierValidator<>),
-                typeof(EmailCarrierValidator<>),
-                typeof(PhoneCarrierValidator<>),
-                typeof(FirstNameCarrierValidator<>),
-                typeof(MiddleNameCarrierValidator<>),
-                typeof(LastNameCarrierValidator<>),
-                typeof(UniversityUuidOptionalCarrierValidator<>)
-            };
+            //var validatorTypes = new Type[]
+            //{
+            //    typeof(UserUuidCarrierValidator<>),
+            //    typeof(SessionUuidCarrierValidator<>),
+            //    typeof(AccessTokenCarrierValidator<>),
+            //    typeof(NullOrValidAccessTokenCarrierValidator<>),
+            //    typeof(EmailOrPhoneCarrierValidator<>),
+            //    typeof(NewPasswordCarrierValidator<>),
+            //    typeof(UserTypeIdCarrierValidator<>),
+            //    typeof(PasswordCarrierValidator<>),
+            //    typeof(EmailCarrierValidator<>),
+            //    typeof(PhoneCarrierValidator<>),
+            //    typeof(FirstNameCarrierValidator<>),
+            //    typeof(MiddleNameCarrierValidator<>),
+            //    typeof(LastNameCarrierValidator<>),
+            //    typeof(UniversityUuidOptionalCarrierValidator<>)
+            //};
 
-            services.AddValidatorServices(validatorTypes);
+            //services.AddValidatorServices(validatorTypes);
 
 
 
@@ -127,22 +104,32 @@ namespace Buisness.Extensions
             services.AddScoped<IValidator<CreateUniversityCommand>, CreateUniversityDtoValidator>();
 
             // AutoMapper
+            //var mapperConfig = new MapperConfiguration(cfg =>
+            //{
+            //    cfg.AddProfile<LogoutMappingProfile>();
+            //    cfg.AddProfile<LogoutAllMappingProfile>();
+            //    cfg.AddProfile<LogoutOthersMappingProfile>();
+            //    cfg.AddProfile<SignUpMappingProfile>();
+            //    cfg.AddProfile<SignInMappingProfile>();
+            //    cfg.AddProfile<ResendSignInOTPProfile>();
+            //    cfg.AddProfile<VerifyOTPMappingProfile>();
+            //    cfg.AddProfile<ChangePasswordProfile>();
+            //    cfg.AddProfile<ForgotPasswordProfile>();
+            //    cfg.AddProfile<ForgotPasswordRecoveryTokenProfile>();
+            //    cfg.AddProfile<RefreshTokenMappingProfile>();
+
+            //    cfg.AddProfile<UniversityMappingProfile>();
+            //    cfg.AddProfile<CommonMappingProfile>();
+            //});
+
+            //mapperConfig.AssertConfigurationIsValid();
+            //var mapper = mapperConfig.CreateMapper();
+            //services.AddSingleton<IMapper>(mapper);
+            // AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
-                cfg.AddProfile<LogoutMappingProfile>();
-                cfg.AddProfile<LogoutAllMappingProfile>();
-                cfg.AddProfile<LogoutOthersMappingProfile>();
-                cfg.AddProfile<SignUpMappingProfile>();
-                cfg.AddProfile<SignInMappingProfile>();
-                cfg.AddProfile<ResendSignInOTPProfile>();
-                cfg.AddProfile<VerifyOTPMappingProfile>();
-                cfg.AddProfile<ChangePasswordProfile>();
-                cfg.AddProfile<ForgotPasswordProfile>();
-                cfg.AddProfile<ForgotPasswordRecoveryTokenProfile>();
-                cfg.AddProfile<RefreshTokenMappingProfile>();
-
-                cfg.AddProfile<UniversityMappingProfile>();
-                cfg.AddProfile<CommonMappingProfile>();
+                // Automatically add all profiles in the current assembly
+                cfg.AddMaps(Assembly.GetExecutingAssembly());
             });
 
             mapperConfig.AssertConfigurationIsValid();

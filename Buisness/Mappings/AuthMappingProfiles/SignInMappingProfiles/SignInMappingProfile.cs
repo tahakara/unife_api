@@ -2,6 +2,8 @@
 using Buisness.DTOs.AuthDtos.SignInDtos.Request;
 using Buisness.DTOs.AuthDtos.SignInDtos.Response;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
+using Buisness.Mappings.MappingHelpers;
+using Core.Utilities.OTPUtilities;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using System;
 using System.Collections.Generic;
@@ -16,25 +18,29 @@ namespace Buisness.Mappings.AuthMappingProfiles.SignInMappingProfiles
         public SignInMappingProfile()
         {
             CreateMap<SignInCommand, SignInRequestDto>()
-                .ForMember(x => x.UserTypeId, opt => opt.MapFrom(src => src.UserTypeId))
-                //.ForMember(x => x.UserUuid, opt => opt.MapFrom(src => src.UserUuid))
-                //.ForMember(x => x.SessionUuid, opt => opt.MapFrom(src => src.SessionUuid))
-                .ForMember(x => x.UserUuid, opt => opt.Ignore())
-                .ForMember(x => x.SessionUuid, opt => opt.Ignore())
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email == null ? null : src.Email.Trim()))
+                .ForMember(x => x.UserTypeId, opt => opt.MapFrom(src =>
+                    MappingHelper.CleanUserTypeId(src.UserTypeId)))
+
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src =>
+                    MappingHelper.CleanEmail(src.Email)))
+
                 .ForMember(dest => dest.PhoneCountryCode, opt => opt.MapFrom(src =>
-                    src.PhoneCountryCode == null
-                        ? null
-                        : new string(src.PhoneCountryCode.Where(char.IsDigit).ToArray())))
+                    MappingHelper.CleanPhoneCountryCode(src.PhoneCountryCode)))
+
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src =>
-                    src.PhoneNumber == null
-                        ? null
-                        : new string(src.PhoneNumber.Where(char.IsDigit).ToArray())))
-                .ForMember(x => x.Password, opt => opt.MapFrom(src => src.Password))
-                .ForMember(x => x.OtpTypeId, opt => opt.Ignore())
-                .ForMember(x => x.OtpCode, opt => opt.Ignore());
+                    MappingHelper.CleanPhoneNumber(src.PhoneNumber)))
 
+                .ForMember(x => x.Password, opt => opt.MapFrom(src =>
+                    src.Password ?? string.Empty))
 
+                // Internal properties
+                .ForMember(dest => dest.UserUuid, opt => opt.Ignore())
+
+                .ForMember(dest => dest.SessionUuid, opt => opt.Ignore())
+
+                .ForMember(dest => dest.OtpTypeId, opt => opt.Ignore())
+
+                .ForMember(dest => dest.OtpCode, opt => opt.Ignore());
         }
     }
 }

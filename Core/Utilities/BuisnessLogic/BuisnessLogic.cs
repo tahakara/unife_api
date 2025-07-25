@@ -13,6 +13,7 @@ namespace Core.Utilities.BuisnessLogic
         public static async Task<IBuisnessLogicResult> Run(
             Func<StepContext, Task<IBuisnessLogicResult>>[] steps,
             Func<StepContext, IBuisnessLogicResult, Task>? onError = null)
+        // TODO: Feature: OnFullSuccess will be added in the future.
         {
             var context = new StepContext { OnError = onError };
 

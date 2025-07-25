@@ -2,6 +2,7 @@
 using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
 using Buisness.Features.CQRS.Auth.Commands.Logout.Logout;
 using Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers;
+using Buisness.Mappings.MappingHelpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,15 +16,12 @@ namespace Buisness.Mappings.AuthMappingProfiles.LogoutMappingProfiles
         public LogoutOthersMappingProfile()
         {
             CreateMap<LogoutOthersRequestDto, LogoutOthersCommand>()
-                .ForMember(dest => dest.AccessToken, opt => opt.MapFrom(src => src.AccessToken != null ? src.AccessToken.Trim() : null));
+                .ForMember(dest => dest.AccessToken, opt => opt.MapFrom(src =>
+                    MappingHelper.CleanAccessToken(src.AccessToken)));
 
             CreateMap<LogoutOthersCommand, LogoutOthersRequestDto>()
                 .ForMember(dest => dest.AccessToken, opt => opt.MapFrom(src =>
-                    src.AccessToken != null
-                        ? (src.AccessToken.Trim().StartsWith("Bearer ", StringComparison.Ordinal)
-                            ? src.AccessToken.Trim().Substring(7).Trim()
-                            : src.AccessToken.Trim())
-                        : null));
+                    MappingHelper.CleanAccessToken(src.AccessToken)));
         }
     }
 }

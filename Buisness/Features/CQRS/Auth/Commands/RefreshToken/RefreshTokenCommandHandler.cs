@@ -56,7 +56,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                         methodName: nameof(RefreshTokenCommandHandler),
                         description: _commandFullName,
                         isEventSuccess: false,
-                        failureMessage: buisnessResult.Message ?? CQRSResponseMessages.Fail(_commandName, buisnessResult.Message)
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
                     );
                     return BaseResponse<RefreshTokenResponseDto>.Failure(
                             message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
@@ -76,7 +76,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                 _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName, refreshTokenResponseDto.RefreshToken));
                 return BaseResponse<RefreshTokenResponseDto>.Success(
                     data: refreshTokenResponseDto,
-                    message: CQRSResponseMessages.Success(_commandName, refreshTokenResponseDto.AccessToken),
+                    message: CQRSResponseMessages.Success(_commandName),
                     statusCode: 200);
             }
             catch (Exception ex)

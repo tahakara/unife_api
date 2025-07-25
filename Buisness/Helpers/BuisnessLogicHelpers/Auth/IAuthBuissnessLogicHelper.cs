@@ -118,6 +118,9 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         Task<IBuisnessLogicResult> SendRecoveryNotificaitonAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
         Task<IBuisnessLogicResult> CheckRecoveryToken(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto);
         Task<IBuisnessLogicResult> ResetUserPassword(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto);
+
+        // TODO: Uncomment when implemented
+        //Task<IBuisnessLogicResult> RevokeSignInBruteForceTokenAsync(VerifyOTPRequestDto verifyOTPRequestDto);
     }
 
     public class AuthBuisnessLogicHelper : ServiceManagerBase, IAuthBuisnessLogicHelper
@@ -619,7 +622,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 signInRequestDto.OtpTypeId = (byte)OTPTypeId.Email; // Default to Email, can be changed based on user preference
 
                 // Response Dto
-                signInResponseDto.SessionUuid = signInRequestDto.SessionUuid ?? Guid.Empty;
+                signInResponseDto.SessionUuid = signInRequestDto.SessionUuid;
                 signInResponseDto.OtpTypeId = signInRequestDto.OtpTypeId;
 
                 switch (signInRequestDto.OtpTypeId)
@@ -1624,5 +1627,11 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 return new BuisnessLogicErrorResult("ResetUserPassword işlemi sırasında hata oluştu", 500);
             }
         }
+
+        // TODO :  
+        //public async Task<IBuisnessLogicResult> RevokeSignInBruteForceTokenAsync(VerifyOTPRequestDto verifyOTPRequestDto)
+        //{
+        //    throw new NotImplementedException("RevokeSignInBruteForceTokenAsync method is not implemented yet.");
+        //}
     }
 }

@@ -10,15 +10,17 @@ namespace Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos
     public class ForgotPasswordRequestDto : DtoBase
     {
         // For Command
-        public byte? UserTypeId { get; set; } = 0;
-        public byte? RecoveryMethodId { get; set; } = 0;
+        public byte UserTypeId { get; set; } = 0;
+        public byte RecoveryMethodId { get; set; } = 0;
         public string Email { get; set; } = string.Empty;
         public string PhoneCountryCode { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
-        // For Internal
-        public string? RecoveryToken { get; set; } = null;
-        public Guid? UserUuid { get; set; } = null;
-        public Guid? RecoverySessionUuid { get; set; } = null;
+
+
+        // For Internal 
+        public string RecoveryToken { get; set; } = string.Empty;
+        public Guid UserUuid { get; set; } = Guid.Empty;
+        public Guid RecoverySessionUuid { get; set; } = Guid.Empty;
 
     }
 }
