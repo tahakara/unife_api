@@ -1,19 +1,24 @@
 ﻿using AutoMapper;
+using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
 using Buisness.DTOs.AuthDtos.RefreshDtos;
 using Buisness.DTOs.AuthDtos.SignInDtos.Request;
 using Buisness.DTOs.AuthDtos.SignInDtos.Response;
 using Buisness.DTOs.AuthDtos.SignUpDtos.Request;
 using Buisness.DTOs.AuthDtos.SignUpDtos.Response;
 using Buisness.DTOs.AuthDtos.VerifyDtos.VerifyOTPDtos;
+using Buisness.Helpers.HelperEnums;
+using Buisness.Services.EntityRepositoryServices.Base;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices;
+using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices.SecurityEventServices;
 using Buisness.Services.UtilityServices.Base.EmailServices;
 using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
+using Core.Enums;
 using Core.Utilities.BuisnessLogic.Base;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using Core.Utilities.OTPUtilities;
 using Core.Utilities.OTPUtilities.Base;
 using Core.Utilities.PasswordUtilities.Base;
-using Core.Enums;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities.SecurityEvents;
 using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
@@ -21,25 +26,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Buisness.Services.EntityRepositoryServices.Base;
-using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices;
-using Buisness.Services.EntityRepositoryServices.Base.AuthorizationModuleServices.SecurityEventServices;
-using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
-using System.ComponentModel.DataAnnotations;
 
 namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 {
     public interface IAuthBuisnessLogicHelper : IBuisnessLogicHelper, IServiceManagerBase
     {
         Task<IBuisnessLogicResult> IsAccessTokenValidAsync(string accessToken);
-        Task<IBuisnessLogicResult> BlackListSessionTokensForASingleSessionAsync(string accessToken);
-        Task<IBuisnessLogicResult> BlacklistAllSessionTokensByUserAsync(string accessToken);
-        Task<IBuisnessLogicResult> BlacklistSessionsExcludedByOneAsync(string accessToken);
+        Task<IBuisnessLogicResult> BlacklistSessionsAsync(string accessToken, BlacklistMode mode);
         Task<IBuisnessLogicResult> IsRefreshTokenValidAsync(RefreshTokenRequestDto refreshTokenRequestDto, RefreshTokenResponseDto refreshTokenResponseDto);
         Task<IBuisnessLogicResult> RefreshAccessTokenAsync(RefreshTokenResponseDto refreshTokenResponseDto);
         Task<IBuisnessLogicResult> CheckAndCreateSignUpCredentialsAsync(SignUpRequestDto signUpRequestDto, SignUpResponseDto signUpResponseDto);
@@ -47,9 +46,9 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         Task<IBuisnessLogicResult> CheckUserSessionCountExceededAsync(SignInResponseDto signInResponseDto);
         Task<IBuisnessLogicResult> CheckSignInCredentialsAsync(SignInRequestDto signInRequestDto, SignInResponseDto signInResponseDto);
         Task<IBuisnessLogicResult> SendSignInOTPAsync(SignInRequestDto signInRequestDto, SignInResponseDto signInResponseDto);
-        Task<IBuisnessLogicResult> SiginCompletedAsync(VerifyOTPRequestDto verifyOTPRequestDto, HttpContext httpContext);
+        Task<IBuisnessLogicResult> SignInCompletedAsync(VerifyOTPRequestDto verifyOTPRequestDto, HttpContext httpContext);
         Task<IBuisnessLogicResult> CheckVerifyOTPAsync(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
-        Task<IBuisnessLogicResult> CreatSession(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
+        Task<IBuisnessLogicResult> CreateSessionAsync(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto);
         Task<IBuisnessLogicResult> RevokeOldOTPAsync(SignInRequestDto signInRequestDto);
 
         /// <summary>
@@ -97,7 +96,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             bool? isEventSuccess = null,
             string? failureMessage = null);
 
-        Task<IBuisnessLogicResult> AddResendSignInOTPSecurityEventRecordAsync(HttpContext? httpContext,
+        Task<IBuisnessLogicResult> AddSignInOTPResendEventRecordAsync (HttpContext? httpContext,
             SecurityEventTypeGuid eventTypeGuidKey,
             string methodName,
             string description,
@@ -107,17 +106,14 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             bool? isEventSuccess = null,
             string? failureMessage = null);
 
-        Task<IBuisnessLogicResult> CheckPasswordIsCorrect(string accessToken, string password);
+        Task<IBuisnessLogicResult> ValidatePasswordAsync(string accessToken, string password);
 
         Task<IBuisnessLogicResult> ChangePasswordAsync(string accessToken, string oldPassword, string newPassword);
-
-        Task<IBuisnessLogicResult> BlacklistOtherSessionsAfterPasswordChangeAsync(string accessToken, bool blackListRequestStatus);
-
         Task<IBuisnessLogicResult> CheckForgotPasswordCredentialsAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
         Task<IBuisnessLogicResult> PreventForgotBruteForceAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
-        Task<IBuisnessLogicResult> SendRecoveryNotificaitonAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
+        Task<IBuisnessLogicResult> SendRecoveryNotificationAsync(ForgotPasswordRequestDto forgotPasswordRequestDto);
         Task<IBuisnessLogicResult> CheckRecoveryToken(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto);
-        Task<IBuisnessLogicResult> ResetUserPassword(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto);
+        Task<IBuisnessLogicResult> ResetUserPasswordAsync(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto);
 
         // TODO: Uncomment when implemented
         //Task<IBuisnessLogicResult> RevokeSignInBruteForceTokenAsync(VerifyOTPRequestDto verifyOTPRequestDto);
@@ -185,11 +181,23 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
         }
 
-        public async Task<IBuisnessLogicResult> BlackListSessionTokensForASingleSessionAsync(string accessToken)
+        #region Blacklist Methods
+        public async Task<IBuisnessLogicResult> BlacklistSessionsAsync(string accessToken, BlacklistMode mode)
+        {
+            return mode switch
+            {
+                BlacklistMode.Single => await BlacklistSingleSessionTokenAsync(accessToken),
+                BlacklistMode.All => await BlacklistAllSessionTokensByUserAsync(accessToken),
+                BlacklistMode.AllExceptOne => await BlacklistAllSessionsExceptOneAsync(accessToken),
+                _ => new BuisnessLogicErrorResult("Invalid blacklist mode", 400)
+            };
+        }
+
+        private async Task<IBuisnessLogicResult> BlacklistSingleSessionTokenAsync(string accessToken)
         {
             try
             {
-                await LogDebugAsync("BlackListSessionTokensForASingleSessionAsync Started", accessToken);
+                await LogDebugAsync("BlacklistSingleSessionTokenAsync Started", accessToken);
 
                 var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
                 var sessionUuid = await _sessionJwtService.GetSessionUuidFromTokenAsync(accessToken);
@@ -206,22 +214,22 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     return new BuisnessLogicErrorResult("Failed to revoke tokens", 500);
                 }
 
-                await LogDebugAsync("BlackListSessionTokensForASingleSessionAsync Completed", new { AccessToken = accessToken, UserUuid = userUuid, SessionUuid = sessionUuid });
+                await LogDebugAsync("BlacklistSingleSessionTokenAsync Completed", new { AccessToken = accessToken, UserUuid = userUuid, SessionUuid = sessionUuid });
                 return new BuisnessLogicSuccessResult("Access token blacklisted successfully", 200);
 
             }
             catch (Exception ex)
             {
-                await LogErrorAsync("BlackListSessionTokensForASingleSessionAsync Excepted", ex, accessToken);
+                await LogErrorAsync("BlacklistSingleSessionTokenAsync Excepted", ex, accessToken);
                 return new BuisnessLogicErrorResult("Error blacklisting access token", 500);
             }
         }
 
-        public async Task<IBuisnessLogicResult> BlacklistSessionsExcludedByOneAsync(string accessToken)
+        private async Task<IBuisnessLogicResult> BlacklistAllSessionsExceptOneAsync(string accessToken)
         {
             try
             {
-                await LogDebugAsync("BlacklistSessionsExcludedByOneAsync Started", accessToken);
+                await LogDebugAsync("BlacklistAllSessionsExceptOneAsync Started", accessToken);
 
                 var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
                 var currentSessionUuid = await _sessionJwtService.GetSessionUuidFromTokenAsync(accessToken);
@@ -238,17 +246,17 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     return new BuisnessLogicErrorResult("Failed to revoke tokens", 500);
                 }
 
-                await LogDebugAsync("BlacklistSessionsExcludedByOneAsync Completed", new { AccessToken = accessToken, UserUuid = userUuid, CurrentSessionUuid = currentSessionUuid });
+                await LogDebugAsync("BlacklistAllSessionsExceptOneAsync Completed", new { AccessToken = accessToken, UserUuid = userUuid, CurrentSessionUuid = currentSessionUuid });
                 return new BuisnessLogicSuccessResult("Access token blacklisted successfully", 200);
             }
             catch (Exception ex)
             {
-                await LogErrorAsync("BlacklistSessionsExcludedByOneAsync Excepted", ex, accessToken);
+                await LogErrorAsync("BlacklistAllSessionsExceptOneAsync Excepted", ex, accessToken);
                 return new BuisnessLogicErrorResult("Error blacklisting access token", 500);
             }
         }
 
-        public async Task<IBuisnessLogicResult> BlacklistAllSessionTokensByUserAsync(string accessToken)
+        private async Task<IBuisnessLogicResult> BlacklistAllSessionTokensByUserAsync(string accessToken)
         {
             try
             {
@@ -276,6 +284,8 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 return new BuisnessLogicErrorResult("Error blacklisting all session tokens by user", 500);
             }
         }
+
+        #endregion
 
         public async Task<IBuisnessLogicResult> IsRefreshTokenValidAsync(RefreshTokenRequestDto refreshTokenRequestDto, RefreshTokenResponseDto refreshTokenResponseDto)
         {
@@ -800,11 +810,11 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         }
 
 
-        public async Task<IBuisnessLogicResult> CreatSession(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto)
+        public async Task<IBuisnessLogicResult> CreateSessionAsync(VerifyOTPRequestDto verifyOTPRequestDto, VerifyOTPResponseDto verifyOTPResponseDto)
         {
             try
             {
-                await LogDebugAsync("CreatSession Started", verifyOTPRequestDto);
+                await LogDebugAsync("CreateSessionAsync Started", verifyOTPRequestDto);
 
                 string newAccessTOken = await _sessionJwtService.GenerateAccessTokenAsync(
                     verifyOTPRequestDto.UserTypeId.ToString(),
@@ -819,7 +829,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 verifyOTPResponseDto.AccessToken = newAccessTOken;
                 verifyOTPResponseDto.RefreshToken = newRefreshToken;
 
-                await LogDebugAsync("CreatSession Completed", new
+                await LogDebugAsync("CreateSessionAsync Completed", new
                 {
                     UserType = verifyOTPRequestDto.UserTypeId,
                     SessionUuid = verifyOTPRequestDto.SessionUuid,
@@ -831,8 +841,8 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
             catch (Exception ex)
             {
-                await LogErrorAsync("CreatSession Excepted", ex, verifyOTPRequestDto);
-                return new BuisnessLogicErrorResult("CreatSession işlemi sırasında hata oluştu", 500);
+                await LogErrorAsync("CreateSessionAsync Excepted", ex, verifyOTPRequestDto);
+                return new BuisnessLogicErrorResult("CreateSessionAsync işlemi sırasında hata oluştu", 500);
             }
         }
 
@@ -1036,7 +1046,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         }
 
 
-        public async Task<IBuisnessLogicResult> AddResendSignInOTPSecurityEventRecordAsync(HttpContext? httpContext,
+        public async Task<IBuisnessLogicResult> AddSignInOTPResendEventRecordAsync(HttpContext? httpContext,
             SecurityEventTypeGuid eventTypeGuidKey,
             string methodName,
             string description,
@@ -1071,11 +1081,11 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             };
         }
 
-        public async Task<IBuisnessLogicResult> CheckPasswordIsCorrect(string accessToken, string password)
+        public async Task<IBuisnessLogicResult> ValidatePasswordAsync(string accessToken, string password)
         {
             try
             {
-                await LogDebugAsync("CheckPasswordIsCorrect Started", new { AccessToken = accessToken, Password = password });
+                await LogDebugAsync("ValidatePasswordAsync Started", new { AccessToken = accessToken, Password = password });
 
                 var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
                 var userTypeId = await _sessionJwtService.GetUserTypeIdFromTokenAsync(accessToken);
@@ -1111,13 +1121,13 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     default:
                         return new BuisnessLogicErrorResult("Invalid user type", 400);
                 }
-                await LogDebugAsync("CheckPasswordIsCorrect Completed", new { UserUuid = uuid, UserTypeId = typeId });
+                await LogDebugAsync("ValidatePasswordAsync Completed", new { UserUuid = uuid, UserTypeId = typeId });
                 return new BuisnessLogicSuccessResult("Password is correct", 200);
             }
             catch (Exception ex)
             {
-                await LogErrorAsync("CheckPasswordIsCorrect Excepted", ex, new { AccessToken = accessToken, Password = password });
-                return new BuisnessLogicErrorResult("CheckPasswordIsCorrect işlemi sırasında hata oluştu", 500);
+                await LogErrorAsync("ValidatePasswordAsync Excepted", ex, new { AccessToken = accessToken, Password = password });
+                return new BuisnessLogicErrorResult("ValidatePasswordAsync işlemi sırasında hata oluştu", 500);
             }
         }
 
@@ -1180,13 +1190,6 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 await LogErrorAsync("ChangePasswordAsync Excepted", ex, new { AccessToken = accessToken, OldPassword = oldPassword, NewPassword = newPassword });
                 return new BuisnessLogicErrorResult("ChangePassword işlemi sırasında hata oluştu", 500);
             }
-        }
-
-        public async Task<IBuisnessLogicResult> BlacklistOtherSessionsAfterPasswordChangeAsync(string accessToken, bool blackListRequestStatus)
-        {
-            return blackListRequestStatus
-                 ? await BlacklistSessionsExcludedByOneAsync(accessToken)
-                 : new BuisnessLogicSuccessResult("No sessions blacklisted as per request", 200);
         }
 
         public async Task<IBuisnessLogicResult> PreventSignInBruteForceAsync(SignInRequestDto signInRequestDto)
@@ -1253,7 +1256,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
         }
 
-        public async Task<IBuisnessLogicResult> SiginCompletedAsync(VerifyOTPRequestDto verifyOTPRequestDto, HttpContext httpContext)
+        public async Task<IBuisnessLogicResult> SignInCompletedAsync(VerifyOTPRequestDto verifyOTPRequestDto, HttpContext httpContext)
         {
             try
             {
@@ -1485,11 +1488,11 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
         }
 
-        public async Task<IBuisnessLogicResult> SendRecoveryNotificaitonAsync(ForgotPasswordRequestDto forgotPasswordRequestDto)
+        public async Task<IBuisnessLogicResult> SendRecoveryNotificationAsync(ForgotPasswordRequestDto forgotPasswordRequestDto)
         {
             try
             {
-                await LogDebugAsync("SendRecoveryNotificaitonAsync Started", forgotPasswordRequestDto);
+                await LogDebugAsync("SendRecoveryNotificationAsync Started", forgotPasswordRequestDto);
 
                 if (string.IsNullOrEmpty(forgotPasswordRequestDto.RecoveryToken))
                 {
@@ -1526,12 +1529,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         return new BuisnessLogicErrorResult("Geçersiz kurtarma yöntemi.", 400);
                         break;
                 }
-                return new BuisnessLogicErrorResult("SendRecoveryNotificaiton işlemi başarılı", 200);
+                return new BuisnessLogicErrorResult("SendRecoveryNotification işlemi başarılı", 200);
             }
             catch (Exception ex)
             {
-                await LogErrorAsync("SendRecoveryNotificaitonAsync Exception", ex, forgotPasswordRequestDto);
-                return new BuisnessLogicErrorResult("SendRecoveryNotificaiton işlemi sırasında hata oluştu", 500);
+                await LogErrorAsync("SendRecoveryNotificationAsync Exception", ex, forgotPasswordRequestDto);
+                return new BuisnessLogicErrorResult("SendRecoveryNotification işlemi sırasında hata oluştu", 500);
             }
         }
 
@@ -1569,11 +1572,11 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
             }
         }
 
-        public async Task<IBuisnessLogicResult> ResetUserPassword(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto)
+        public async Task<IBuisnessLogicResult> ResetUserPasswordAsync(ForgotPasswordRecoveryTokenRequestDto forgotPasswordRecoveryTokenRequestDto)
         {
             try
             {
-                await LogDebugAsync("ResetUserPassword Started", forgotPasswordRecoveryTokenRequestDto);
+                await LogDebugAsync("ResetUserPasswordAsync Started", forgotPasswordRecoveryTokenRequestDto);
 
                 (byte[] newHash, byte[] newSalt) = _passwordUtility.HashPassword(forgotPasswordRecoveryTokenRequestDto.NewPassword);
 
@@ -1612,19 +1615,19 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         await _studentService.UpdateStudentAsync(student);
                         break;
                     default:
-                        await LogErrorAsync("ResetUserPassword Invalid User Type", null, forgotPasswordRecoveryTokenRequestDto);
+                        await LogErrorAsync("ResetUserPasswordAsync Invalid User Type", null, forgotPasswordRecoveryTokenRequestDto);
                         return new BuisnessLogicErrorResult("Invalid user type", 400);
                         break;
                 }
 
-                await LogDebugAsync("ResetUserPassword Completed", forgotPasswordRecoveryTokenRequestDto);
+                await LogDebugAsync("ResetUserPasswordAsync Completed", forgotPasswordRecoveryTokenRequestDto);
                 return new BuisnessLogicSuccessResult("Password reset successfully", 200);
 
             }
             catch (Exception ex)
             {
-                await LogErrorAsync("ResetUserPassword Exception", ex, forgotPasswordRecoveryTokenRequestDto);
-                return new BuisnessLogicErrorResult("ResetUserPassword işlemi sırasında hata oluştu", 500);
+                await LogErrorAsync("ResetUserPasswordAsync Exception", ex, forgotPasswordRecoveryTokenRequestDto);
+                return new BuisnessLogicErrorResult("ResetUserPasswordAsync işlemi sırasında hata oluştu", 500);
             }
         }
 

@@ -4,6 +4,7 @@ using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Buisness.Helpers.HelperEnums;
 using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
@@ -42,7 +43,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.Logout
                         ctx => _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutRequestDto.AccessToken),
 
                         // Executors
-                        ctx => _authBusinessLogicHelper.BlackListSessionTokensForASingleSessionAsync(logoutRequestDto.AccessToken)
+                        ctx => _authBusinessLogicHelper.BlacklistSessionsAsync(logoutRequestDto.AccessToken, BlacklistMode.Single)
                     }/*,
                     onError: async (ctx, failedResult) =>
                     {

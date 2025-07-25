@@ -37,7 +37,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                         ctx => _authBusinessLogicHelper.ValidateAsync(request),
                         ctx => _authBusinessLogicHelper.MapToDtoAsync(request, forgotPasswordRecoveryTokenRequestDto),
                         ctx => _authBusinessLogicHelper.CheckRecoveryToken(forgotPasswordRecoveryTokenRequestDto),
-                        ctx => _authBusinessLogicHelper.ResetUserPassword(forgotPasswordRecoveryTokenRequestDto) 
+                        ctx => _authBusinessLogicHelper.ResetUserPasswordAsync(forgotPasswordRecoveryTokenRequestDto) 
                     });
 
                 if (buisnessResult != null)

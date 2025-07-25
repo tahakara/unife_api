@@ -53,7 +53,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
 
                 if (buisnessResult != null)
                 {
-                    await _authBusinessLogicHelper.AddResendSignInOTPSecurityEventRecordAsync(
+                    await _authBusinessLogicHelper.AddSignInOTPResendEventRecordAsync(
                         httpContext: httpContext,
                         eventTypeGuidKey: SecurityEventTypeGuid.LoginFailure,
                         methodName: nameof(SignInCommandHandler),
@@ -70,7 +70,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
                 }
 
 
-                await _authBusinessLogicHelper.AddResendSignInOTPSecurityEventRecordAsync(
+                await _authBusinessLogicHelper.AddSignInOTPResendEventRecordAsync(
                         httpContext: httpContext,
                         eventTypeGuidKey: SecurityEventTypeGuid.LoginSuccess,
                         methodName: nameof(SignInCommandHandler),

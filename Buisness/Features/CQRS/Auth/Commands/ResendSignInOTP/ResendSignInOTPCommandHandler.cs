@@ -56,7 +56,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
 
                 if (buisnessResult != null)
                 {
-                    await _authBusinessLogicHelper.AddResendSignInOTPSecurityEventRecordAsync(
+                    await _authBusinessLogicHelper.AddSignInOTPResendEventRecordAsync(
                         httpContext: httpContext,
                         eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPResend,
                         methodName: nameof(ResendSignInOTPCommandHandler),
@@ -72,7 +72,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
                         statusCode: buisnessResult.StatusCode);
                 }
 
-                await _authBusinessLogicHelper.AddResendSignInOTPSecurityEventRecordAsync(
+                await _authBusinessLogicHelper.AddSignInOTPResendEventRecordAsync(
                     httpContext: httpContext,
                     eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPResend,
                     methodName: nameof(ResendSignInOTPCommandHandler),

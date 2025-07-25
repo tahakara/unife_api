@@ -39,7 +39,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                         ctx => _authBusinessLogicHelper.MapToDtoAsync(request, forgotPasswordRequestDto),
                         ctx => _authBusinessLogicHelper.CheckForgotPasswordCredentialsAsync(forgotPasswordRequestDto),
                         ctx => _authBusinessLogicHelper.PreventForgotBruteForceAsync(forgotPasswordRequestDto),
-                        ctx => _authBusinessLogicHelper.SendRecoveryNotificaitonAsync(forgotPasswordRequestDto)
+                        ctx => _authBusinessLogicHelper.SendRecoveryNotificationAsync(forgotPasswordRequestDto)
                     });
 
                 if (buisnessResult != null)

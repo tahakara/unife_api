@@ -3,6 +3,7 @@ using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Buisness.Helpers.HelperEnums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -39,11 +40,14 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword
                         ctx => _authBusinessLogicHelper.ValidateAsync(request),
                         ctx => _authBusinessLogicHelper.MapToDtoAsync(request, changePasswordRequestDto),
                         ctx => _authBusinessLogicHelper.IsAccessTokenValidAsync(changePasswordRequestDto.AccessToken),
-                        ctx => _authBusinessLogicHelper.CheckPasswordIsCorrect(changePasswordRequestDto.AccessToken, changePasswordRequestDto.OldPassword),
+                        ctx => _authBusinessLogicHelper.ValidatePasswordAsync(changePasswordRequestDto.AccessToken, changePasswordRequestDto.OldPassword),
                         
                         // Executors
                         ctx => _authBusinessLogicHelper.ChangePasswordAsync(changePasswordRequestDto.AccessToken, changePasswordRequestDto.OldPassword,     changePasswordRequestDto.NewPassword),
-                        ctx => _authBusinessLogicHelper.BlacklistOtherSessionsAfterPasswordChangeAsync(changePasswordRequestDto.AccessToken, changePasswordRequestDto.LogoutOtherSessions) 
+
+                        changePasswordRequestDto.LogoutOtherSessions
+                            ? ctx => _authBusinessLogicHelper.BlacklistSessionsAsync(changePasswordRequestDto.AccessToken, BlacklistMode.AllExceptOne)
+                            : ctx => Task.FromResult<IBuisnessLogicResult>(new BuisnessLogicSuccessResult())
                     });
 
 

@@ -51,8 +51,8 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                         ctx => _authBusinessLogicHelper.CheckVerifyOTPAsync(verifyOTPRequestDto, verifyOTPResponseDto),
 
                         // Executors
-                        ctx => _authBusinessLogicHelper.CreatSession(verifyOTPRequestDto, verifyOTPResponseDto),
-                        ctx => _authBusinessLogicHelper.SiginCompletedAsync(verifyOTPRequestDto, httpContext)//,
+                        ctx => _authBusinessLogicHelper.CreateSessionAsync(verifyOTPRequestDto, verifyOTPResponseDto),
+                        ctx => _authBusinessLogicHelper.SignInCompletedAsync(verifyOTPRequestDto, httpContext)//,
                         
                         // FullSuccess
                         //ctx => _authBusinessLogicHelper.RevokeSignInBruteForceTokenAsync(verifyOTPRequestDto)
