@@ -1,4 +1,7 @@
-﻿namespace Buisness.Features.CQRS.Base.Generic.Response
+﻿using Buisness.Features.CQRS.Base.Generic.Response.FailResponse;
+using Buisness.Features.CQRS.Base.Generic.Response.SuccessResponse;
+
+namespace Buisness.Features.CQRS.Base.Generic.Response
 {
     /// <summary>
     /// Represents the base response for CQRS operations.

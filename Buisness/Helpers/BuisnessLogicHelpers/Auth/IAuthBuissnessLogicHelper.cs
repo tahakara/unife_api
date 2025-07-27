@@ -14,6 +14,7 @@ using Buisness.Services.UtilityServices.Base.EmailServices;
 using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
 using Core.Enums;
 using Core.Utilities.BuisnessLogic.Base;
+using Core.Utilities.BuisnessLogic.BuisnesLogicMessages;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
 using Core.Utilities.OTPUtilities;
@@ -307,21 +308,21 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                await LogDebugAsync("IsAccessTokenValidAsync Started", accessToken);
+                await LogDebugAsync("IsAccessTokenValidAsync Started");
 
                 bool isValid = await _sessionJwtService.ValidateTokenAsync(accessToken);
                 if (!isValid)
                 {
-                    return new BuisnessLogicErrorResult("AccessToken invalid or expired");
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.InvalidOrExpired("AccessToken"));
                 }
 
-                await LogDebugAsync("IsAccessTokenValidAsync Completed", accessToken);
-                return new BuisnessLogicSuccessResult("Access token validation successful", 200);
+                await LogDebugAsync("IsAccessTokenValidAsync Completed");
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Valid("AccessToken"), 200);
             }
             catch (Exception ex)
             {
-                await LogErrorAsync("IsAccessTokenValidAsync Excepted", ex, accessToken);
-                return new BuisnessLogicErrorResult("Access token validation failed", 500);
+                await LogErrorAsync("IsAccessTokenValidAsync Excepted", ex);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("IsAccessTokenValidAsync"), 500);
             }
         }
 
@@ -333,7 +334,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 BlacklistMode.Single => await BlacklistSingleSessionTokenAsync(accessToken),
                 BlacklistMode.All => await BlacklistAllSessionTokensByUserAsync(accessToken),
                 BlacklistMode.AllExceptOne => await BlacklistAllSessionsExceptOneAsync(accessToken),
-                _ => new BuisnessLogicErrorResult("Invalid blacklist mode", 400)
+                _ => new BuisnessLogicErrorResult(BuisnessLogicMessage.Invalid("BalcklistMode"), 400)
             };
         }
         #region Private Methods
@@ -341,7 +342,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         {
             try
             {
-                await LogDebugAsync("BlacklistSingleSessionTokenAsync Started", accessToken);
+                await LogDebugAsync("BlacklistSingleSessionTokenAsync Started");
 
                 var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
                 var sessionUuid = await _sessionJwtService.GetSessionUuidFromTokenAsync(accessToken);
@@ -349,23 +350,23 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                 if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(sessionUuid) || string.IsNullOrEmpty(userTypeId))
                 {
-                    return new BuisnessLogicErrorResult("User UUID and Session UUID are not found on AccessToken", 400);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound(new[] { "UserUuid", "SessionUuid" }, "AccessToken"), 400);
                 }
 
                 var revokeResult = await _sessionJwtService.RevokeTokensAsync(userUuid, sessionUuid, userTypeId);
                 if (!revokeResult)
                 {
-                    return new BuisnessLogicErrorResult("Failed to revoke tokens", 500);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.RevokcationFailed("Tokens"), 500);
                 }
 
                 await LogDebugAsync("BlacklistSingleSessionTokenAsync Completed", new { AccessToken = accessToken, UserUuid = userUuid, SessionUuid = sessionUuid });
-                return new BuisnessLogicSuccessResult("Access token blacklisted successfully", 200);
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Blacklisted("AccessToken"), 200);
 
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("BlacklistSingleSessionTokenAsync Excepted", ex, accessToken);
-                return new BuisnessLogicErrorResult("Error blacklisting access token", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("BlacklistSingleSessionTokenAsync"), 500);
             }
         }
 
@@ -380,23 +381,23 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                 if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(currentSessionUuid))
                 {
-                    return new BuisnessLogicErrorResult("User UUID and Session UUID are not found on AccessToken", 400);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound(new[] { "UserUuid", "SessionUuid" }, "AccessToken"), 400);
                 }
 
                 bool revokeResult = await _sessionJwtService.RevokeUserAllTokensExcluededByOne(userUuid, currentSessionUuid);
 
                 if (!revokeResult)
                 {
-                    return new BuisnessLogicErrorResult("Failed to revoke tokens", 500);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.RevokcationFailed("Tokens"), 500);
                 }
 
                 await LogDebugAsync("BlacklistAllSessionsExceptOneAsync Completed", new { AccessToken = accessToken, UserUuid = userUuid, CurrentSessionUuid = currentSessionUuid });
-                return new BuisnessLogicSuccessResult("Access token blacklisted successfully", 200);
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Blacklisted("AccessToken"), 200);
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("BlacklistAllSessionsExceptOneAsync Excepted", ex, accessToken);
-                return new BuisnessLogicErrorResult("Error blacklisting access token", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("BlacklistAllSessionsExceptOneAsync"), 500);
             }
         }
 
@@ -409,23 +410,23 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
                 if (string.IsNullOrEmpty(userUuid))
                 {
-                    return new BuisnessLogicErrorResult("User UUID is not found on AccessToken", 400);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("UserUuid", "AccessToken"), 400);
                 }
 
                 bool revokeResult = await _sessionJwtService.RevokeUserAllTokensAsync(userUuid);
 
                 if (!revokeResult)
                 {
-                    return new BuisnessLogicErrorResult("Failed to revoke all session tokens", 500);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.RevokcationFailed("Tokens"), 500);
                 }
 
                 await LogDebugAsync("BlacklistAllSessionTokensByUserAsync Completed", new { AccessToken = accessToken, UserUuid = userUuid });
-                return new BuisnessLogicSuccessResult("All session tokens blacklisted successfully", 200);
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Revoked("All Tokens"), 200);
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("BlacklistAllSessionTokensByUserAsync Excepted", ex, accessToken);
-                return new BuisnessLogicErrorResult("Error blacklisting all session tokens by user", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("BlacklistAllSessionTokensByUserAsync"), 500);
             }
         }
         #endregion
@@ -444,7 +445,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                 if (string.IsNullOrEmpty(refreshTokenRequestDto.RefreshToken) || string.IsNullOrWhiteSpace(refreshTokenRequestDto.RefreshToken))
                 {
-                    return new BuisnessLogicErrorResult("Refresh token is required", 400);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.Required("RefreshToken"), 400);
                 }
 
                 if (string.IsNullOrEmpty(refreshTokenRequestDto.AccessToken) || string.IsNullOrWhiteSpace(refreshTokenRequestDto.AccessToken))
@@ -453,18 +454,18 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                     if (string.IsNullOrEmpty(postfixSearchKey))
                     {
-                        return new BuisnessLogicErrorResult("Refresh token invalid or expired", 400);
+                        return new BuisnessLogicErrorResult(BuisnessLogicMessage.InvalidOrExpired("RefreshToken"), 400);
                     }
 
                     JsonElement? postfixSearchResult = await _sessionJwtService.GetRefreshTokenValue(postfixSearchKey);
                     if (postfixSearchKey == null)
                     {
-                        return new BuisnessLogicErrorResult("Refresh token invalid or expired", 400);
+                        return new BuisnessLogicErrorResult(BuisnessLogicMessage.InvalidOrExpired("RefreshToken"), 400);
                     }
 
                     if (!postfixSearchResult.HasValue || !postfixSearchResult.Value.TryGetProperty("UserUuid", out var userUuid) || !postfixSearchResult.Value.TryGetProperty("SessionUuid", out var sessionUuid) || !postfixSearchResult.Value.TryGetProperty("UserTypeId", out var userTypeId))
                     {
-                        return new BuisnessLogicErrorResult("Refresh token is not valid or expired", 400);
+                        return new BuisnessLogicErrorResult(BuisnessLogicMessage.InvalidOrExpired("RefreshToken"), 400);
                     }
 
                     refreshTokenResponseDto.UserUuid = userUuid.GetString() ?? string.Empty;
@@ -472,7 +473,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     refreshTokenResponseDto.RefreshToken = refreshTokenRequestDto.RefreshToken;
                     refreshTokenResponseDto.UserTypeId = byte.TryParse(userTypeId.GetString(), out var parsedUserTypeId) ? parsedUserTypeId : (byte)0;
 
-                    return new BuisnessLogicSuccessResult("Refresh token is valid", 200);
+                    return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Valid("RefreshToken"), 200);
 
                 }
 
@@ -481,7 +482,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 refreshTokenResponseDto.RefreshToken = refreshTokenRequestDto.RefreshToken;
                 if (string.IsNullOrEmpty(refreshTokenResponseDto.UserUuid) || string.IsNullOrEmpty(refreshTokenResponseDto.SessionUuid))
                 {
-                    return new BuisnessLogicErrorResult("User UUID and Session UUID are not found on AccessToken", 400);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound(new[] { "UserUuid", "SessionUuid"}, "AccessToken"), 400);
                 }
 
                 await LogDebugAsync("IsRefreshTokenValidAsync Completed", new
@@ -491,12 +492,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     SessionUuid = refreshTokenResponseDto.SessionUuid,
                     RefreshToken = refreshTokenResponseDto.RefreshToken
                 });
-                return new BuisnessLogicSuccessResult("Refresh token is valid", 200);
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Valid("RefreshToken"), 200);
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("IsRefreshTokenValidAsync Excepted", ex, refreshTokenRequestDto.RefreshToken);
-                return new BuisnessLogicErrorResult("IsRefreshTokenValid işlemi sırasında hata oluştu", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("IsRefreshTokenValidAsync"), 500);
             }
         }
 
@@ -509,7 +510,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 var refreshResult = await _sessionJwtService.RefreshAccessTokenAsync(refreshTokenResponseDto.UserTypeId.ToString(), refreshTokenResponseDto.UserUuid, refreshTokenResponseDto.SessionUuid, refreshTokenResponseDto.RefreshToken);
                 if (refreshResult == null)
                 {
-                    return new BuisnessLogicErrorResult("Refresh token işlemi başarısız oldu", 500);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.Failed("RefreshResult"), 500);
                 }
 
                 refreshTokenResponseDto.AccessToken = refreshResult.AccessToken;
@@ -522,12 +523,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     UserUuid = refreshTokenResponseDto.UserUuid,
                     SessionUuid = refreshTokenResponseDto.SessionUuid
                 });
-                return new BuisnessLogicSuccessResult("Refresh token Completed", 200);
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Success("RefreshToken"), 200);
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("RefreshAccessTokenAsync Excepted", ex, refreshTokenResponseDto.RefreshToken);
-                return new BuisnessLogicErrorResult("Refresh token işlemi sırasında hata oluştu", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("RefreshAccessTokenAsync"), 500);
             }
         }
         #endregion
@@ -546,14 +547,14 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         bool emailResult = await _adminService.IsEmailExistsAsync(signUpRequestDto.Email);
                         if (emailResult)
                         {
-                            return new BuisnessLogicErrorResult("Email not usable", 400);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotAccepted("Email"), 400);
                         }
 
                         bool phoneNumberResult = await _adminService.IsPhoneNumberExistsAsync(signUpRequestDto.PhoneCountryCode, signUpRequestDto.PhoneNumber);
 
                         if (phoneNumberResult)
                         {
-                            return new BuisnessLogicErrorResult("Phone number not usable", 400);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotAccepted("PhoneNumber"), 400);
                         }
 
                         (byte[] hash, byte[] salt) = _passwordUtility.HashPassword(signUpRequestDto.Password);
@@ -568,24 +569,24 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                         if (newAdmin == null)
                         {
-                            return new BuisnessLogicErrorResult("Admin creation failed", 500);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.Failed("Admin", "Creating"), 500);
                         }
 
                         _mapper.Map(newAdmin, signUpResponseDto);
 
-                        return new BuisnessLogicSuccessResult("New admin created successfully", 200);
+                        return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Success("Admin"), 200);
                         break;
 
                     case (byte)UserTypeId.Staff:
                         bool staffEmailResult = await _staffService.IsEmailExistsAsync(signUpRequestDto.Email);
                         if (staffEmailResult)
                         {
-                            return new BuisnessLogicErrorResult("Email not usable", 400);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotAccepted("Email"), 400);
                         }
                         bool staffPhoneNumberResult = await _staffService.IsPhoneNumberExistsAsync(signUpRequestDto.PhoneCountryCode, signUpRequestDto.PhoneNumber);
                         if (staffPhoneNumberResult)
                         {
-                            return new BuisnessLogicErrorResult("Phone number not usable", 400);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotAccepted("PhoneNumber"), 400);
                         }
 
                         (byte[] staffHash, byte[] staffSalt) = _passwordUtility.HashPassword(signUpRequestDto.Password);
@@ -598,26 +599,26 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         newStaff = await _staffService.CreateNewStaffAsync(newStaff);
                         if (newStaff == null)
                         {
-                            return new BuisnessLogicErrorResult("Staff creation failed", 500);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.Failed("Staff", "Creating"), 500);
                         }
 
                         _mapper.Map(newStaff, signUpResponseDto);
 
-                        return new BuisnessLogicSuccessResult("New staff created successfully", 200);
+                        return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Success("Staff"), 200);
                         break;
                     case (byte)UserTypeId.Student:
 
                         bool studentEmailResult = await _studentService.IsEmailExistsAsync(signUpRequestDto.Email);
                         if (studentEmailResult)
                         {
-                            return new BuisnessLogicErrorResult("Email not usable", 400);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotAccepted("Email"), 400);
                         }
 
                         bool studentPhoneNumberResult = await _studentService.IsPhoneNumberExistsAsync(signUpRequestDto.PhoneCountryCode, signUpRequestDto.PhoneNumber);
 
                         if (studentPhoneNumberResult)
                         {
-                            return new BuisnessLogicErrorResult("Phone number not usable", 400);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotAccepted("PhoneNumber"), 400);
                         }
 
                         (byte[] studentHash, byte[] studentSalt) = _passwordUtility.HashPassword(signUpRequestDto.Password);
@@ -631,24 +632,24 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                         if (newStudent == null)
                         {
-                            return new BuisnessLogicErrorResult("Student creation failed", 500);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.Failed("Student", "Creating"), 500);
                         }
 
                         _mapper.Map(newStudent, signUpResponseDto);
 
-                        return new BuisnessLogicSuccessResult("New student created successfully", 200);
+                        return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Success("Student"), 200);
                         break;
 
                     default:
-                        return new BuisnessLogicErrorResult("Geçersiz kullanıcı tipi", 400);
+                        return new BuisnessLogicErrorResult(BuisnessLogicMessage.Invalid("UserTypeId"), 400);
                         break;
                 }
-                return new BuisnessLogicErrorResult("Kullanıcı tipi bulunamadı", 400);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("UserTypeId"), 400);
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("CheckSignUpCredentialsAsync Excepted", ex, signUpRequestDto);
-                return new BuisnessLogicErrorResult("CheckSignUpCredentials işlemi sırasında hata oluştu", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("CheckSignUpCredentialsAsync"), 500);
             }
         }
         #endregion
@@ -665,7 +666,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                 if (string.IsNullOrEmpty(key))
                 {
-                    return new BuisnessLogicErrorResult("Geçersiz brute force key", 400);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.InvalidOrExpired("BruteForceKey"), 400);
                 }
 
                 bool exists = await _sessionJwtService.IsSignInOTPBruteForceProtectionKeyExistsAsync(key);
@@ -676,22 +677,22 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     attempts = await _sessionJwtService.GetSignInOTPBruteForceProtectionAttemptsByKeyAsync(key);
                     if (attempts >= 5)
                     {
-                        return new BuisnessLogicErrorResult("Çok fazla başarısız giriş denemesi, lütfen daha sonra tekrar deneyin.", 429);
+                        return new BuisnessLogicErrorResult(BuisnessLogicMessage.ToManyAttempts("SignIn"), 429);
                     }
                     await _sessionJwtService.IncrementSignInOTPBruteForceProtectionAttemptsAsync(key);
 
-                    return new BuisnessLogicSuccessResult("Brute force koruması geçti", 200);
+                    return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Success("BruteForceKeyProtection"), 200);
                 }
 
                 // Increment or set
                 await _sessionJwtService.SetSignInOTPBruteForceProtectionKeyAsync(key);
 
-                return new BuisnessLogicSuccessResult("Brute force koruması geçti", 200);
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Success("BruteForceKeyProtection"), 200);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "PreventSignInBruteForceAsync hata");
-                return new BuisnessLogicErrorResult("Brute force koruması sırasında hata oluştu", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("BruteForceKeyProtection"), 500);
             }
         }
 
@@ -709,12 +710,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 }
 
                 await LogDebugAsync("CheckUserSessionCountExceeded Completed", signInResponseDto);
-                return new BuisnessLogicSuccessResult("CheckUserSessionCountExceeded Completed", 200);
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Success("CheckUserSessionCountExceededAsync"), 200);
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("CheckUserSessionCountExceeded Excepted", ex, signInResponseDto);
-                return new BuisnessLogicErrorResult("CheckUserSessionCountExceeded işlemi sırasında hata oluştu", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("CheckUserSessionCountExceededAsync"), 500);
             }
         }
 
@@ -746,16 +747,16 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         {
                             currentAdmin = await _adminService.GetAdminByPhoneNumberAsync(signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
                         }
-                        else { return new BuisnessLogicErrorResult("Missing credentials: Email or PhoneCountryCode and PhoneNumber are required", 400); }
+                        else { return new BuisnessLogicErrorResult(BuisnessLogicMessage.AtLeastOneRequired(new[] { "(Email & Password)", "(PhoneCountryCode & PhoneNumber & Password)" }), 400); }
 
                         if (currentAdmin == null)
                         {
-                            return new BuisnessLogicErrorResult("Admin not found", 404);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Admin"), 404);
                         }
 
                         if (!_passwordUtility.VerifyPassword(signInRequestDto.Password, currentAdmin.PasswordHash, currentAdmin.PasswordSalt))
                         {
-                            return new BuisnessLogicErrorResult("Invalid password", 401);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.Invalid("Password"), 401);
                         }
                         signInRequestDto.UserUuid = currentAdmin.AdminUuid;
 
@@ -775,16 +776,16 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         {
                             currentStaff = await _staffService.GetStaffByPhoneNumberAsync(signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
                         }
-                        else { return new BuisnessLogicErrorResult("Missing credentials: Email or PhoneCountryCode and PhoneNumber are required", 400); }
+                        else { return new BuisnessLogicErrorResult(BuisnessLogicMessage.AtLeastOneRequired(new[] { "(Email & Password)", "(PhoneCountryCode & PhoneNumber & Password)" }), 400); }
 
                         if (currentStaff == null)
                         {
-                            return new BuisnessLogicErrorResult("Staff not found", 404);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Staff"), 404);
                         }
 
                         if (!_passwordUtility.VerifyPassword(signInRequestDto.Password, currentStaff.PasswordHash, currentStaff.PasswordSalt))
                         {
-                            return new BuisnessLogicErrorResult("Invalid password", 401);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.Invalid("Password"), 401);
                         }
 
                         signInRequestDto.UserUuid = currentStaff.StaffUuid;
@@ -805,16 +806,16 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         {
                             currentStudent = await _studentService.GetStudentByPhoneNumberAsync(signInRequestDto.PhoneCountryCode, signInRequestDto.PhoneNumber);
                         }
-                        else { return new BuisnessLogicErrorResult("Missing credentials: Email or PhoneCountryCode and PhoneNumber are required", 400); }
+                        else { return new BuisnessLogicErrorResult(BuisnessLogicMessage.AtLeastOneRequired(new[] { "(Email & Password)", "(PhoneCountryCode & PhoneNumber & Password)" }), 400); }
 
                         if (currentStudent == null)
                         {
-                            return new BuisnessLogicErrorResult("Student not found", 404);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Student"), 404);
                         }
 
                         if (!_passwordUtility.VerifyPassword(signInRequestDto.Password, currentStudent.PasswordHash, currentStudent.PasswordSalt))
                         {
-                            return new BuisnessLogicErrorResult("Invalid password", 401);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.Invalid("Password"), 401);
                         }
 
                         signInRequestDto.UserUuid = currentStudent.StudentUuid;
@@ -824,17 +825,17 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                         break;
 
                     default:
-                        return new BuisnessLogicErrorResult("Invalid user type", 400);
+                        return new BuisnessLogicErrorResult(BuisnessLogicMessage.Invalid("UserTypeId"), 400);
                         break;
                 }
 
                 await LogDebugAsync("CheckSignInCredentialsAsync Completed", signInRequestDto);
-                return new BuisnessLogicSuccessResult("SignIn credentials are valid", 200);
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Valid("Credentials"), 200);
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("CheckSignInCredentialsAsync Excepted", ex, signInRequestDto);
-                return new BuisnessLogicErrorResult("CheckSignInCredentials işlemi sırasında hata oluştu", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("CheckSignInCredentials"), 500);
             }
         }
 
@@ -864,13 +865,13 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
                         if (!result)
                         {
-                            return new BuisnessLogicErrorResult("Failed to set OTP code", 500);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.Failed("Setting","OTP"), 500);
                         }
 
                         bool mailResult = await _emailService.SendSignInOtpCode(signInRequestDto.Email, signInRequestDto.OtpCode);
                         if (!mailResult)
                         {
-                            return new BuisnessLogicErrorResult("Failed to send OTP via Email", 500);
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.Failed("Sending", "OTP Via Email"), 500);
                         }
                         break;
 
@@ -879,7 +880,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     //    break;
 
                     default:
-                        return new BuisnessLogicErrorResult("Invalid OTP type", 400);
+                        return new BuisnessLogicErrorResult(BuisnessLogicMessage.Invalid("OTPType"), 400);
                         break;
                 }
 
@@ -893,12 +894,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     OtpTypeId = signInRequestDto.OtpTypeId,
                     OtpCode = signInRequestDto.OtpCode
                 });
-                return new BuisnessLogicSuccessResult("SendSignInOTP Completed", 200);
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Success("SendSignInOTP"), 200);
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("SendSignInOTPAsync Excepted", ex, signInRequestDto);
-                return new BuisnessLogicErrorResult("SendSignInOTP işlemi sırasında hata oluştu", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("SendSignInOTP"), 500);
             }
         }
 
@@ -911,7 +912,7 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 bool isRevoked = await _OTPCodeService.RevokeCodeByUserUuid(signInRequestDto.UserUuid.ToString());
                 if (!isRevoked)
                 {
-                    return new BuisnessLogicErrorResult("Failed to revoke old OTP", 500);
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.RevokcationFailed("Old OTP"), 500);
                 }
 
                 await LogDebugAsync("RevokeOldOTP Completed", new
@@ -920,12 +921,12 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                     SessionUuid = signInRequestDto.SessionUuid,
                     OtpTypeId = signInRequestDto.OtpTypeId
                 });
-                return new BuisnessLogicSuccessResult("RevokeOldOTP Completed", 200);
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Success("RevokeOldOTP"), 200);
             }
             catch (Exception ex)
             {
                 await LogErrorAsync("RevokeOldOTPAsync Excepted", ex, signInRequestDto);
-                return new BuisnessLogicErrorResult("RevokeOldOTP işlemi sırasında hata oluştu", 500);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("RevokeOldOTP"), 500);
             }
         }
         #endregion

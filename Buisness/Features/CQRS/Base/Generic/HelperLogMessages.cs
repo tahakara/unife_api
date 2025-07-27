@@ -5,17 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Buisness.Features.CQRS.Common
+namespace Buisness.Features.CQRS.Base.Generic
 {
-    /// <summary>
-    /// Provides a set of standardized CQRS log message templates for process tracking and error reporting.
-    /// </summary>
-    public class CQRSLogMessages : ProccesMessageUtility, IMessageUtility
+    public class HelperLogMessages : ProccesMessageUtility, IMessageUtility
     {
         /// <summary>
-        /// The process type name used in CQRS log messages.
+        /// The process type name used in Helper Messages.
         /// </summary>
-        public const string ProcessTypeName = "CQRS";
+        public const string ProcessTypeName = "Helper";
 
         /// <summary>
         /// Gets the default message for an unknown state.
@@ -28,7 +25,7 @@ namespace Buisness.Features.CQRS.Common
         public const string Success = "Success";
 
         /// <summary>
-        /// Generates a log message indicating that a CQRS process has started.
+        /// Generates a log message indicating that a HerperMessages process has started.
         /// </summary>
         /// <param name="processName">The name of the process.</param>
         /// <param name="additionalData">Optional additional data to include in the message.</param>
@@ -37,7 +34,7 @@ namespace Buisness.Features.CQRS.Common
             => ProccessStarted(processName, ProcessTypeName, additionalData);
 
         /// <summary>
-        /// Generates a log message indicating that a CQRS process has completed successfully.
+        /// Generates a log message indicating that a HerperMessages process has completed successfully.
         /// </summary>
         /// <param name="processName">The name of the process.</param>
         /// <param name="additionalData">Optional additional data to include in the message.</param>
@@ -46,7 +43,7 @@ namespace Buisness.Features.CQRS.Common
             => ProccessCompleted(processName, ProcessTypeName, additionalData);
 
         /// <summary>
-        /// Generates a log message indicating that a CQRS process has failed.
+        /// Generates a log message indicating that a HerperMessages process has failed.
         /// </summary>
         /// <param name="processName">The name of the process.</param>
         /// <param name="errorMessage">The error message describing the failure.</param>

@@ -46,7 +46,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                 {
                     //await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                     //    httpContext: httpContext,
-                    //    eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetTokenFailed,
+                    //    eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetFailed,
                     //    methodName: nameof(ForgotPasswordRecoveryTokenCommandHandler),
                     //    description: _commandFullName,
                     //    userGuid: null,
@@ -63,7 +63,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
 
                 //await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                 //    httpContext: httpContext,
-                //    eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetTokenSucceeded,
+                //    eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetSucceeded,
                 //    methodName: nameof(ForgotPasswordRecoveryTokenCommandHandler),
                 //    description: _commandFullName,
                 //    userGuid: null,

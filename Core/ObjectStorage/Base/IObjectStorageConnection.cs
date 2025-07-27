@@ -53,5 +53,7 @@ namespace Core.ObjectStorage.Base
         Task<bool> FlushAllAsync();
         Task<long> GetDatabaseSizeAsync();
         Task<bool> TestConnectionAsync();
+
+        Task<long> IncrementStringAsync(IObjectStorageConnection conn, string key);
     }
 }

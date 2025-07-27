@@ -281,5 +281,14 @@ namespace Core.ObjectStorage.Redis
             // Return the first matching key
             return keys.First().ToString().Replace($"{_keyPrefix}:", "");
         }
+
+        public async Task<long> IncrementStringAsync(IObjectStorageConnection conn, string key)
+        {
+            var val = await conn.GetStringAsync(key);
+            var number = long.TryParse(val, out var parsed) ? parsed : 0;
+            number++;
+            await conn.SetStringAsync(key, number.ToString());
+            return number;
+        }
     }
 }

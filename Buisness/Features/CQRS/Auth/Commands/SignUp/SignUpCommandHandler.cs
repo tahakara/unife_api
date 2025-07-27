@@ -55,7 +55,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignUp
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        eventTypeGuidKey: SecurityEventTypeGuid.RegisterFailed,
+                        eventTypeGuidKey: SecurityEventTypeGuid.SignUpFailed,
                         methodName: nameof(SignUpCommandHandler),
                         description: _commandFullName,
                         userGuid: null,
@@ -73,7 +73,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignUp
 
                 await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                     httpContext: httpContext,
-                    eventTypeGuidKey: SecurityEventTypeGuid.RegisterSucceesed,
+                    eventTypeGuidKey: SecurityEventTypeGuid.SignUpSucceeded,
                     methodName: nameof(SignUpCommandHandler),
                     description: _commandFullName,
                     userGuid: null,

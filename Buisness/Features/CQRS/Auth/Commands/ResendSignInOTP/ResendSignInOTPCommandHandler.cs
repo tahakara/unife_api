@@ -59,7 +59,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPResendFailed,
+                        eventTypeGuidKey: SecurityEventTypeGuid.VerificationResendFailed,
                         methodName: nameof(ResendSignInOTPCommandHandler),
                         description: _commandFullName,
                         userGuid: null,
@@ -76,7 +76,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
 
                 await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                     httpContext: httpContext,
-                    eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPResendSucceeded,
+                    eventTypeGuidKey: SecurityEventTypeGuid.VerificationResendSucceeded,
                     methodName: nameof(RefreshTokenCommandHandler),
                     description: _commandFullName,
                     userGuid: null,

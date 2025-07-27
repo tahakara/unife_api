@@ -47,10 +47,10 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                     });
 
                 if (buisnessResult != null)
-                { 
+                {
                     //await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                     //    httpContext: httpContext,
-                    //    eventTypeGuidKey: SecurityEventTypeGuid.ForgotPasswordFailed,
+                    //    eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetRequestFailed,
                     //    methodName: nameof(ForgotPasswordCommandHandler),
                     //    description: _commandFullName,
                     //    userGuid: null,
@@ -68,7 +68,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
 
                 //await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                 //    httpContext: httpContext,
-                //    eventTypeGuidKey: SecurityEventTypeGuid.ForgotPasswordSucceeded,
+                //    eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetRequestSucceeded,
                 //    methodName: nameof(ForgotPasswordCommandHandler),
                 //    description: _commandFullName,
                 //    userGuid: null,

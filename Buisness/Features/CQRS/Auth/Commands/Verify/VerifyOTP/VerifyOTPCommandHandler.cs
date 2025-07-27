@@ -65,7 +65,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPFailed,
+                        eventTypeGuidKey: SecurityEventTypeGuid.VerificationSignInOTPFailed,
                         methodName: nameof(ResendSignInOTPCommandHandler),
                         description: _commandFullName,
                         userGuid: null,
@@ -83,7 +83,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
 
                 await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                     httpContext: httpContext,
-                    eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPSuccess,
+                    eventTypeGuidKey: SecurityEventTypeGuid.VerificationSignInOTPSucceeded,
                     methodName: nameof(VerifyOTPCommandHandler),
                     description: _commandFullName,
                     userGuid: null,

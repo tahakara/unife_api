@@ -55,7 +55,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        eventTypeGuidKey: SecurityEventTypeGuid.SessionRefreshFalied,
+                        eventTypeGuidKey: SecurityEventTypeGuid.SessionRefreshFailed,
                         methodName: nameof(RefreshTokenCommandHandler),
                         description: _commandFullName,
                         userGuid: null,

@@ -14,5 +14,4 @@ namespace Core.Utilities.MessageUtility
     {
         // Marker interface – no instance members required
     }
-
 }

@@ -31,6 +31,7 @@
     <Folder Include="Concrete\" />
     <Folder Include="DTOs\AuthDtos\VerifyDtos\VerifyPhoneDtos\" />
     <Folder Include="Features\CQRS\Base\Generic\Handler\" />
+    <Folder Include="Helpers\Common\HelperMessages\" />
   </ItemGroup>
 
 </Project>

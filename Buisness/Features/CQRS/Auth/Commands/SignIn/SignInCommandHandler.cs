@@ -56,7 +56,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignIn
                 {
                     await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        eventTypeGuidKey: SecurityEventTypeGuid.SignInFailure,
+                        eventTypeGuidKey: SecurityEventTypeGuid.SignInFailed,
                         methodName: nameof(SignInCommandHandler),
                         description: _commandFullName,
                         userGuid: null,
