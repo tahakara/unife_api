@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Buisness.DTOs.UniversityDtos;
-using Buisness.Features.CQRS.Base;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -10,6 +9,8 @@ using Core.Entities.Base;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper;
+using Buisness.Features.CQRS.Base.Generic.Response;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
 
 namespace Buisness.Features.CQRS.Universities.Commands.CreateUniversity
 {

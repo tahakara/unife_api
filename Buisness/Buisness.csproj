@@ -30,7 +30,7 @@
     <Folder Include="Abstract\" />
     <Folder Include="Concrete\" />
     <Folder Include="DTOs\AuthDtos\VerifyDtos\VerifyPhoneDtos\" />
-    <Folder Include="DTOs\AuthDtos\VerifyDtos\VerifyEmailDtos\" />
+    <Folder Include="Features\CQRS\Base\Generic\Handler\" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿using Buisness.Features.CQRS.Base;
+﻿using Buisness.Features.CQRS.Base.Generic.Response;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.IdentityModel.Tokens.Jwt;

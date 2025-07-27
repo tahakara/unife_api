@@ -14,6 +14,7 @@ namespace Buisness.Mappings.AuthMappingProfiles.PsswordMappingProfiles
     {
         public ForgotPasswordProfile()
         {
+            //Command to DTO Mapping
             CreateMap<ForgotPasswordCommand, ForgotPasswordRequestDto>()
                 .ForMember(dest => dest.UserTypeId, opt => opt.MapFrom(src =>
                     MappingHelper.CleanUserTypeId(src.UserTypeId)))

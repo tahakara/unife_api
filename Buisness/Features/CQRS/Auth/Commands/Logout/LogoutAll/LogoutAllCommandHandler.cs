@@ -1,10 +1,12 @@
 ﻿using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
 using Buisness.Features.CQRS.Auth.Commands.Logout.Logout;
-using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
-using Buisness.Helpers.HelperEnums;
+using Buisness.Helpers.Common.HelperEnums;
+using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -47,29 +49,33 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
 
                 if (buisnessResult != null)
                 {
-                    await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                    await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        accessToken: logoutAllRequestDto.AccessToken,
-                        eventTypeGuidKey: SecurityEventTypeGuid.Logout,
-                        methodName: nameof(LogoutCommandHandler),
+                        eventTypeGuidKey: SecurityEventTypeGuid.LogoutAllFailed,
+                        methodName: nameof(LogoutAllCommandHandler),
                         description: _commandFullName,
+                        userGuid: null,
+                        userTypeId: UserTypeId._,
+                        accessToken: null,
                         isEventSuccess: false,
-                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
-                    );
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown);
+
+                    _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<bool>.Failure(
                         message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
 
-                await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                    httpContext: httpContext,
-                    accessToken: logoutAllRequestDto.AccessToken,
-                    eventTypeGuidKey: SecurityEventTypeGuid.Logout,
-                    methodName: nameof(LogoutAllCommandHandler),
-                    description: "Logout All",
-                    isEventSuccess: true
-                );
+                await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
+                        httpContext: httpContext,
+                        eventTypeGuidKey: SecurityEventTypeGuid.LogoutAllSucceeded,
+                        methodName: nameof(LogoutAllCommandHandler),
+                        description: _commandFullName,
+                        userGuid: null,
+                        userTypeId: UserTypeId._,
+                        accessToken: logoutAllRequestDto.AccessToken,
+                        isEventSuccess: true);
 
                 _logger.LogDebug(message: CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<bool>.Success(
@@ -78,7 +84,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll
             }
             catch (Exception ex)
             {
-                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request.AccessToken));
+                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request));
                 return BaseResponse<bool>.Failure(
                     message: CQRSResponseMessages.Error(_commandName),
                     errors: new List<string> { ex.Message },

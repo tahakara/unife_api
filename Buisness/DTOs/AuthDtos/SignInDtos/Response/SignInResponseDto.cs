@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Buisness.DTOs.AuthDtos.SignInDtos.Response
 {
-    public class SignInResponseDto : DtoBase, IDtoBase
+    public class SignInResponseDto : ResponseDtoBase
     {
         public byte UserTypeId { get; set; } = 0;
         [ModelBinder(BinderType = typeof(TrimmedGuidModelBinder))]

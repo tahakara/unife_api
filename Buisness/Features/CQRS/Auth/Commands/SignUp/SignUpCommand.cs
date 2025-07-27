@@ -1,7 +1,8 @@
 ﻿using Buisness.DTOs.AuthDtos.SignUpDtos.Request;
 using Buisness.DTOs.AuthDtos.SignUpDtos.Response;
-using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
 

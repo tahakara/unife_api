@@ -2,7 +2,8 @@
 using Buisness.DTOs.AuthDtos.PasswordDtos.ChangePasswordDtos;
 using Buisness.DTOs.AuthDtos.SignInDtos.Response;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
-using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
 using System;

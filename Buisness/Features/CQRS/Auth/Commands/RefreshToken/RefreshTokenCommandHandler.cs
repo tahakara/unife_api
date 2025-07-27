@@ -1,8 +1,12 @@
-﻿using Buisness.DTOs.AuthDtos.RefreshDtos;
-using Buisness.Features.CQRS.Base;
+﻿using Buisness.DTOs.AuthDtos.PasswordDtos.ChangePasswordDtos;
+using Buisness.DTOs.AuthDtos.RefreshDtos;
+using Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -49,31 +53,35 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
 
                 if (buisnessResult != null)
                 {
-                    await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                    await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        accessToken: refreshTokenResponseDto.AccessToken,
-                        eventTypeGuidKey: SecurityEventTypeGuid.SessionRefreshed,
+                        eventTypeGuidKey: SecurityEventTypeGuid.SessionRefreshFalied,
                         methodName: nameof(RefreshTokenCommandHandler),
                         description: _commandFullName,
+                        userGuid: null,
+                        userTypeId: UserTypeId._,
+                        accessToken: null,
                         isEventSuccess: false,
-                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
-                    );
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown);
+
+                    _logger.LogDebug(CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<RefreshTokenResponseDto>.Failure(
                             message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                             statusCode: buisnessResult.StatusCode);
                 }
 
 
-                await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                     httpContext: httpContext,
-                    accessToken: refreshTokenResponseDto.AccessToken,
-                    eventTypeGuidKey: SecurityEventTypeGuid.SessionRefreshed,
+                    eventTypeGuidKey: SecurityEventTypeGuid.SessionRefreshSucceeded,
                     methodName: nameof(RefreshTokenCommandHandler),
                     description: _commandFullName,
-                    isEventSuccess: true
-                );
+                    userGuid: null,
+                    userTypeId: UserTypeId._,
+                    accessToken: refreshTokenRequestDto.AccessToken,
+                    isEventSuccess: true);
 
-                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName, refreshTokenResponseDto.RefreshToken));
+                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<RefreshTokenResponseDto>.Success(
                     data: refreshTokenResponseDto,
                     message: CQRSResponseMessages.Success(_commandName),
@@ -81,7 +89,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.RefreshToken
             }
             catch (Exception ex)
             {
-                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request.AccessToken));
+                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request));
                 return BaseResponse<RefreshTokenResponseDto>.Failure(
                     message: CQRSResponseMessages.Error(_commandName),
                     errors: new List<string> { ex.Message }, 

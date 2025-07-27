@@ -3,15 +3,6 @@ using Buisness.Behaviors;
 using Buisness.Features.CQRS.Universities.Commands.CreateUniversity;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper;
-using Buisness.Mappings;
-using Buisness.Mappings.AuthMappingProfiles.LogoutMappingProfiles;
-using Buisness.Mappings.AuthMappingProfiles.PsswordMappingProfiles;
-using Buisness.Mappings.AuthMappingProfiles.RefreshTokenMappingProfiles;
-using Buisness.Mappings.AuthMappingProfiles.ResendSignInOTPProfiles;
-using Buisness.Mappings.AuthMappingProfiles.SignInMappingProfiles;
-using Buisness.Mappings.AuthMappingProfiles.SignUpMappingProfiles;
-using Buisness.Mappings.AuthMappingProfiles.VerifyMappingProfiles;
-using Buisness.Mappings.Common;
 using Buisness.Services.EntityRepositoryServices;
 using Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices;
 using Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices.SecurityEventServices;
@@ -42,107 +33,80 @@ using System.Reflection;
 
 namespace Buisness.Extensions
 {
+    /// <summary>
+    /// Contains extension methods for registering Buisness layer services into the DI container.
+    /// </summary>
     public static class ServiceCollectionExtensions
     {
+        /// <summary>
+        /// Registers all Buisness layer services, validators, mappers, helpers, and utilities into the DI container.
+        /// </summary>
+        /// <param name="services">The IServiceCollection to add services to.</param>
+        /// <param name="configuration">Optional application configuration.</param>
+        /// <returns>The IServiceCollection for chaining.</returns>
         public static IServiceCollection AddBusinessServices(this IServiceCollection services, IConfiguration? configuration = null)
         {
-            // MediatR Registration
+            AddMediatRWithPipelineBehaviors(services);
+            AddFluentValidation(services);
+            AddAutoMapper(services);
+            AddCoreBusinessServices(services, configuration);
+
+            return services;
+        }
+
+        /// <summary>
+        /// Registers MediatR and related pipeline behaviors.
+        /// </summary>
+        private static void AddMediatRWithPipelineBehaviors(IServiceCollection services)
+        {
             services.AddMediatR(cfg =>
             {
                 cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
             });
 
-
-            // Pipeline Behaviors
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
+        }
 
-            // FluentValidation Aoutomatic Registration based on Assembly IValidator<T>
+        /// <summary>
+        /// Registers FluentValidation validators.
+        /// </summary>
+        private static void AddFluentValidation(IServiceCollection services)
+        {
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
-            // AccessToken Carrier Validator
-            //var validatorTypes = new Type[]
-            //{
-            //    typeof(UserUuidCarrierValidator<>),
-            //    typeof(SessionUuidCarrierValidator<>),
-            //    typeof(AccessTokenCarrierValidator<>),
-            //    typeof(NullOrValidAccessTokenCarrierValidator<>),
-            //    typeof(EmailOrPhoneCarrierValidator<>),
-            //    typeof(NewPasswordCarrierValidator<>),
-            //    typeof(UserTypeIdCarrierValidator<>),
-            //    typeof(PasswordCarrierValidator<>),
-            //    typeof(EmailCarrierValidator<>),
-            //    typeof(PhoneCarrierValidator<>),
-            //    typeof(FirstNameCarrierValidator<>),
-            //    typeof(MiddleNameCarrierValidator<>),
-            //    typeof(LastNameCarrierValidator<>),
-            //    typeof(UniversityUuidOptionalCarrierValidator<>)
-            //};
-
-            //services.AddValidatorServices(validatorTypes);
-
-
-
-            // FluentValidation Validators
-            //services.AddScoped<IValidator<AccessTokenDto> , AccessTokenDtoValidator>();
-
-            //services.AddScoped<IValidator<LogoutCommand>, LogoutCommandValidator>();
-            //services.AddScoped<IValidator<LogoutAllCommand>, LogoutAllCommandValidator>();
-            //services.AddScoped<IValidator<LogoutOthersCommand>, LogoutOthersCommandValidator>();
-            //services.AddScoped<IValidator<SignUpCommand>, SignUpCommandValidator>();
-            //services.AddScoped<IValidator<SignInCommand>, SignInCommandValidator>();
-            //services.AddScoped<IValidator<ResendSignInOTPCommand>, SignInCommandValidator>();
-            //services.AddScoped<IValidator<VerifyOTPCommand>, VerifyOTPCommandValidator>();
-            //services.AddScoped<IValidator<ChangePasswordCommand>, ChangePasswordCommandValidator>();
-            //services.AddScoped<IValidator<ForgotPasswordCommand>, ForgotPasswordCommandValidator>();
-            //services.AddScoped<IValidator<ForgotPasswordRecoveryTokenCommand>, ForgotPasswordRecoveryTokenCommandValidator>();
-            //services.AddScoped<IValidator<RefreshTokenCommand>, RefreshTokenCommandValidator>();
-
-
-
+            // Example explicit validator registration
             services.AddScoped<IValidator<CreateUniversityCommand>, CreateUniversityDtoValidator>();
+        }
 
-            // AutoMapper
-            //var mapperConfig = new MapperConfiguration(cfg =>
-            //{
-            //    cfg.AddProfile<LogoutMappingProfile>();
-            //    cfg.AddProfile<LogoutAllMappingProfile>();
-            //    cfg.AddProfile<LogoutOthersMappingProfile>();
-            //    cfg.AddProfile<SignUpMappingProfile>();
-            //    cfg.AddProfile<SignInMappingProfile>();
-            //    cfg.AddProfile<ResendSignInOTPProfile>();
-            //    cfg.AddProfile<VerifyOTPMappingProfile>();
-            //    cfg.AddProfile<ChangePasswordProfile>();
-            //    cfg.AddProfile<ForgotPasswordProfile>();
-            //    cfg.AddProfile<ForgotPasswordRecoveryTokenProfile>();
-            //    cfg.AddProfile<RefreshTokenMappingProfile>();
-
-            //    cfg.AddProfile<UniversityMappingProfile>();
-            //    cfg.AddProfile<CommonMappingProfile>();
-            //});
-
-            //mapperConfig.AssertConfigurationIsValid();
-            //var mapper = mapperConfig.CreateMapper();
-            //services.AddSingleton<IMapper>(mapper);
-            // AutoMapper
+        /// <summary>
+        /// Configures AutoMapper with profiles from the current assembly.
+        /// </summary>
+        private static void AddAutoMapper(IServiceCollection services)
+        {
             var mapperConfig = new MapperConfiguration(cfg =>
             {
-                // Automatically add all profiles in the current assembly
                 cfg.AddMaps(Assembly.GetExecutingAssembly());
             });
 
             mapperConfig.AssertConfigurationIsValid();
             var mapper = mapperConfig.CreateMapper();
             services.AddSingleton<IMapper>(mapper);
+        }
 
-            // *** UNIFE SERVICES - Sadeleştirilmiş Yapı ***
+        /// <summary>
+        /// Registers core Buisness services, helpers, utilities, JWT core services and custom Redis connections.
+        /// </summary>
+        private static void AddCoreBusinessServices(IServiceCollection services, IConfiguration? configuration)
+        {
+            // Caching & JWT
             services.AddScoped<ICacheService, UnifeCacheService>();
             services.AddScoped<ISessionJwtService, SessionJwtService>();
             services.AddSingleton<IPasswordUtility, PasswordUtility>();
             services.AddSingleton<IOTPUtilitiy, OTPUtilitiy>();
 
-            // Business Services
+            // Core Business Entity Services
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IStaffService, StaffService>();
             services.AddScoped<IStudentService, StudentService>();
@@ -153,37 +117,25 @@ namespace Buisness.Extensions
             services.AddScoped<IUniversityTypeService, UniversityTypeService>();
             services.AddScoped<IRegionService, RegionService>();
 
-            // Business Logic Helper
+            // Business Logic Helpers
             services.AddScoped<IAuthBuisnessLogicHelper, AuthBuisnessLogicHelper>();
             services.AddScoped<IUniversityBuisnessLogicHelper, UniversityBusinessLogicHelper>();
 
-            // Database Management Services
+            // DB Connections
             services.AddScoped<UnifeConnectionFactory>();
 
-            // JWT Core services
+            // JWT Core Extension
             services.AddJwtCore(configuration);
 
+            // Utility Services
             services.AddScoped<IEmailService, EmailService>();
-
-            // Verification Code Service
             services.AddScoped<IOTPCodeService, VerificationCodeService>();
+
             services.AddKeyedScoped<IObjectStorageConnectionFactory, GenericRedisConnectionFactory>("verification", (sp, key) =>
-    new GenericRedisConnectionFactory(
-        sp.GetRequiredService<IConfiguration>(),
-        sp.GetRequiredService<ILogger<GenericRedisConnectionFactory>>(),
-        RedisStorageType.VerificationCode));
-
-            return services;
-        }
-    
-        private static IServiceCollection AddValidatorServices(this IServiceCollection services, Type[] validatorTypes)
-        {
-            foreach (var validatorType in validatorTypes)
-            {
-                services.AddSingleton(typeof(IValidator<>), validatorType);
-            }
-
-            return services;
+                new GenericRedisConnectionFactory(
+                    sp.GetRequiredService<IConfiguration>(),
+                    sp.GetRequiredService<ILogger<GenericRedisConnectionFactory>>(),
+                    RedisStorageType.VerificationCode));
         }
     }
 }

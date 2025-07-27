@@ -1,4 +1,4 @@
-﻿using Buisness.Features.CQRS.Base;
+﻿using Buisness.Features.CQRS.Base.Generic.Response;
 using FluentValidation;
 using System.Net;
 using System.Text.Json;

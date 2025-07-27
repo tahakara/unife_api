@@ -1,6 +1,7 @@
 ﻿using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
-using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Utilities.BuisnessLogic;
@@ -37,34 +38,40 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
                         ctx => _authBusinessLogicHelper.ValidateAsync(request),
                         ctx => _authBusinessLogicHelper.MapToDtoAsync(request, forgotPasswordRecoveryTokenRequestDto),
                         ctx => _authBusinessLogicHelper.CheckRecoveryToken(forgotPasswordRecoveryTokenRequestDto),
-                        ctx => _authBusinessLogicHelper.ResetUserPasswordAsync(forgotPasswordRecoveryTokenRequestDto) 
+                        ctx => _authBusinessLogicHelper.ResetUserPasswordAsync(forgotPasswordRecoveryTokenRequestDto)  .ContinueWith(task =>
+    {forgotPasswordRecoveryTokenRequestDto.NewPassword = task.Result.StatusCode.ToString(); return task.Result; })
                     });
 
                 if (buisnessResult != null)
                 {
-                    //await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                    //    httpContext,
-                    //    string.Empty,
-                    //    SecurityEventTypeGuid.PasswordResetSuccess,
-                    //    nameof(ForgotPasswordRecoveryTokenCommandHandler),
-                    //    "Forgot Password Recovery Token",
-                    //    false,
-                    //    buisnessResult.Message ?? "An error occurred while processing your request.");
+                    //await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
+                    //    httpContext: httpContext,
+                    //    eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetTokenFailed,
+                    //    methodName: nameof(ForgotPasswordRecoveryTokenCommandHandler),
+                    //    description: _commandFullName,
+                    //    userGuid: null,
+                    //    userTypeId: UserTypeId._,
+                    //    accessToken: null,
+                    //    isEventSuccess: false,
+                    //    failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown);
+
                     _logger.LogDebug(CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<bool>.Failure(
                         message : CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
-                //await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                //    httpContext,
-                //    string.Empty,
-                //    SecurityEventTypeGuid.PasswordResetSuccess,
-                //    nameof(ForgotPasswordRecoveryTokenCommandHandler),
-                //    "Forgot Password Recovery Token",
-                //    true,
-                //    buisnessResult.Message ?? "Recovery token processed successfully.");
-                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName, request.RecoveryToken));
+                //await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
+                //    httpContext: httpContext,
+                //    eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetTokenSucceeded,
+                //    methodName: nameof(ForgotPasswordRecoveryTokenCommandHandler),
+                //    description: _commandFullName,
+                //    userGuid: null,
+                //    userTypeId: UserTypeId._,
+                //    accessToken: null,
+                //    isEventSuccess: true);
+
+                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<bool>.Success(
                     data: true,
                     message: CQRSResponseMessages.Success(_commandName),
@@ -72,7 +79,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
             }
             catch (Exception ex)
             {
-                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message));
+                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request));
                 return BaseResponse<bool>.Failure(
                     message: CQRSResponseMessages.Error(_commandName),
                     statusCode: 500);

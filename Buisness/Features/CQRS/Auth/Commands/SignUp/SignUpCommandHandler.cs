@@ -1,34 +1,42 @@
-﻿using Buisness.DTOs.AuthDtos.SignUpDtos.Request;
+﻿using Buisness.DTOs.AuthDtos.RefreshDtos;
+using Buisness.DTOs.AuthDtos.SignUpDtos.Request;
 using Buisness.DTOs.AuthDtos.SignUpDtos.Response;
+using Buisness.Features.CQRS.Auth.Commands.RefreshToken;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
-using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
+using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
+using Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEventEnums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Buisness.Features.CQRS.Auth.Commands.SignUp
 {
-    public class SignUpCommandHandler : ICommandHandler<SignUpCommand, BaseResponse<SignUpResponseDto>>
+    public class SignUpCommandHandler : AuthCommandHandlerBase<SignUpCommand>, ICommandHandler<SignUpCommand, BaseResponse<SignUpResponseDto>>
     {
         private readonly IAuthBuisnessLogicHelper _authBusinessLogicHelper;
         private readonly ILogger<SignUpCommand> _logger;
 
         public SignUpCommandHandler(
             IAuthBuisnessLogicHelper authBusinessLogicHelper,
-            ILogger<SignUpCommand> logger)
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<SignUpCommand> logger) : base(authBusinessLogicHelper, httpContextAccessor, logger, "SignUp")
         {
-            _authBusinessLogicHelper = authBusinessLogicHelper;
-            _logger = logger;
         }
 
         public async Task<BaseResponse<SignUpResponseDto>> Handle(SignUpCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                _logger.LogDebug("SignUp işlemi başlatıldı. UserTypeId: {UserTypeId}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",
-                    request.UserTypeId, request.Email, request.PhoneCountryCode, request.PhoneNumber);
+                _logger.LogDebug(message: CQRSLogMessages.ProccessStarted(_commandFullName));
+
+                var httpContext = _httpContextAccessor.HttpContext;
 
                 SignUpRequestDto signUpRequestDto = new();
                 SignUpResponseDto signUpResponsetDto = new();
@@ -44,24 +52,47 @@ namespace Buisness.Features.CQRS.Auth.Commands.SignUp
                     });
               
                 if (buisnessResult != null)
+                {
+                    await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
+                        httpContext: httpContext,
+                        eventTypeGuidKey: SecurityEventTypeGuid.RegisterFailed,
+                        methodName: nameof(SignUpCommandHandler),
+                        description: _commandFullName,
+                        userGuid: null,
+                        userTypeId: UserTypeId._,
+                        accessToken: null,
+                        isEventSuccess: false,
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown);
+
+                    _logger.LogDebug(message: CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<SignUpResponseDto>.Failure(
                         message: buisnessResult.Message ?? "SignUp işlemi sırasında hata oluştu",
                         statusCode: buisnessResult.StatusCode);
+                }
 
 
-                _logger.LogDebug("SignUp işlemi başarılı. UserTypeId: {UserTypeId}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",
-                    request.UserTypeId, request.Email, request.PhoneCountryCode, request.PhoneNumber);
+                await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
+                    httpContext: httpContext,
+                    eventTypeGuidKey: SecurityEventTypeGuid.RegisterSucceesed,
+                    methodName: nameof(SignUpCommandHandler),
+                    description: _commandFullName,
+                    userGuid: null,
+                    userTypeId: UserTypeId._,
+                    accessToken: null,
+                    isEventSuccess: true);
+
+                _logger.LogDebug(message: CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<SignUpResponseDto>.Success(
                     data: signUpResponsetDto,
-                    message: "SignUp işlemi başarılı",
+                    message: CQRSResponseMessages.Success(_commandName),
                     statusCode: 200);
 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "SignUp işlemi sırasında hata oluştu");
+                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request));
                 return BaseResponse<SignUpResponseDto>.Failure(
-                    message: "SignUp işlemi sırasında hata oluştu",
+                    message: CQRSResponseMessages.Fail(_commandName, ex.Message),
                     errors: new List<string> { ex.Message },
                     statusCode: 500);
             }

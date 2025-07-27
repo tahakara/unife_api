@@ -11,6 +11,7 @@ namespace Buisness.Mappings.AuthMappingProfiles.PsswordMappingProfiles
     {
         public ForgotPasswordRecoveryTokenProfile()
         {
+            // Command to DTO mapping
             CreateMap<ForgotPasswordRecoveryTokenCommand, ForgotPasswordRecoveryTokenRequestDto>()
                 .ForMember(dest => dest.RecoveryToken, opt => opt.MapFrom(src =>
                     MappingHelper.CleanRecoveryToken(src.RecoveryToken)))

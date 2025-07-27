@@ -1,9 +1,13 @@
-﻿using Buisness.DTOs.AuthDtos.PasswordDtos.ChangePasswordDtos;
-using Buisness.Features.CQRS.Base;
+﻿using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
+using Buisness.DTOs.AuthDtos.PasswordDtos.ChangePasswordDtos;
+using Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
-using Buisness.Helpers.HelperEnums;
+using Buisness.Helpers.Common.HelperEnums;
+using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -53,30 +57,35 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword
 
                 if (buisnessResult != null)
                 {
-                    await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                    await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        accessToken: changePasswordRequestDto.AccessToken,
-                        eventTypeGuidKey: SecurityEventTypeGuid.PasswordChange,
+                        eventTypeGuidKey: SecurityEventTypeGuid.PasswordChangeFailed,
                         methodName: nameof(ChangePasswordCommandHandler),
                         description: _commandFullName,
-                        isEventSuccess:  false,
-                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
-                    );
+                        userGuid: null,
+                        userTypeId: UserTypeId._,
+                        accessToken: null,
+                        isEventSuccess: false,
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown);
+
+                    _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<bool>.Failure(
                         message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
-                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName));
 
-                await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                     httpContext: httpContext,
-                    accessToken: changePasswordRequestDto.AccessToken,
-                    eventTypeGuidKey: SecurityEventTypeGuid.PasswordChange,
+                    eventTypeGuidKey: SecurityEventTypeGuid.PasswordChangeSucceeded,
                     methodName: nameof(ChangePasswordCommandHandler),
                     description: _commandFullName,
-                    isEventSuccess: true
-                );
+                    userGuid: null,
+                    userTypeId: UserTypeId._,
+                    accessToken: changePasswordRequestDto.AccessToken,
+                    isEventSuccess: true);
+
+                _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<bool>.Success(
                     data: true,
                     message: CQRSResponseMessages.Success(_commandName));
@@ -84,7 +93,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword
             }
             catch (Exception ex)
             {
-                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message));
+                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request));
                 return BaseResponse<bool>.Failure(
                     message: CQRSResponseMessages.Error(_commandName),
                     errors : new List<string> { ex.Message },

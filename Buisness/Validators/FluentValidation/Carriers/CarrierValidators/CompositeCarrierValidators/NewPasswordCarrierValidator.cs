@@ -4,9 +4,18 @@ using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators
 {
+    /// <summary>
+    /// Validator for types implementing <see cref="INewPasswordCarrier"/>.
+    /// Ensures the new password and confirm password meet complexity, length, and matching requirements.
+    /// </summary>
+    /// <typeparam name="T">The type implementing <see cref="INewPasswordCarrier"/>.</typeparam>
     public class NewPasswordCarrierValidator<T> : AbstractValidator<T>
         where T : INewPasswordCarrier
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NewPasswordCarrierValidator{T}"/> class.
+        /// Sets up validation rules for the <see cref="INewPasswordCarrier.NewPassword"/> and <see cref="INewPasswordCarrier.ConfirmPassword"/> properties.
+        /// </summary>
         public NewPasswordCarrierValidator()
         {
             RuleFor(x => x.NewPassword)

@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Buisness.Validators.FluentValidation.Carriers.Base
 {
+    /// <summary>
+    /// Marker interface for carrier types used in validation.
+    /// </summary>
     public interface ICarrier
     {
     }

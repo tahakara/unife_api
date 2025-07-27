@@ -4,9 +4,18 @@ using FluentValidation;
 
 namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators
 {
+    /// <summary>
+    /// Validator for types implementing <see cref="IMiddleNameCarrier"/>.
+    /// Ensures the middle name does not exceed the maximum allowed length.
+    /// </summary>
+    /// <typeparam name="T">The type implementing <see cref="IMiddleNameCarrier"/>.</typeparam>
     public class MiddleNameCarrierValidator<T> : AbstractValidator<T>
-    where T : IMiddleNameCarrier
+        where T : IMiddleNameCarrier
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MiddleNameCarrierValidator{T}"/> class.
+        /// Sets up validation rules for the <see cref="IMiddleNameCarrier.MiddleName"/> property.
+        /// </summary>
         public MiddleNameCarrierValidator()
         {
             RuleFor(x => x.MiddleName)

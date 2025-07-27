@@ -16,7 +16,7 @@ namespace Buisness.Mappings.AuthMappingProfiles.SignUpMappingProfiles
     {
         public SignUpMappingProfile()
         {
-            // SignUpCommand -> SignUpRequestDto Mapping
+            // Command to DTO mapping
             CreateMap<SignUpCommand, SignUpRequestDto>()
             .ForMember(dest => dest.UserTypeId, opt => opt.MapFrom(src =>
                 MappingHelper.CleanUserTypeId(src.UserTypeId)))

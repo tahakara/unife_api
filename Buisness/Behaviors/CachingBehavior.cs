@@ -2,8 +2,9 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using Buisness.Features.CQRS.Base;
 using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Request.Query;
 
 namespace Buisness.Behaviors
 {

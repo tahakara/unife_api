@@ -1,4 +1,6 @@
-﻿using Buisness.Features.CQRS.Base;
+﻿using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Request.Query;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

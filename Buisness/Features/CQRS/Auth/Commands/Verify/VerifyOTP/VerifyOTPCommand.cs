@@ -1,6 +1,7 @@
 ﻿using Buisness.DTOs.AuthDtos.VerifyDtos.VerifyOTPDtos;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
-using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using System;
 using System.Collections.Generic;

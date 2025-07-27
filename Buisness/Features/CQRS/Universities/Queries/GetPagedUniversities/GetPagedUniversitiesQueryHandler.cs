@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
 using Buisness.DTOs.Common;
 using Buisness.DTOs.UniversityDtos;
-using Buisness.Features.CQRS.Base;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using Core.Abstract.Repositories.UniversityModuleRepositories;
 using Domain.Entities.MainEntities.UniversityModul;
+using Buisness.Features.CQRS.Base.Generic.Request.Query;
 
 namespace Buisness.Features.CQRS.Universities.Queries.GetPagedUniversities
 {

@@ -15,11 +15,13 @@ namespace Buisness.Mappings.AuthMappingProfiles.LogoutMappingProfiles
     {
         public LogoutOthersMappingProfile()
         {
-            CreateMap<LogoutOthersRequestDto, LogoutOthersCommand>()
+            // Command to DTO Mapping
+            CreateMap<LogoutOthersCommand, LogoutOthersRequestDto>()
                 .ForMember(dest => dest.AccessToken, opt => opt.MapFrom(src =>
                     MappingHelper.CleanAccessToken(src.AccessToken)));
 
-            CreateMap<LogoutOthersCommand, LogoutOthersRequestDto>()
+            // DTO to Command Mapping
+            CreateMap<LogoutOthersRequestDto, LogoutOthersCommand>()
                 .ForMember(dest => dest.AccessToken, opt => opt.MapFrom(src =>
                     MappingHelper.CleanAccessToken(src.AccessToken)));
         }

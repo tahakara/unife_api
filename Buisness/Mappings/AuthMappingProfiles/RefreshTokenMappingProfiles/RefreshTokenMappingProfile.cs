@@ -14,6 +14,7 @@ namespace Buisness.Mappings.AuthMappingProfiles.RefreshTokenMappingProfiles
     {
         public RefreshTokenMappingProfile()
         {
+            // Command To DTO
             CreateMap<RefreshTokenCommand, RefreshTokenRequestDto>()
                 .ForMember(dest => dest.RefreshToken, opt => opt.MapFrom(src =>
                     MappingHelper.CleanRefreshToken(src.RefreshToken)))

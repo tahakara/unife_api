@@ -1,5 +1,6 @@
 using Buisness.DTOs.UniversityDtos;
-using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Generic.Request.Query;
+using Buisness.Features.CQRS.Base.Generic.Response;
 
 namespace Buisness.Features.CQRS.Universities.Queries.GetUniversityById
 {

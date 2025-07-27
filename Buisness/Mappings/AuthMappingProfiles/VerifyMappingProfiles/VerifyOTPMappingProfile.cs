@@ -14,6 +14,7 @@ namespace Buisness.Mappings.AuthMappingProfiles.VerifyMappingProfiles
     {
         public VerifyOTPMappingProfile()
         {
+            // Command to DTO mapping
             CreateMap<VerifyOTPCommand,  VerifyOTPRequestDto>()
                 .ForMember(dest => dest.UserTypeId, opt => opt.MapFrom(src => 
                     MappingHelper.CleanUserTypeId(src.UserTypeId)))

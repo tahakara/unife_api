@@ -1,10 +1,14 @@
-﻿using Buisness.DTOs.AuthDtos.SignInDtos.Request;
+﻿using Buisness.DTOs.AuthDtos.RefreshDtos;
+using Buisness.DTOs.AuthDtos.SignInDtos.Request;
 using Buisness.DTOs.AuthDtos.SignInDtos.Response;
+using Buisness.Features.CQRS.Auth.Commands.RefreshToken;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
-using Buisness.Features.CQRS.Base;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -33,9 +37,6 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
         {
             try
             {
-                //_logger.LogDebug("SignIn işlemi başlatıldı. UserType: {UserType}, Email: {Email}, PhoneCountryCode: {PhoneCountryCode}, PhoneNumber: {PhoneNumber}",
-                //request.UserTypeId, request.Email, request.PhoneCountryCode, request.PhoneNumber);
-
                 _logger.LogDebug(message: CQRSLogMessages.ProccessStarted(_commandFullName, new { request.UserTypeId, request.Email, request.PhoneCountryCode, request.PhoneNumber }));
                 var httpContext = _httpContextAccessor.HttpContext;
 
@@ -56,33 +57,34 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
 
                 if (buisnessResult != null)
                 {
-                    await _authBusinessLogicHelper.AddSignInOTPResendEventRecordAsync(
+                    await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPResend,
+                        eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPResendFailed,
                         methodName: nameof(ResendSignInOTPCommandHandler),
-                        description: _commandName,
-                        userGuid: signInResponseDto.UserUuid,
-                        userTypeId: signInResponseDto.UserTypeId,
+                        description: _commandFullName,
+                        userGuid: null,
+                        userTypeId: UserTypeId._,
                         accessToken: null,
                         isEventSuccess: false,
                         failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown);
 
+                    _logger.LogDebug(message: CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<SignInResponseDto>.Failure(
                         message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
-                await _authBusinessLogicHelper.AddSignInOTPResendEventRecordAsync(
+                await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                     httpContext: httpContext,
-                    eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPResend,
-                    methodName: nameof(ResendSignInOTPCommandHandler),
+                    eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPResendSucceeded,
+                    methodName: nameof(RefreshTokenCommandHandler),
                     description: _commandFullName,
-                    userGuid: signInResponseDto.UserUuid,
-                    userTypeId: signInResponseDto.UserTypeId,
+                    userGuid: null,
+                    userTypeId: UserTypeId._,
                     accessToken: null,
                     isEventSuccess: true);
 
-                _logger.LogDebug(message: CQRSLogMessages.ProccessCompleted(_commandFullName, new { request.UserTypeId, request.Email, request.PhoneCountryCode, request.PhoneNumber }));
+                _logger.LogDebug(message: CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<SignInResponseDto>.Success(
                     data: signInResponseDto,
                     message: CQRSResponseMessages.Success(_commandName),
@@ -91,7 +93,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP
             }
             catch (Exception ex)
             {
-                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, new { request.UserTypeId, request.Email, request.PhoneCountryCode, request.PhoneNumber }));
+                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request));
                 return BaseResponse<SignInResponseDto>.Failure(
                     message: CQRSResponseMessages.Error(_commandName),
                     errors: new List<string> { ex.Message },

@@ -1,6 +1,6 @@
 using Buisness.DTOs.Common;
 using Buisness.DTOs.UniversityDtos;
-using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Generic.Request.Query;
 
 namespace Buisness.Features.CQRS.Universities.Queries.GetPagedUniversities
 {

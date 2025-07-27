@@ -36,7 +36,6 @@ namespace Buisness.Services.UtilityServices.Base.ObjectStorageServices
         string GenerateSignInOTPBruteForceProtectionKey(string? email, string? phoneCode, string? phoneNumber);
         Task<bool> IsSignInOTPBruteForceProtectionKeyExistsAsync(string key);
         Task<bool> RemoveSignInOTPBruteForceProtectionKeyAsync(string key);
-        //Task<bool> RevokeSignInOTPBruteForceProtectionByEmailAsync(string email);
         Task<bool> SetSignInOTPBruteForceProtectionKeyAsync(string key, int attempts = 0, TimeSpan? expiration = null);
         Task<int> GetSignInOTPBruteForceProtectionAttemptsByKeyAsync(string key);
         Task<int> GetSignInOTPBruteForceProtectionAttemptsByUserUuid(string userUuid);

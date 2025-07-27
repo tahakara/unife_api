@@ -1,6 +1,7 @@
 ﻿using Buisness.DTOs.AuthDtos.RefreshDtos;
 using Buisness.Features.CQRS.Auth.Commands.RefreshToken;
-using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
 using System;
 using System.Collections.Generic;

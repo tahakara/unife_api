@@ -32,7 +32,7 @@ namespace WebAPI.Controllers.Auth
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> SignUp(
+        public async Task<IActionResult> SignUpPost(
             [FromBody] SignUpCommand command) 
         {
             return await SendCommand(command);
@@ -43,7 +43,7 @@ namespace WebAPI.Controllers.Auth
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> SignIn(
+        public async Task<IActionResult> SignInPost(
             [FromBody] SignInCommand command)
         {
             return await SendCommand(command);
@@ -53,7 +53,7 @@ namespace WebAPI.Controllers.Auth
         [RejectAuthorizationHeader]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> VerifyOTP(
+        public async Task<IActionResult> VerifyOTPPost(
             [FromBody] VerifyOTPCommand command)
         {
             return await SendCommand(command);
@@ -63,7 +63,7 @@ namespace WebAPI.Controllers.Auth
         [RejectAuthorizationHeader]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ResendSignInOTP(
+        public async Task<IActionResult> ResendSignInOTPPost(
             [FromBody] ResendSignInOTPCommand command)
         {
             return await SendCommand(command);
@@ -73,7 +73,7 @@ namespace WebAPI.Controllers.Auth
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> RefreshToken(
+        public async Task<IActionResult> RefreshTokenPost(
             [FromHeader(Name = "Authorization")] string? accessToken, 
             [FromBody] RefreshTokenCommand command) 
         {
@@ -124,7 +124,7 @@ namespace WebAPI.Controllers.Auth
         [HttpPost("forgot-password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ForgotPassword(
+        public async Task<IActionResult> ForgotPasswordPost(
             [FromBody] ForgotPasswordCommand command)
         {
             return await SendCommand(command);
@@ -134,7 +134,7 @@ namespace WebAPI.Controllers.Auth
         [HttpPost("forgot-password/t/{RecoveryToken}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ForgotPasswordWithToken(
+        public async Task<IActionResult> ForgotPasswordWithTokenPost(
             [FromRoute] string RecoveryToken,
             [FromBody] ForgotPasswordRecoveryTokenCommand command)
         {
@@ -147,7 +147,7 @@ namespace WebAPI.Controllers.Auth
         [HttpPost("cahnge-password")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ChangePassword(
+        public async Task<IActionResult> ChangePasswordPost(
             [FromHeader(Name = "Authorization")] string accessToken, 
             [FromBody] ChangePasswordCommand command)
         {
@@ -156,10 +156,23 @@ namespace WebAPI.Controllers.Auth
 
         }
 
+
+
+        [Authorize]
+        [HttpGet("verify-email")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifyEmailGet(
+            [FromHeader(Name = "Authorization")] VerifyEmailCommand command)
+        {
+            return await SendCommand(command);
+        }
+
+        [Authorize]
         [HttpPost("verify-email")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> VerifyEmail(
+        public async Task<IActionResult> VerifyEmailPost(
             [FromHeader(Name = "Authorization")] string? accessToken, 
             [FromBody] VerifyEmailCommand command)
         {
@@ -167,6 +180,17 @@ namespace WebAPI.Controllers.Auth
             return await SendCommand(command);
         }
 
+        [Authorize]
+        [HttpGet("verify-phone")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifyPhoneGet(
+            [FromHeader(Name = "Authorization")] VerifyPhoneCommand command)
+        {
+            return await SendCommand(command);
+        }
+
+        [Authorize]
         [HttpPost("verify-phone")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

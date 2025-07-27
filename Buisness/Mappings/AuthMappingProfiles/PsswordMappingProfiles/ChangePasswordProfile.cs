@@ -14,6 +14,7 @@ namespace Buisness.Mappings.AuthMappingProfiles.PsswordMappingProfiles
     {
         public ChangePasswordProfile()
         {
+            // Command to DTO mapping
             CreateMap<ChangePasswordCommand, ChangePasswordRequestDto>()
                 .ForMember(dest => dest.AccessToken, opt => opt.MapFrom(src =>
                     MappingHelper.CleanAccessToken(src.AccessToken)))

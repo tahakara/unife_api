@@ -1,9 +1,13 @@
 ﻿using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
-using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Auth.Commands.Logout.Logout;
+using Buisness.Features.CQRS.Auth.Commands.Logout.LogoutAll;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
-using Buisness.Helpers.HelperEnums;
+using Buisness.Helpers.Common.HelperEnums;
+using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -30,43 +34,49 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
                 _logger.LogDebug(CQRSLogMessages.ProccessStarted(_commandFullName, request.AccessToken));
 
                 var httpContext = _httpContextAccessor.HttpContext;
-                LogoutOthersRequestDto mappedRequestDto = new();
+                LogoutOthersRequestDto logoutOthersRequestDto = new();
 
                 IBuisnessLogicResult buisnessResult = await BuisnessLogic.Run(
                     new Func<StepContext, Task<IBuisnessLogicResult>>[]
                     {
                         ctx => _authBusinessLogicHelper.ValidateAsync(request),
-                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, mappedRequestDto),
-                        ctx => _authBusinessLogicHelper.IsAccessTokenValidAsync(mappedRequestDto.AccessToken),
+                        ctx => _authBusinessLogicHelper.MapToDtoAsync(request, logoutOthersRequestDto),
+                        ctx => _authBusinessLogicHelper.IsAccessTokenValidAsync(logoutOthersRequestDto.AccessToken),
                     
                         // Executors
-                        ctx => _authBusinessLogicHelper.BlacklistSessionsAsync(mappedRequestDto.AccessToken, BlacklistMode.AllExceptOne)
+                        ctx => _authBusinessLogicHelper.BlacklistSessionsAsync(logoutOthersRequestDto.AccessToken, BlacklistMode.AllExceptOne)
                     });
 
                 if (buisnessResult != null)
                 {
-                    await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                    await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        accessToken: mappedRequestDto.AccessToken,
-                        eventTypeGuidKey: SecurityEventTypeGuid.LogoutOthers,
+                        eventTypeGuidKey: SecurityEventTypeGuid.LogoutOthersFailed,
                         methodName: nameof(LogoutOthersCommandHandler),
                         description: _commandFullName,
-                        isEventSuccess:  false,
-                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
-                    );
+                        userGuid: null,
+                        userTypeId: UserTypeId._,
+                        accessToken: null,
+                        isEventSuccess: false,
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown);
+
+                    _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<bool>.Failure(
                         message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
-                await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+
+                await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                     httpContext: httpContext,
-                    accessToken: mappedRequestDto.AccessToken,
-                    eventTypeGuidKey: SecurityEventTypeGuid.LogoutOthers,
+                    eventTypeGuidKey: SecurityEventTypeGuid.LogoutOthersSucceeded,
                     methodName: nameof(LogoutOthersCommandHandler),
                     description: _commandFullName,
-                    isEventSuccess: true
-                );
+                    userGuid: null,
+                    userTypeId: UserTypeId._,
+                    accessToken: logoutOthersRequestDto.AccessToken,
+                    isEventSuccess: true);
+
                 _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName, request.AccessToken));
                 return BaseResponse<bool>.Success(
                     data: true,
@@ -76,7 +86,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Logout.LogoutOthers
             }
             catch (Exception ex)
             {
-                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message));
+                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request));
                 return BaseResponse<bool>.Failure(
                     message: CQRSResponseMessages.Error(_commandName),
                     errors: new List<string> { ex.Message }, 

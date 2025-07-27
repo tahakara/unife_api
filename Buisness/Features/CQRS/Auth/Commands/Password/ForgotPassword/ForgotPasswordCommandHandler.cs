@@ -1,8 +1,12 @@
-﻿using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
-using Buisness.Features.CQRS.Base;
+﻿using Buisness.DTOs.AuthDtos.PasswordDtos.ChangePasswordDtos;
+using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
+using Buisness.Features.CQRS.Auth.Commands.Password.ChangePassword;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults.Base;
@@ -44,29 +48,34 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
 
                 if (buisnessResult != null)
                 { 
-                    await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                        httpContext: httpContext,
-                        accessToken: string.Empty,
-                        eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetRequest,
-                        methodName: nameof(ForgotPasswordCommandHandler),
-                        description: _commandFullName,
-                        isEventSuccess:  false,
-                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
-                    );
+                    //await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
+                    //    httpContext: httpContext,
+                    //    eventTypeGuidKey: SecurityEventTypeGuid.ForgotPasswordFailed,
+                    //    methodName: nameof(ForgotPasswordCommandHandler),
+                    //    description: _commandFullName,
+                    //    userGuid: null,
+                    //    userTypeId: UserTypeId._,
+                    //    accessToken: null,
+                    //    isEventSuccess: false,
+                    //    failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown);
+
                     _logger.LogDebug(CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<bool>.Failure(
                         message: CQRSResponseMessages.Fail(_commandFullName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
-                await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
-                    httpContext: httpContext,
-                    accessToken: string.Empty,
-                    eventTypeGuidKey: SecurityEventTypeGuid.PasswordResetRequest,
-                    methodName: nameof(ForgotPasswordCommandHandler),
-                    description: _commandFullName,
-                    isEventSuccess: true
-                );
+
+                //await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
+                //    httpContext: httpContext,
+                //    eventTypeGuidKey: SecurityEventTypeGuid.ForgotPasswordSucceeded,
+                //    methodName: nameof(ForgotPasswordCommandHandler),
+                //    description: _commandFullName,
+                //    userGuid: null,
+                //    userTypeId: UserTypeId._,
+                //    accessToken: null,
+                //    isEventSuccess: true);
+
                 _logger.LogDebug(CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<bool>.Success(
                     data: true,
@@ -74,7 +83,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword
             }
             catch (Exception ex)
             {
-                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message));
+                _logger.LogError(message: CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request));
                 return BaseResponse<bool>.Failure(
                     message: CQRSResponseMessages.Error(_commandName),
                     errors: new List<string> { ex.Message },

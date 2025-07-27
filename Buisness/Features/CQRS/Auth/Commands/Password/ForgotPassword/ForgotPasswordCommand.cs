@@ -1,6 +1,7 @@
 ﻿using Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos;
 using Buisness.Features.CQRS.Auth.Commands.Password.ForgotPassword;
-using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;

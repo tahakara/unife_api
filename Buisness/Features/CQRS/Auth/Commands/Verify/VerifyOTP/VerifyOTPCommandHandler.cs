@@ -1,9 +1,12 @@
 ﻿using Buisness.DTOs.AuthDtos.SignInDtos.Response;
 using Buisness.DTOs.AuthDtos.SignUpDtos.Response;
 using Buisness.DTOs.AuthDtos.VerifyDtos.VerifyOTPDtos;
+using Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
-using Buisness.Features.CQRS.Base;
+using Buisness.Features.CQRS.Auth.Commands.SignUp;
 using Buisness.Features.CQRS.Base.Auth;
+using Buisness.Features.CQRS.Base.Generic.Request.Command;
+using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Features.CQRS.Common;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
 using Core.Enums;
@@ -52,38 +55,43 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
 
                         // Executors
                         ctx => _authBusinessLogicHelper.CreateSessionAsync(verifyOTPRequestDto, verifyOTPResponseDto),
-                        ctx => _authBusinessLogicHelper.SignInCompletedAsync(verifyOTPRequestDto, httpContext)//,
+                        ctx => _authBusinessLogicHelper.SignInCompletedAsync(verifyOTPRequestDto, httpContext),
                         
                         // FullSuccess
-                        //ctx => _authBusinessLogicHelper.RevokeSignInBruteForceTokenAsync(verifyOTPRequestDto)
+                        ctx => _authBusinessLogicHelper.RevokeSignInBruteForceTokenAsync(verifyOTPRequestDto.UserTypeId, userUuid: verifyOTPRequestDto.UserUuid)
                     });
 
                 if (buisnessResult != null)
                 {
-                    await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+                    await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                         httpContext: httpContext,
-                        accessToken: verifyOTPResponseDto.AccessToken,
                         eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPFailed,
-                        methodName: nameof(VerifyOTPCommandHandler),
+                        methodName: nameof(ResendSignInOTPCommandHandler),
                         description: _commandFullName,
+                        userGuid: null,
+                        userTypeId: UserTypeId._,
+                        accessToken: null,
                         isEventSuccess: false,
-                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown
-                    );
+                        failureMessage: buisnessResult.Message ?? CQRSLogMessages.Unknown);
+
+                    _logger.LogDebug(CQRSLogMessages.ProccessFailed(_commandFullName, buisnessResult.Message));
                     return BaseResponse<VerifyOTPResponseDto>.Failure(
                         message: CQRSResponseMessages.Fail(_commandName, buisnessResult.Message),
                         statusCode: buisnessResult.StatusCode);
                 }
 
-                await _authBusinessLogicHelper.AddSecurityEventRecordByTypeAsync(
+
+                await _authBusinessLogicHelper.AddSecurityEventRecordAsync(
                     httpContext: httpContext,
-                    accessToken: verifyOTPResponseDto.AccessToken,
                     eventTypeGuidKey: SecurityEventTypeGuid.VerificationOTPSuccess,
                     methodName: nameof(VerifyOTPCommandHandler),
                     description: _commandFullName,
-                    isEventSuccess: true
-                );
+                    userGuid: null,
+                    userTypeId: UserTypeId._,
+                    accessToken: null,
+                    isEventSuccess: true);
 
-                _logger.LogDebug(message: CQRSLogMessages.ProccessCompleted(_commandFullName, new { request.UserTypeId, request.UserUuid }));
+                _logger.LogDebug(message: CQRSLogMessages.ProccessCompleted(_commandFullName));
                 return BaseResponse<VerifyOTPResponseDto>.Success(
                     data: verifyOTPResponseDto,
                     message: CQRSResponseMessages.Success(_commandName),
@@ -92,7 +100,7 @@ namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyOTP
             }
             catch (Exception ex)
             {
-                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, new { request.UserTypeId, request.UserUuid }));
+                _logger.LogError(CQRSLogMessages.ProccessFailed(_commandFullName, ex.Message, request));
                 return BaseResponse<VerifyOTPResponseDto>.Failure(
                     message: CQRSResponseMessages.Error(_commandName),
                     statusCode: 500);

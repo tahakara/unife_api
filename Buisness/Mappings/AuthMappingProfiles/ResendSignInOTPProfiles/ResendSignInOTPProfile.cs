@@ -16,6 +16,7 @@ namespace Buisness.Mappings.AuthMappingProfiles.ResendSignInOTPProfiles
     {
         public ResendSignInOTPProfile()
         {
+            // Command to DTO mapping
             CreateMap<ResendSignInOTPCommand, SignInRequestDto>()
                 .ForMember(x => x.UserTypeId, opt => opt.MapFrom(src =>
                     MappingHelper.CleanUserTypeId(src.UserTypeId)))
