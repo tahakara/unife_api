@@ -10,6 +10,10 @@ namespace Core.Utilities.BuisnessLogic.BuisnesLogicMessages
     public abstract class BuisnessLogicMessage : IMessageUtility
     {
         
+        public static string Successfuly(string propertyName, string? location = null)
+            => string.IsNullOrWhiteSpace(location)
+                ? $"{propertyName} successfully."
+                : $"{propertyName} successfully on the {location}.";
         public static string Success(string propertyName, string? location = null)
             => string.IsNullOrWhiteSpace(location)
                 ? $"{propertyName} succeeded."
@@ -24,6 +28,11 @@ namespace Core.Utilities.BuisnessLogic.BuisnesLogicMessages
             => string.IsNullOrWhiteSpace(location)
                 ? $"{propertyName} error."
                 : $"{propertyName} error on the {location}.";
+
+        public static string ErrorOccurred(string propertyName, string? location = null)
+            => string.IsNullOrWhiteSpace(location)
+                ? $"Error occurred on {propertyName}."
+                : $"{propertyName} error occurred on the {location}.";
 
         public static string Valid(string propertyName) 
             => $"{propertyName} is valid.";
@@ -97,5 +106,23 @@ namespace Core.Utilities.BuisnessLogic.BuisnesLogicMessages
      
         public static string ToManyAttempts(string propertyName)
             => $"{propertyName} has too many attempts. Please try again later.";
+
+        public static string AlreadyExists(string propertyName, string? location = null)
+            => string.IsNullOrWhiteSpace(location)
+                ? $"{propertyName} already exists."
+                : $"{propertyName} already exists on the {location}.";
+
+        public static string Created(string propertyName, string? location = null)
+            => string.IsNullOrWhiteSpace(location)
+                ? $"{propertyName} created successfully."
+                : $"{propertyName} created successfully on the {location}.";
+
+        public static string NotCreated(string propertyName, string? location = null)
+            => string.IsNullOrWhiteSpace(location)
+                ? $"{propertyName} not created."
+                : $"{propertyName} not created on the {location}.";
+
+        public static string ExceedsLimit(string propertyName, int limit)
+            => $"{propertyName} exceeds the limit of {limit}.";
     }
 }
