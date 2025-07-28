@@ -2,6 +2,7 @@ using Buisness.Services.UtilityServices.Base.ObjectStorageServices;
 using Core.ObjectStorage.Base;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
 public class VerificationCodeService : IOTPCodeService
@@ -169,4 +170,98 @@ public class VerificationCodeService : IOTPCodeService
             return false;
         }
     }
+
+    #region Email Verification
+    public static byte EmailVerificationCodeExpirationMinutes => 10;
+    public static string EmailVerificaitonOtpKey(string userUuid, string OtpCode)
+        => $"EmailVerificationOTP:{userUuid}:{OtpCode}";
+    public class EmailVerificaitonTokenData
+    {
+        public string UserUuid { get; set; }
+        public string OtpCode { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        public EmailVerificaitonTokenData(string userUuid, string otpCode, DateTime createdAt)
+        {
+            UserUuid = userUuid;
+            OtpCode = otpCode;
+            CreatedAt = createdAt;
+        }
+    }
+    public async Task<bool> SetEmailVerificationCodeAsync(string userUuid, string otpCode)
+    {
+        try
+        {
+            _logger.LogDebug("Setting email verification code for user {UserUuid} with code {OtpCode}", userUuid, otpCode);
+            using var connection = await GetVerificationConnectionAsync();
+
+            var redisKey = EmailVerificaitonOtpKey(userUuid, otpCode);
+
+            var tokenData = new EmailVerificaitonTokenData(userUuid, otpCode, DateTime.UtcNow.AddMinutes(EmailVerificationCodeExpirationMinutes));
+            var serializedData = JsonSerializer.Serialize(tokenData);
+
+            bool result = await connection.SetStringAsync(redisKey, serializedData, TimeSpan.FromMinutes(EmailVerificationCodeExpirationMinutes));
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while setting the email verification code for user {UserUuid}.", userUuid);
+            return false;
+        }
+    }
+
+    public async Task<bool> IsExistEmailVerificaitonOTPByUserUuid(string userUuid)
+    {
+        try
+        {
+            _logger.LogDebug("Retrieving email verification OTP for user {UserUuid}", userUuid);  
+            using var connection = await GetVerificationConnectionAsync();
+
+            var keys = await connection.GetKeysAsync($"EmailVerificationOTP:{userUuid}:*");
+            if (keys.Count == 0)
+            {
+                _logger.LogInformation("No email verification OTP found for user {UserUuid}.", userUuid);
+                return false; // No OTP found
+            }
+            _logger.LogDebug("Found {Count} email verification OTPs for user {UserUuid}.", keys.Count, userUuid);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while getting the email verification OTP for user {UserUuid}.", userUuid);
+            return false;
+        }
+    }
+
+    public async Task<bool> RemoveEmailVerificationCodeAsync(string userUuid)
+    {
+        try
+        {
+            _logger.LogDebug("Removing email verification code for user {UserUuid}", userUuid);
+            using var connection = await GetVerificationConnectionAsync();
+            var keys = await connection.GetKeysAsync($"EmailVerificationOTP:{userUuid}:*");
+            if (keys.Count == 0)
+            {
+                _logger.LogInformation("No email verification code found for user {UserUuid}.", userUuid);
+                return true; // No code to remove, considered successful
+            }
+            _logger.LogDebug("Found {Count} email verification codes for user {UserUuid}.", keys.Count, userUuid);
+            var tasks = keys.Select(key => connection.DeleteAsync(key)).ToList();
+            var results = await Task.WhenAll(tasks);
+            bool allRemoved = results.All(result => result);
+            if (!allRemoved)
+            {
+                _logger.LogWarning("Not all email verification codes were removed for user {UserUuid}.", userUuid);
+                return false; // Not all codes were removed
+            }
+            _logger.LogDebug("Successfully removed all email verification codes for user {UserUuid}.", userUuid);
+            return true; // All codes successfully removed
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while removing the email verification code for user {UserUuid}.", userUuid);
+            return false;
+        }
+    }
+    #endregion
 }

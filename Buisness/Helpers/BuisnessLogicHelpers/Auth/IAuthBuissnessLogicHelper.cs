@@ -133,6 +133,8 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
 
         #endregion
 
+        #region Verify
+
         #region Verify OTP
 
         /// <summary>
@@ -167,6 +169,15 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
         /// <returns>A business logic result indicating the outcome.</returns>
         Task<IBuisnessLogicResult> RevokeSignInBruteForceTokenAsync(byte userTypeId, Guid userUuid);
 
+        #endregion
+
+        #region Verify Email
+        Task<IBuisnessLogicResult> CheckIsEmailNotVerifiedAsync(string accessToken);
+        Task<IBuisnessLogicResult> SendEmailVerificationOTPAsync(string accessToken);
+        Task<IBuisnessLogicResult> CheckAndVerifyEmailOTPAsync(string accessToken, string otpCode);
+        Task<IBuisnessLogicResult> CompleteEmailVerificaitonAsync(string accessToken);
+        #endregion
+        
         #endregion
 
         #region Change Password
@@ -1217,6 +1228,241 @@ namespace Buisness.Helpers.BuisnessLogicHelpers.Auth
                 return new BuisnessLogicErrorResult(BuisnessLogicMessage.Error("Revoking SignIn Protection Keys"), 500);
             }
         }
+
+        #region Verify Email
+
+        public async Task<IBuisnessLogicResult> CheckIsEmailNotVerifiedAsync(string accessToken)
+        {
+            try
+            {
+                await LogDebugAsync("CheckIsEmailNotVerifiedAsync Started");
+
+                var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
+                var userTypeId = await _sessionJwtService.GetUserTypeIdFromTokenAsync(accessToken);
+
+                if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(userTypeId))
+                {
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound(new[] { "UserUuid", "UserTypeId" }, "AccessToken"), 400);
+                }
+
+                Guid uuid = Guid.Parse(userUuid);
+                UserTypeId typeId = (UserTypeId)byte.Parse(userTypeId);
+                bool? isEmailVerified = null;
+
+                switch (typeId)
+                {
+                    case UserTypeId.Admin:
+                        Admin? admin = await _adminService.GetByUuidAsync(uuid);
+                        if (admin == null)
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Admin"), 404);
+                        
+                        isEmailVerified = admin.IsEmailVerified;
+                        break;
+                    case UserTypeId.Staff:
+                        Staff? staff = await _staffService.GetByUuidAsync(uuid);
+                        if (staff == null)
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Staff"), 404);
+
+                        isEmailVerified = staff.IsEmailVerified;
+                        break;
+                    case UserTypeId.Student:
+                        Student? student = await _studentService.GetByUuidAsync(uuid);
+                        if (student == null)
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Student"), 404);
+
+                        isEmailVerified = student.IsEmailVerified;
+                        break;
+                    default:
+                        return new BuisnessLogicErrorResult(BuisnessLogicMessage.Invalid("UserTypeId"), 400);
+                        break;
+                }
+
+                if (isEmailVerified.HasValue && isEmailVerified.Value)
+                {
+                    await LogDebugAsync("CheckIsEmailNotVerifiedAsync Completed", new { UserUuid = uuid, UserTypeId = typeId, IsEmailVerified = isEmailVerified });
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.Already("Email","Verified"), 200);
+                }
+                else if (isEmailVerified.HasValue && !isEmailVerified.Value)
+                {
+                    await LogDebugAsync("CheckIsEmailNotVerifiedAsync Completed", new { UserUuid = uuid, UserTypeId = typeId, IsEmailVerified = isEmailVerified });
+                    return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Not("Email", "Verified"), 200);
+                }
+                else
+                {
+                    await LogDebugAsync("CheckIsEmailNotVerifiedAsync Completed", new { UserUuid = uuid, UserTypeId = typeId, IsEmailVerified = isEmailVerified });
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Email"), 404);
+                }
+            }
+            catch (Exception ex)
+            {
+                await LogDebugAsync("CheckIsEmailNotVerifiedAsync Excepted", ex);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.ErrorOccurred("Checking Email Verification"), 500);
+            }
+        }
+        public async Task<IBuisnessLogicResult> SendEmailVerificationOTPAsync(string accessToken)
+        {
+            try
+            {
+                await LogDebugAsync("SendEmailVerificationOTPAsync Started");
+
+                var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
+                var userTypeId = await _sessionJwtService.GetUserTypeIdFromTokenAsync(accessToken);
+
+                if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(userTypeId))
+                {
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound(new[] { "UserUuid", "UserTypeId" }, "AccessToken"), 400);
+                }
+
+                Guid uuid = Guid.Parse(userUuid);
+                UserTypeId typeId = (UserTypeId)byte.Parse(userTypeId);
+
+                string otpCode = _otpUtilitiy.GenerateOTP();
+                string? email = null;
+
+                switch (typeId)
+                {   
+                    case UserTypeId.Admin:
+                        Admin? admin = await _adminService.GetByUuidAsync(uuid);
+                        email = admin?.Email;
+                        if (admin == null)
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Admin"), 404);
+                        break;
+                    case UserTypeId.Staff:
+                        Staff? staff = await _staffService.GetByUuidAsync(uuid);
+                        email = staff?.Email;
+                        if (staff == null)
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Staff"), 404);
+                        break;
+                    case UserTypeId.Student:
+                        Student? student = await _studentService.GetByUuidAsync(uuid);
+                        email = student?.Email;
+                        break;
+                    default:
+                        return new BuisnessLogicErrorResult(BuisnessLogicMessage.Invalid("UserTypeId"), 400);
+                        break;
+                }
+
+                if (string.IsNullOrEmpty(email))
+                {
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.Required("Email"), 400);
+                }
+
+                bool existingOtp = await _OTPCodeService.IsExistEmailVerificaitonOTPByUserUuid(uuid.ToString());
+                if (existingOtp != false)
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.Already("Email Verification OTP", "Sended"), 400);
+
+                // Set OTP code
+                bool isSet = await _OTPCodeService.SetEmailVerificationCodeAsync(
+                    userUuid: uuid.ToString(),
+                    otpCode: otpCode);
+
+                if (!isSet)
+                {
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.Failed("Setting", "Email Verification OTP"), 500);
+                }
+
+                // Send OTP code via email
+                bool isSent = await _emailService.SendEmailVerificationOtpAsync(email, otpCode);
+                if (!isSent)
+                {
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.Failed("Sending", "Email Verification OTP"), 500);
+                }
+
+                await LogDebugAsync("SendEmailVerificationOTPAsync Completed");
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Successfuly("Email Verification OTP was sent"), 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("SendEmailVerificationOTPAsync Excepted", ex);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.ErrorOccurred("Sending Email Verification OTP"), 500);
+            }
+        }
+        public async Task<IBuisnessLogicResult> CheckAndVerifyEmailOTPAsync(string accessToken, string otpCode)
+        {
+            try
+            {
+                await LogDebugAsync("CheckAndVerifyEmailOTPAsync Started");
+                var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
+                var userTypeId = await _sessionJwtService.GetUserTypeIdFromTokenAsync(accessToken);
+
+                if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(userTypeId))
+                {
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound(new[] { "UserUuid", "UserTypeId" }, "AccessToken"), 400);
+                }
+
+                bool isExistOtp = await _OTPCodeService.IsExistEmailVerificaitonOTPByUserUuid(userUuid);
+                if (!isExistOtp) 
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.InvalidOrExpired("OTP"), 404);
+
+                bool revoked = await _OTPCodeService.RemoveEmailVerificationCodeAsync(userUuid);
+                if (!revoked)
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.Failed("Revoking", "Email Verification OTP"), 500);
+
+                await LogDebugAsync("CheckAndVerifyEmailOTPAsync OTP Found");
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Successfuly("OTP Verified"), 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("CheckAndVerifyEmailOTPAsync Excepted", ex);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.ErrorOccurred("Checking and Verifying Email OTP"), 500);
+            }
+        }
+        public async Task<IBuisnessLogicResult> CompleteEmailVerificaitonAsync(string accessToken)
+        {
+            try
+            {
+                await LogDebugAsync("CompleteEmailVerificaitonAsync Started");
+                var userUuid = await _sessionJwtService.GetUserUuidFromTokenAsync(accessToken);
+                var userTypeId = await _sessionJwtService.GetUserTypeIdFromTokenAsync(accessToken);
+
+                if (string.IsNullOrEmpty(userUuid) || string.IsNullOrEmpty(userTypeId))
+                {
+                    return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound(new[] { "UserUuid", "UserTypeId" }, "AccessToken"), 400);
+                }
+
+                Guid uuid = Guid.Parse(userUuid);
+                UserTypeId typeId = (UserTypeId)byte.Parse(userTypeId);
+
+                switch (typeId)
+                {
+                    case UserTypeId.Admin:
+                        Admin? admin = await _adminService.GetByUuidAsync(uuid);
+                        if (admin == null)
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Admin"), 404);
+
+                        admin.IsEmailVerified = true;
+                        await _adminService.UpdateAdminAsync(admin);
+                        break;
+                    case UserTypeId.Staff:
+                        Staff? staff = await _staffService.GetByUuidAsync(uuid);
+                        if (staff == null)
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Staff"), 404);
+
+                        staff.IsEmailVerified = true;
+                        await _staffService.UpdateStaffAsync(staff);
+                        break;
+                    case UserTypeId.Student:
+                        Student? student = await _studentService.GetByUuidAsync(uuid);
+                        if (student == null)
+                            return new BuisnessLogicErrorResult(BuisnessLogicMessage.NotFound("Student"), 404);
+
+                        student.IsEmailVerified = true;
+                        await _studentService.UpdateStudentAsync(student);
+                        break;
+                    default:
+                        return new BuisnessLogicErrorResult(BuisnessLogicMessage.Invalid("UserTypeId"), 400);
+                        break;
+                }
+                return new BuisnessLogicSuccessResult(BuisnessLogicMessage.Successfuly("Email Verification Completed"), 200);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("CompleteEmailVerificaitonAsync Excepted", ex);
+                return new BuisnessLogicErrorResult(BuisnessLogicMessage.ErrorOccurred("Completing Email Verification"), 500);
+            }
+        }
+
+        #endregion
 
         #endregion
 

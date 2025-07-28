@@ -20,6 +20,7 @@ namespace Buisness.DTOs.AuthDtos.VerifyDtos.VerifyEmailDtos
         /// <summary>
         /// Gets or sets the user's unique identifier. (INTERNAL USAGE PROPERTY)
         /// </summary>
-        public Guid UserUid { get; set; } = Guid.Empty;
+        public byte UserTyeId { get; set; } = 0;
+        public Guid UserUuid { get; set; } = Guid.Empty;
     }
 }

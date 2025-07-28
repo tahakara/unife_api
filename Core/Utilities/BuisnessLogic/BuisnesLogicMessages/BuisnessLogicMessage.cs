@@ -112,6 +112,16 @@ namespace Core.Utilities.BuisnessLogic.BuisnesLogicMessages
                 ? $"{propertyName} already exists."
                 : $"{propertyName} already exists on the {location}.";
 
+        public static string Already(string propertyName, string propertyStatus)
+            => string.IsNullOrWhiteSpace(propertyStatus)
+                ? $"{propertyName} already."
+                : $"{propertyName} already {propertyStatus}.";
+
+        public static string Not(string propertyName, string propertyStatus)
+            => string.IsNullOrWhiteSpace(propertyStatus)
+                ? $"{propertyName} not."
+                : $"{propertyName} not {propertyStatus}.";
+
         public static string Created(string propertyName, string? location = null)
             => string.IsNullOrWhiteSpace(location)
                 ? $"{propertyName} created successfully."

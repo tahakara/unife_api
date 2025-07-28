@@ -60,6 +60,43 @@ namespace Buisness.Services.UtilityServices.EmailServices
             }
         }
 
+        public async Task<bool> SendEmailVerificationOtpAsync(string to, string otp)
+        {
+            try
+            {
+                _logger.LogDebug("Sending email verification OTP to {Recipient}", to);
+                var subject = "Email Verification OTP";
+                var body = $@"
+                    <div style='font-family:Segoe UI,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #e0e0e0;border-radius:8px;box-shadow:0 2px 8px #f0f0f0;padding:32px;background:#fafbfc;'>
+                        <div style='text-align:center;margin-bottom:24px;'>
+                            <img src='https://cdn-icons-png.flaticon.com/512/561/561127.png' alt='Email Verification' width='64' height='64' style='margin-bottom:12px;' />
+                            <h2 style='color:#1976d2;margin:0;'>Email Verification</h2>
+                        </div>
+                        <p style='font-size:16px;color:#333;'>Hello,</p>
+                        <p style='font-size:15px;color:#444;margin-bottom:18px;'>Please use the following OTP to verify your email address:</p>
+                        <h2 style='letter-spacing:2px;'>{otp}</h2>
+                        <p style='font-size:14px;color:#333;'>Keep this OTP private.</p>
+                        <hr style='border:none;border-top:1px solid #eee;margin:24px 0;' />
+                        <p style='font-size:12px;color:#999;text-align:center;'>This is an automated message. Please do not reply directly to this email.</p>
+                    </div>";
+
+                var emailSent = await SendEmailAsync(to, subject, body, true);
+                if (!emailSent)
+                {
+                    _logger.LogWarning("Failed to send email verification OTP to {Recipient}", to);
+                    return false;
+                }
+
+                _logger.LogDebug("Email verification OTP sent successfully to {Recipient}", to);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while sending email verification OTP to {Recipient}", to);
+                return false;
+            }
+        }
+
         public async Task<bool> SendForgotPasswordEmailAsync(string to, string recoveryToken)
         {
             try

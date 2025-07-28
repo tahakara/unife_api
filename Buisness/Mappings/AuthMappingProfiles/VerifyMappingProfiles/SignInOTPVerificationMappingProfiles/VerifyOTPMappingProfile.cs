@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Buisness.Mappings.AuthMappingProfiles.VerifyMappingProfiles
+namespace Buisness.Mappings.AuthMappingProfiles.VerifyMappingProfiles.SignInOTPVerificationMappingProfiles
 {
     public class VerifyOTPMappingProfile : Profile
     {

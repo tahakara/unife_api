@@ -148,7 +148,7 @@ namespace WebAPI.Controllers.Auth
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ChangePasswordPost(
-            [FromHeader(Name = "Authorization")] string accessToken, 
+            [FromHeader(Name = "Authorization")] string? accessToken, 
             [FromBody] ChangePasswordCommand command)
         {
             command.AccessToken = accessToken;
@@ -163,9 +163,10 @@ namespace WebAPI.Controllers.Auth
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> VerifyEmailGet(
-            [FromHeader(Name = "Authorization")] VerifyEmailCommand command)
+            [FromHeader(Name = "Authorization")] string? accessToken)
         {
-            return await SendCommand(command);
+            return await SendCommand(
+                new SendEmailVerificationOTPCommand { AccessToken = accessToken });
         }
 
         [Authorize]

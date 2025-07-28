@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Buisness.Features.CQRS.Auth.Commands.Verify.VerifyPhone
 {
+    // TODO: Will be implement after the sms service is ready.
     public class VerifyPhoneCommand : ICommand<BaseResponse<bool>>,
         IAccessTokenCarrier
     {

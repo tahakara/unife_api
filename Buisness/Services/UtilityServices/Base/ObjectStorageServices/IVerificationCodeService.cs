@@ -15,5 +15,13 @@ namespace Buisness.Services.UtilityServices.Base.ObjectStorageServices
         Task<bool> RevokeCodeByUserUuid(string userUuid);
         Task<bool> RemoveCodeAsync(string sessionUuid, string userUuid, string otpTypeId, string otpCode);
 
+        #region Email Verification
+
+        Task<bool> SetEmailVerificationCodeAsync(string userUuid, string otpCode);
+        Task<bool> IsExistEmailVerificaitonOTPByUserUuid(string userUuid);
+        Task<bool> RemoveEmailVerificationCodeAsync(string userUuid);
+
+
+        #endregion
     }
 }

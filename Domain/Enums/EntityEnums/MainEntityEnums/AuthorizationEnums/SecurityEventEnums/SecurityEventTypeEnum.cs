@@ -42,8 +42,13 @@ namespace Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEv
         SignUpFailed,
         
         VerificationSignInOTPSucceeded,
-        VerificationSignInOTPFailed
+        VerificationSignInOTPFailed,
 
+        VerificationOTPEmailFailed,
+        VerificationOTPEmailSucceeded,
+
+        VerificationEmailFailed,
+        VerificationEmailSucceeded
     }
 
     public static class SecurityEventTypeGuids
@@ -72,6 +77,10 @@ namespace Domain.Enums.EntityEnums.MainEntityEnums.AuthorizationEnums.SecurityEv
             { SecurityEventTypeGuid.SignUpFailed,                   Guid.Parse("555ee376-d85d-4553-a80f-4d17ae54f34a") },
             { SecurityEventTypeGuid.VerificationSignInOTPSucceeded, Guid.Parse("e3cdf08d-7fb2-4d9a-ac74-fd50ec52e7af") },
             { SecurityEventTypeGuid.VerificationSignInOTPFailed,    Guid.Parse("bf008257-2060-48bb-8370-3b0c299dadec") },
+            { SecurityEventTypeGuid.VerificationOTPEmailFailed,     Guid.Parse("f615cf02-9131-4148-9494-9f905eac121a") },
+            { SecurityEventTypeGuid.VerificationOTPEmailSucceeded,  Guid.Parse("083901f1-9d89-4b09-9a50-f720c2e97782") },
+            { SecurityEventTypeGuid.VerificationEmailFailed,        Guid.Parse("ade70474-5ae5-4654-ac1e-89055bc0b745") },
+            { SecurityEventTypeGuid.VerificationEmailSucceeded,     Guid.Parse("8e72d526-dd81-4826-809d-9f45f4536eaa") },
         };
     }
 }
