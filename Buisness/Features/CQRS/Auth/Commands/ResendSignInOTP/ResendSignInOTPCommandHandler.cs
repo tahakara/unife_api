@@ -1,13 +1,12 @@
 ﻿using Buisness.DTOs.AuthDtos.RefreshDtos;
-using Buisness.DTOs.AuthDtos.SignInDtos.Request;
-using Buisness.DTOs.AuthDtos.SignInDtos.Response;
+using Buisness.DTOs.AuthDtos.SignInDtos;
 using Buisness.Features.CQRS.Auth.Commands.RefreshToken;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Features.CQRS.Base.Generic.Request.Command;
 using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Features.CQRS.Common;
-using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Buisness.Helpers.BuisnessLogicHelpers.Auth.Base;
 using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;

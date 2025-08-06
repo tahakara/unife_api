@@ -1,8 +1,8 @@
-﻿using Buisness.DTOs.AuthDtos.SignUpDtos.Request;
-using Buisness.Features.CQRS.Auth.Commands.SignUp;
+﻿using Buisness.Features.CQRS.Auth.Commands.SignUp;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators;
+using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.ProfileCarrieValidators;
 using FluentValidation;
 using System.Text.RegularExpressions;
 

@@ -5,7 +5,7 @@ using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Features.CQRS.Base.Generic.Request.Command;
 using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Features.CQRS.Common;
-using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Buisness.Helpers.BuisnessLogicHelpers.Auth.Base;
 using Core.Enums;
 using Core.Utilities.BuisnessLogic;
 using Core.Utilities.BuisnessLogic.BuisnessLogicResults;

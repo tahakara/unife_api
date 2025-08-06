@@ -1,8 +1,8 @@
 ﻿using Buisness.Validators.Common;
-using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.ProfileCarrierInterfaces;
 using FluentValidation;
 
-namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators
+namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.ProfileCarrieValidators
 {
     /// <summary>
     /// Validator for types implementing <see cref="ILastNameCarrier"/>.
@@ -20,10 +20,10 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCa
         {
             RuleFor(x => x.LastName)
                 .NotNull().NotEmpty()
-                    .WithMessage(ValidationMessages.RequiredFormat(nameof(ILastNameCarrier.LastName)))
+                    .WithMessage(Core.Utilities.MessageUtility.ValidationMessageUtility.RequiredFormat(nameof(ILastNameCarrier.LastName)))
 
                 .MaximumLength(50)
-                    .WithMessage(ValidationMessages.MaxLengthFormat(nameof(ILastNameCarrier.LastName), 50));
+                    .WithMessage(Core.Utilities.MessageUtility.ValidationMessageUtility.MaxLengthFormat(nameof(ILastNameCarrier.LastName), 50));
         }
     }
 }

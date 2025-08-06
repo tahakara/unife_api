@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Buisness.DTOs.AuthDtos.SignInDtos.Request
+namespace Buisness.DTOs.AuthDtos.SignInDtos
 {
     /// <summary>
     /// Data Transfer Object for handling sign-in requests.

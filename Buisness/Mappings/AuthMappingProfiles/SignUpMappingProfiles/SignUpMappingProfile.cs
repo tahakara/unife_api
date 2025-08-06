@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
-using Buisness.DTOs.AuthDtos.SignUpDtos.Request;
-using Buisness.DTOs.AuthDtos.SignUpDtos.Response;
+using Buisness.DTOs.AuthDtos.SignUpDtos;
 using Buisness.Features.CQRS.Auth.Commands.SignUp;
 using Buisness.Mappings.MappingHelpers;
 using Domain.Entities.MainEntities.AuthorizationModuleEntities;

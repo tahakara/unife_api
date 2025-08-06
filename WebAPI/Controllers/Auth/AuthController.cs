@@ -22,7 +22,7 @@ namespace WebAPI.Controllers.Auth
     [Route("api/v1/auth")]
     public class AuthController : BaseController
     {
-        public AuthController(IMediator mediator, ILogger<UniversityController> logger) 
+        public AuthController(IMediator mediator, ILogger<AuthController> logger) 
             : base(mediator, logger)
         {
         }

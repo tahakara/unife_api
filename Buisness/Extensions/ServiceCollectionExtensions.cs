@@ -2,6 +2,7 @@
 using Buisness.Behaviors;
 using Buisness.Features.CQRS.Universities.Commands.CreateUniversity;
 using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+using Buisness.Helpers.BuisnessLogicHelpers.Auth.Base;
 using Buisness.Helpers.BuisnessLogicHelpers.UniversityBuisnessLogicHelper;
 using Buisness.Services.EntityRepositoryServices;
 using Buisness.Services.EntityRepositoryServices.AuthorizationModuleServices;

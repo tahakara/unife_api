@@ -1,5 +1,4 @@
-﻿using Buisness.DTOs.AuthDtos.SignInDtos.Request;
-using Buisness.DTOs.AuthDtos.SignInDtos.Response;
+﻿using Buisness.DTOs.AuthDtos.SignInDtos;
 using Buisness.Features.CQRS.Auth.Commands.Logout;
 using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Features.CQRS.Base.Generic.Request.Command;

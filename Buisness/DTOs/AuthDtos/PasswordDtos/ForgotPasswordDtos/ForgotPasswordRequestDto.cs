@@ -14,7 +14,7 @@ namespace Buisness.DTOs.AuthDtos.PasswordDtos.ForgotPasswordDtos
     /// In some scenarios, after mapping, additional properties related to internal usage may be included in this class for internal processing.
     /// </para>
     /// </summary>
-    public class ForgotPasswordRequestDto : DtoBase
+    public class ForgotPasswordRequestDto : RequestDtoBase
     {
         // COMMAND PROPERTIES
         /// <summary>

@@ -1,10 +1,10 @@
-﻿using Buisness.DTOs.AuthDtos.SignUpDtos.Request;
-using Buisness.DTOs.AuthDtos.SignUpDtos.Response;
+﻿using Buisness.DTOs.AuthDtos.SignUpDtos;
 using Buisness.Features.CQRS.Base.Auth;
 using Buisness.Features.CQRS.Base.Generic.Request.Command;
 using Buisness.Features.CQRS.Base.Generic.Response;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
 using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.CompositeCarrierInterfaces;
+using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.ProfileCarrierInterfaces;
 
 namespace Buisness.Features.CQRS.Auth.Commands.SignUp
 {

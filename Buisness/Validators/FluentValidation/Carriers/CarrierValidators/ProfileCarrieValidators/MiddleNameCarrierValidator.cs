@@ -1,8 +1,8 @@
-﻿using Buisness.Validators.Common;
-using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.AuthCarrierInterfaces;
+﻿using Buisness.Validators.FluentValidation.Carriers.CarrierInterfaces.ProfileCarrierInterfaces;
+using Core.Utilities.MessageUtility;
 using FluentValidation;
 
-namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators
+namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.ProfileCarrieValidators
 {
     /// <summary>
     /// Validator for types implementing <see cref="IMiddleNameCarrier"/>.
@@ -20,7 +20,7 @@ namespace Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCa
         {
             RuleFor(x => x.MiddleName)
                 .MaximumLength(50)
-                    .WithMessage(ValidationMessages.MaxLengthFormat(nameof(IMiddleNameCarrier.MiddleName), 50));
+                    .WithMessage(ValidationMessageUtility.MaxLengthFormat(nameof(IMiddleNameCarrier.MiddleName), 50));
         }
     }
 }

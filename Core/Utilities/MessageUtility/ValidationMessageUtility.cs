@@ -41,6 +41,14 @@
             => $"{PropertyName} must be a valid byte value (0-255).";
 
         /// <summary>
+        /// Returns a validation error message indicating that the specified property must be a valid URL format.
+        /// </summary>
+        /// <param name="PropertyName">The name of the property being validated.</param>
+        /// <returns>A formatted error message for invalid URL format.</returns>
+        public static string InvalidUrlFormat(string PropertyName)
+            => $"{PropertyName} must be a valid URL format.";
+
+        /// <summary>
         /// Returns a message indicating that the property must be a valid boolean value.
         /// </summary>
         /// <param name="PropertyName">The name of the property.</param>

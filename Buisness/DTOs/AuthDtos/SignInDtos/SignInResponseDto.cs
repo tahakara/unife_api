@@ -2,7 +2,7 @@
 using Buisness.DTOs.ModelBinderHelper;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Buisness.DTOs.AuthDtos.SignInDtos.Response
+namespace Buisness.DTOs.AuthDtos.SignInDtos
 {
     public class SignInResponseDto : ResponseDtoBase
     {

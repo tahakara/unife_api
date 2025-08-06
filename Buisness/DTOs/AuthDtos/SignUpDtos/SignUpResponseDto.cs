@@ -2,7 +2,7 @@
 using Buisness.DTOs.ModelBinderHelper;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Buisness.DTOs.AuthDtos.SignUpDtos.Response
+namespace Buisness.DTOs.AuthDtos.SignUpDtos
 {
     /// <summary>
     /// Data Transfer Object for the response of a user sign-up operation.

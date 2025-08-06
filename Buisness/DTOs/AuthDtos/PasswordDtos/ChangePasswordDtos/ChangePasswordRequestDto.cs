@@ -14,7 +14,7 @@ namespace Buisness.DTOs.AuthDtos.PasswordDtos.ChangePasswordDtos
     /// In some scenarios, after mapping, additional properties related to internal usage may be included in this class for internal processing.
     /// </para>
     /// </summary>
-    public class ChangePasswordRequestDto : DtoBase
+    public class ChangePasswordRequestDto : RequestDtoBase
     {
         /// <summary>
         /// Gets or sets the access token used to identify the user whose password will be changed. (COMMAND PROPERTY)

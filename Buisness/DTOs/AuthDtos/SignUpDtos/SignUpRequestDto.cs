@@ -3,7 +3,7 @@ using Buisness.DTOs.ModelBinderHelper;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql.TypeMapping;
 
-namespace Buisness.DTOs.AuthDtos.SignUpDtos.Request
+namespace Buisness.DTOs.AuthDtos.SignUpDtos
 {
     /// <summary>
     /// Data Transfer Object for handling user sign-up requests.

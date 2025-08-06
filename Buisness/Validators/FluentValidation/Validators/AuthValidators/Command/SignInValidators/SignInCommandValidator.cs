@@ -1,5 +1,4 @@
-﻿using Buisness.DTOs.AuthDtos.SignInDtos.Request;
-using Buisness.Features.CQRS.Auth.Commands.SignIn;
+﻿using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.AuthCarrierValidators;
 using Buisness.Validators.FluentValidation.Carriers.CarrierValidators.CompositeCarrierValidators;

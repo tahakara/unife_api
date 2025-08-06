@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Buisness.DTOs.AuthDtos.SignInDtos.Request;
+using Buisness.DTOs.AuthDtos.SignInDtos;
 using Buisness.Features.CQRS.Auth.Commands.ResendSignInOTP;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Mappings.MappingHelpers;

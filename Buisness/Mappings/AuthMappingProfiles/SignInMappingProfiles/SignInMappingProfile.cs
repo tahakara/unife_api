@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Buisness.DTOs.AuthDtos.SignInDtos.Request;
-using Buisness.DTOs.AuthDtos.SignInDtos.Response;
+using Buisness.DTOs.AuthDtos.SignInDtos;
+
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Mappings.MappingHelpers;
 using Core.Utilities.OTPUtilities;

@@ -30,6 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\University\" />
+    <Folder Include="Controllers\User\Admin\" />
+    <Folder Include="Controllers\User\Student\" />
+    <Folder Include="Controllers\User\Staff\" />
     <Folder Include="logs\" />
   </ItemGroup>
 

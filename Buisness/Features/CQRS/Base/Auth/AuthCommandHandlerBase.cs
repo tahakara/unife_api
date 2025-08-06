@@ -1,4 +1,4 @@
-﻿using Buisness.Helpers.BuisnessLogicHelpers.Auth;
+﻿using Buisness.Helpers.BuisnessLogicHelpers.Auth.Base;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;

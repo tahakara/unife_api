@@ -1,6 +1,5 @@
 ﻿using Buisness.DTOs.AuthDtos.LogoutDtos.RequestDtos;
 using Buisness.DTOs.AuthDtos.PasswordDtos.ChangePasswordDtos;
-using Buisness.DTOs.AuthDtos.SignInDtos.Response;
 using Buisness.Features.CQRS.Auth.Commands.SignIn;
 using Buisness.Features.CQRS.Base.Generic.Request.Command;
 using Buisness.Features.CQRS.Base.Generic.Response;
